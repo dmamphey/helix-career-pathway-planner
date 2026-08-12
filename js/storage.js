@@ -13,6 +13,12 @@
 
 import { normaliseProfile } from "./profile.js";
 
+/*
+ * The key keeps its original name through the rename to Helix Career Pathway
+ * Planner. It is invisible to the user, and changing it would orphan the saved
+ * profile and progress of anybody who had already used the tool — a rebrand is no
+ * reason to delete somebody's work.
+ */
 const KEY = "careerpath.v1";
 export const STORAGE_SCHEMA = 1;
 
@@ -74,7 +80,7 @@ export function save(state, datasetVersion) {
   return clean;
 }
 
-/** Remove everything CareerPath has stored. */
+/** Remove everything Helix has stored. */
 export function reset() {
   if (storageAvailable()) {
     try { window.localStorage.removeItem(KEY); } catch (ignored) { /* nothing */ }
@@ -148,7 +154,7 @@ function isCareerId(value) {
 /** Download the saved state as a local JSON file. */
 export function exportState(state, datasetVersion) {
   const payload = {
-    application: "CareerPath",
+    application: "Helix Career Pathway Planner",
     exported: new Date().toISOString(),
     datasetVersion: datasetVersion || state.datasetVersion || "",
     note: "This file contains your structured career profile and progress. It "
@@ -160,7 +166,7 @@ export function exportState(state, datasetVersion) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `careerpath-progress-${stamp()}.json`;
+  link.download = `helix-career-pathway-${stamp()}.json`;
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -179,17 +185,17 @@ export async function importState(file) {
   try {
     parsed = JSON.parse(await file.text());
   } catch (cause) {
-    throw new Error("That file is not a CareerPath export — it is not valid "
+    throw new Error("That file is not a Helix export — it is not valid "
                   + "JSON.");
   }
   const state = parsed && parsed.state ? parsed.state : parsed;
   if (!state || typeof state !== "object") {
-    throw new Error("That file does not contain CareerPath progress.");
+    throw new Error("That file does not contain Helix progress.");
   }
   const clean = coerce(state);
   if (!clean.profile && !clean.savedCareerIds.length
       && !Object.keys(clean.progress).length) {
-    throw new Error("That file contains no CareerPath profile or progress to "
+    throw new Error("That file contains no Helix profile or progress to "
                   + "import.");
   }
   return {

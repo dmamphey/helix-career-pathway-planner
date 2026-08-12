@@ -1,11 +1,11 @@
-# CareerPath
+# Helix Career Pathway Planner
 
 **Career navigation for life sciences and healthcare professionals.**
 
-Part of Optymum SS Digital Tools. Intended production URL:
-`https://tools.optymumss.com/career-pathway/`
+A tool by Optymum SS. Production URL:
+`https://tools.optymumss.com/helix-career-pathway-planner/`
 
-CareerPath answers four questions for somebody working in, or moving into, UK life
+Helix answers four questions for somebody working in, or moving into, UK life
 sciences and healthcare:
 
 1. Where am I now?
@@ -26,7 +26,7 @@ It is a static browser application. No backend, no accounts, no AI service.
 - It does not predict whether you will get a job, and never shows a percentage
   chance of anything.
 - It does not determine professional eligibility. Where a career is regulated,
-  CareerPath says so, links to the regulator, and asks you to confirm your own
+  Helix says so, links to the regulator, and asks you to confirm your own
   position. It does not restate registration criteria it has not verified.
 
 ## Architecture
@@ -54,7 +54,7 @@ Structured career profile         the only thing the engines see
 Vanilla ES modules, no build step, no framework.
 
 ```text
-career-pathway/
+helix-career-pathway-planner/
 ├── index.html                  application shell
 ├── styles.css                  all styling, including the print stylesheet
 ├── js/
@@ -95,7 +95,7 @@ The CV is read in the browser and never leaves the device.
   from the working text **before** any parsing happens.
 - `ProfileInterpreter.parse()` builds the structured profile from the redacted
   text. Evidence strings attached to the profile are always phrases from
-  CareerPath's own vocabulary in `ontology.js`, never spans copied out of the
+  Helix's own vocabulary in `ontology.js`, never spans copied out of the
   document — so a sentence containing a name or a patient detail cannot travel
   with the profile.
 - The raw text is a local variable in the upload handler. It is never assigned to
@@ -133,7 +133,7 @@ should not have to contact a third party in order to read a CV.
 ## Dataset
 
 ```text
-CareerPath UK Life Sciences & Healthcare Career Dataset
+Helix UK Life Sciences & Healthcare Career Dataset
 Version 1.0, generated 2026-08-12, 677 careers, United Kingdom
 ```
 
@@ -143,7 +143,7 @@ in the codebase edits, reorders or filters out a supplied record.
 Each record carries an id, title, family, jurisdiction, regulatory status,
 regulator or body, pathway depth, core tags, a typical entry signal, official
 source codes and a verification date. There are no per-career descriptions or
-requirements, which is why CareerPath describes a career's *family* rather than
+requirements, which is why Helix describes a career's *family* rather than
 inventing prose about the role.
 
 Derived attributes — domains, work orientations, a search index — are computed at
@@ -188,7 +188,7 @@ Four categories:
 | Category | Meaning |
 |---|---|
 | **Required** | Verified against a current official source. Only a rule pack with `requirementsVerified: true` can produce one. |
-| **Must be confirmed officially** | The dataset shows a requirement applies; CareerPath cannot say what it means for you. |
+| **Must be confirmed officially** | The dataset shows a requirement applies; Helix cannot say what it means for you. |
 | **Usually expected** | Common expectations. Not universal rules. |
 | **Career-enhancing / Optional** | Strengthens a move, or is route-dependent. |
 
@@ -198,7 +198,7 @@ Mandatory-sounding content and verified provenance travel together or not at all
 
 Where nothing is verified, the interface says so and links to the source:
 
-> CareerPath has not yet verified a full role-specific requirements pack for this
+> Helix has not yet verified a full role-specific requirements pack for this
 > career. Use the official sources below to confirm current entry and registration
 > requirements.
 
@@ -249,7 +249,7 @@ Build the CV fixtures first (they are generated, not committed):
 python tests/make_fixtures.py
 ```
 
-Note: the storage tests write to and clear CareerPath's localStorage key on that
+Note: the storage tests write to and clear Helix's localStorage key on that
 origin. Do not run them in a browser profile holding a profile you want to keep.
 
 ### Testing privacy yourself
@@ -275,8 +275,20 @@ python tools/fetch_libraries.py
 
 Commit everything including `assets/vendor/`, then enable Pages for the branch.
 Because all paths are relative and routing is hash-based, it works unchanged at
-`/career-pathway/` or any other subdirectory. `.nojekyll` is present so that Pages
-does not run the files through Jekyll.
+`/helix-career-pathway-planner/` or any other subdirectory. `.nojekyll` is present
+so that Pages does not run the files through Jekyll.
+
+Live deployment:
+
+| | |
+|---|---|
+| Application | <https://tools.optymumss.com/helix-career-pathway-planner/> |
+| Alternative URL | <https://dmamphey.github.io/helix-career-pathway-planner/> |
+| Repository | <https://github.com/dmamphey/helix-career-pathway-planner> |
+
+The path comes from the repository name: the custom domain is attached to the
+`dmamphey.github.io` user site, and project repositories are served beneath it. So
+renaming the repository renames the public URL, and the two cannot drift apart.
 
 ## Extending it
 
@@ -333,7 +345,7 @@ records stay in the launch taxonomy and are documented for a human decision.
 
 ## Disclaimer
 
-CareerPath provides career-development guidance and decision support. It does not
+Helix provides career-development guidance and decision support. It does not
 determine professional eligibility, guarantee employment or replace advice from
 regulators, professional bodies, employers or training providers. Always confirm
 current mandatory requirements with the relevant official organisation.

@@ -9,7 +9,7 @@ export async function render(app) {
   const stored = storage.rawStoredValue();
 
   return h("div", { class: "stack" }, [
-    panel("What CareerPath stores on this device", [
+    panel("What Helix stores on this device", [
       h("p", { text: "One entry in this browser's local storage, on this device "
         + "only. There is no account and no server." }),
       h("dl", { class: "summary" }, [
@@ -53,14 +53,14 @@ export async function render(app) {
         + "structured profile and progress shown above. Use it to move between "
         + "devices or keep a backup." }),
       h("div", { class: "card-actions" }, [
-        button("Export my CareerPath data", () => {
+        button("Export my Helix data", () => {
           storage.exportState(app.state, app.catalogue.meta.version);
           notice("Export downloaded to this device.", "good");
         }, { variant: "primary", disabled: !state.profile
              && !state.savedCareerIds.length }),
       ]),
       h("div", { class: "field" }, [
-        h("label", { for: "import-file", text: "Import a CareerPath export" }),
+        h("label", { for: "import-file", text: "Import a Helix export" }),
         h("input", { type: "file", id: "import-file", accept: ".json",
           onChange: (event) => doImport(app, event.target.files[0]) }),
         h("p", { class: "hint", text: "Importing replaces what is currently "
@@ -72,7 +72,7 @@ export async function render(app) {
       h("p", { text: "Deletes the stored profile, saved careers and all "
         + "milestone progress from this browser. It cannot be undone." }),
       h("div", { class: "card-actions" }, [
-        button("Reset CareerPath", async () => {
+        button("Reset Helix", async () => {
           const proceed = await confirmDialog(
             "Delete everything saved on this device?",
             "Your profile, saved careers and milestone progress will be removed "
@@ -81,7 +81,7 @@ export async function render(app) {
             "Delete it all");
           if (!proceed) return;
           app.resetAll();
-          notice("CareerPath has been reset on this device.", "info");
+          notice("Helix has been reset on this device.", "info");
           app.navigate("/");
         }, { variant: "danger" }),
       ]),

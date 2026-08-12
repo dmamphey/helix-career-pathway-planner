@@ -153,10 +153,10 @@ export function nextActions(profile, match, gaps, pathway, options = {}) {
     tier: TIER.evidence,
     title: "Sense-check this plan against two live job adverts",
     detail: `Find two current ${career.title.toLowerCase()} adverts and mark `
-      + "every requirement CareerPath has not mentioned. Employers say plainly "
+      + "every requirement Helix has not mentioned. Employers say plainly "
       + "what they screen on, and it is the fastest way to find anything this "
       + "dataset does not yet hold.",
-    why: "CareerPath works from a curated taxonomy, not from the live job "
+    why: "Helix works from a curated taxonomy, not from the live job "
        + "market. This closes that gap in an afternoon.",
     area: "communication",
   });
@@ -181,7 +181,7 @@ export function nextActions(profile, match, gaps, pathway, options = {}) {
       + "they had done earlier. Professional bodies and special-interest groups "
       + "are the usual way in.",
     why: "It is the fastest correction to any assumption in this plan, "
-       + "including CareerPath's.",
+       + "including Helix's.",
     area: "communication",
   });
 

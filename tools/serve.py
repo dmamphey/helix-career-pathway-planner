@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Serve CareerPath locally for development.
+"""Serve Helix locally for development.
 
     python tools/serve.py            # http://localhost:8766
     python tools/serve.py --port 9000
 
-CareerPath is a static site, so any web server will do — but a plain
+Helix is a static site, so any web server will do — but a plain
 ``python -m http.server`` sends no cache headers, and browsers then apply
 heuristic caching to ES modules. That means an edit can appear to have no effect,
 which wastes far more time than this file costs. Everything here is served with
@@ -48,7 +48,7 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description="Serve CareerPath locally.")
+    parser = argparse.ArgumentParser(description="Serve Helix locally.")
     parser.add_argument("--port", type=int, default=8766)
     parser.add_argument("--bind", default="127.0.0.1")
     args = parser.parse_args(argv)
@@ -56,7 +56,7 @@ def main(argv=None) -> int:
     handler = functools.partial(NoCacheHandler, directory=str(ROOT))
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer((args.bind, args.port), handler) as server:
-        print(f"CareerPath on http://{args.bind}:{args.port}/")
+        print(f"Helix on http://{args.bind}:{args.port}/")
         print(f"Tests      on http://{args.bind}:{args.port}/tests/")
         print("Ctrl+C to stop.")
         try:

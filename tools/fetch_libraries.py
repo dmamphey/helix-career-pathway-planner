@@ -3,7 +3,7 @@
 
     python tools/fetch_libraries.py
 
-CareerPath reads PDF and DOCX files in the browser, which needs PDF.js and
+Helix reads PDF and DOCX files in the browser, which needs PDF.js and
 Mammoth. It will fall back to a public CDN when these files are absent, so
 development works without running this — but a privacy-first tool should not have
 to contact a third-party host in order to read a CV, so a real deployment should
@@ -38,7 +38,7 @@ FILES = {
         f"https://cdn.jsdelivr.net/npm/mammoth@{MAMMOTH_VERSION}/mammoth.browser.min.js",
 }
 
-LICENCES = f"""CareerPath self-hosted document libraries - third party notices
+LICENCES = f"""Helix self-hosted document libraries - third party notices
 
 PDF.js {PDFJS_VERSION}                Apache License 2.0
     https://github.com/mozilla/pdf.js/blob/master/LICENSE
@@ -91,7 +91,7 @@ def main(argv=None) -> int:
         print("\nNothing was downloaded. Check network access to cdn.jsdelivr.net.")
         return 1
 
-    print("\nDeploy assets/vendor/ with the rest of the site. CareerPath prefers "
+    print("\nDeploy assets/vendor/ with the rest of the site. Helix prefers "
           "these files and only falls back to the CDN when they are missing.")
     return 0
 

@@ -177,7 +177,7 @@ function openMilestone(app, career, node, gaps, redraw) {
       : null,
     node.status === "needs_confirmation"
       ? h("div", { class: "callout callout-warn" }, [
-          h("p", { text: "CareerPath cannot mark this as met on your behalf. "
+          h("p", { text: "Helix cannot mark this as met on your behalf. "
             + "Confirm it with the official body, then record it here." }),
         ])
       : null,

@@ -20,7 +20,7 @@ function hero(app, hasProfile) {
   return h("section", { class: "hero" }, [
     h("h1", { text: "Navigate your next move in life sciences and healthcare." }),
     h("p", { class: "lede", text:
-      "Start with your CV or build a profile manually. CareerPath maps your "
+      "Start with your CV or build a profile manually. Helix maps your "
       + "experience against hundreds of career destinations, highlights "
       + "development gaps and turns them into practical next steps." }),
     h("div", { class: "hero-actions" }, [
@@ -42,9 +42,9 @@ function hero(app, hasProfile) {
     h("div", { class: "callout callout-good" }, [
       h("p", {}, [
         h("strong", { text: "Your CV stays on your device. " }),
-        "CareerPath processes your document locally in your browser to build a "
+        "Helix processes your document locally in your browser to build a "
         + "career profile. Your CV is not uploaded to Optymum SS and the raw "
-        + "document is not stored by CareerPath.",
+        + "document is not stored by Helix.",
       ]),
     ]),
   ]);
@@ -113,7 +113,7 @@ async function useDemo(app, id) {
   if (storage.hasSavedProfile()) {
     const proceed = await confirmDialog(
       "Replace your saved profile?",
-      "You have a saved CareerPath profile. Loading a demonstration profile will "
+      "You have a saved Helix profile. Loading a demonstration profile will "
       + "replace it. Export your data first from Manage saved data if you want "
       + "to keep it.",
       "Load the example");
@@ -130,7 +130,7 @@ async function useDemo(app, id) {
 
 function jurisdictionNote() {
   return h("div", { class: "callout callout-info" }, [
-    h("p", { text: "CareerPath currently provides UK-focused career navigation. "
+    h("p", { text: "Helix currently provides UK-focused career navigation. "
       + "Requirements can differ substantially between countries." }),
   ]);
 }

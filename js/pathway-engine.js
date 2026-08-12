@@ -142,7 +142,7 @@ function generated(profile, match, gaps, depth) {
       title: item.title,
       meaning: item.detail,
       why: "Requirements for regulated and approved routes are set by the "
-         + "official body, not by CareerPath, and they can change.",
+         + "official body, not by Helix, and they can change.",
       action: "Confirm your position with the official body before committing "
             + "time or money to a route.",
       domain: item.domain,

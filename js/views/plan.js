@@ -52,7 +52,7 @@ export async function render(app, context) {
         ]),
         h("p", { class: "hint", text:
           "The document contains your structured career profile only. It does not "
-          + "contain your CV, your name or any contact details — CareerPath does "
+          + "contain your CV, your name or any contact details — Helix does "
           + "not hold them." }),
       ], { id: "plan-heading" }),
     ]),
@@ -60,7 +60,7 @@ export async function render(app, context) {
     h("article", { class: "plan" }, [
       h("header", { class: "plan-head" }, [
         h("h1", { text: "My Career Pathway Plan" }),
-        h("p", { class: "plan-meta", text: `Generated ${generated} · CareerPath `
+        h("p", { class: "plan-meta", text: `Generated ${generated} · Helix Career Pathway Planner `
           + `· dataset v${app.catalogue.meta.version}` }),
       ]),
 
@@ -184,14 +184,15 @@ export async function render(app, context) {
                 + `${pack.verifiedDate}.`
               : `A structural rule pack exists for this career, but its `
                 + `requirements are not yet verified.` })
-          : h("p", { text: "CareerPath has not yet verified a full role-specific "
+          : h("p", { text: "Helix has not yet verified a full role-specific "
               + "requirements pack for this career. Use the official sources "
               + "above to confirm current entry and registration requirements." }),
       ]),
 
       h("footer", { class: "plan-foot" }, [
-        h("p", { text: "CareerPath provides career-development guidance and "
-          + "decision support. It does not determine professional eligibility, "
+        h("p", { text: "Helix Career Pathway Planner provides career-development "
+          + "guidance and decision support. It does not determine professional "
+          + "eligibility, "
           + "guarantee employment or replace advice from regulators, professional "
           + "bodies, employers or training providers. Always confirm current "
           + "mandatory requirements with the relevant official organisation." }),

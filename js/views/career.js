@@ -80,7 +80,7 @@ function regulationCard(career, app) {
     h("h2", { class: "callout-title", text: "Professional registration applies" }),
     h("p", { text:
       "This career is associated with a regulated profession or protected title. "
-      + "CareerPath can help you understand the pathway, but current eligibility "
+      + "Helix can help you understand the pathway, but current eligibility "
       + "must be confirmed with the official regulator." }),
     h("dl", { class: "summary" }, [
       h("dt", { text: "Recorded status" }),
@@ -97,7 +97,7 @@ function aboutCard(career) {
   return panel("What this career is about", [
     h("p", { text: career.derived.familyAbout }),
     h("p", { class: "hint", text:
-      "CareerPath does not hold a written description for each individual career "
+      "Helix does not hold a written description for each individual career "
       + "yet. The paragraph above describes the family this career sits in, which "
       + "is what the dataset supports — a role-specific description will be added "
       + "as that research is done rather than generated now." }),
@@ -113,7 +113,7 @@ function aboutCard(career) {
 
 function noProfileCard() {
   return panel("Your alignment", [
-    empty("Build a profile and CareerPath will show which parts of this career "
+    empty("Build a profile and Helix will show which parts of this career "
         + "your experience already covers."),
     h("div", { class: "card-actions" }, [
       link("Upload my CV", "#/upload", { class: "btn btn-primary" }),
@@ -179,7 +179,7 @@ function alignmentCard(app, career, analysis) {
         ]))),
     ]),
     h("p", { class: "hint", text:
-      "Profile-based development indicators. “Not identified” means CareerPath "
+      "Profile-based development indicators. “Not identified” means Helix "
       + "did not find it in your profile, not that you lack it." }),
 
     h("div", { class: "card-actions" }, [
@@ -201,7 +201,7 @@ function progressionCard(app, career, pack) {
         ])
       : h("p", { class: "hint", text:
           "No researched progression ladder exists for this career yet, so "
-          + "CareerPath shows related careers a step more senior rather than "
+          + "Helix shows related careers a step more senior rather than "
           + "inventing job titles." }),
     next.length
       ? h("div", { class: "grid grid-2" }, next.map((item) =>

@@ -36,7 +36,7 @@ export const CATEGORIES = {
   },
   needs_confirmation: {
     label: "Must be confirmed officially",
-    blurb: "CareerPath can see that a requirement applies here but cannot "
+    blurb: "Helix can see that a requirement applies here but cannot "
          + "confirm what it means for you. Check with the official body.",
   },
   usually_expected: {
@@ -135,7 +135,7 @@ export function analyseGaps(profile, match, pack, registry = {}) {
           + "this specific role, scope of practice or protected title still has "
           + "to be confirmed with the regulator."
         : `This career is recorded as "${career.regulatory_status}"`
-          + `${body ? ` with ${body}` : ""}. CareerPath cannot establish your `
+          + `${body ? ` with ${body}` : ""}. Helix cannot establish your `
           + "eligibility: confirm the current route and requirements with the "
           + "official body before planning around them.",
       sourceCode: body || (career.official_source_codes || [])[0] || "",

@@ -153,7 +153,7 @@ function applyFilters(careers) {
 export async function renderMatches(app) {
   if (!app.hasProfile()) {
     return panel("No profile yet", [
-      empty("CareerPath needs a profile before it can group career options."),
+      empty("Helix needs a profile before it can group career options."),
       h("div", { class: "card-actions" }, [
         link("Upload my CV", "#/upload", { class: "btn btn-primary" }),
         link("Build a profile manually", "#/profile", { class: "btn" }),

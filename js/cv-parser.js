@@ -65,7 +65,7 @@ export async function extractText(file) {
       + "build your profile manually.");
   }
   throw new UnsupportedFormatError(
-    "That file type is not supported. CareerPath reads text-based PDF, DOCX "
+    "That file type is not supported. Helix reads text-based PDF, DOCX "
     + "and TXT files.");
 }
 

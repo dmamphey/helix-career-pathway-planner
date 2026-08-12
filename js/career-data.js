@@ -50,7 +50,7 @@ export async function loadCareers() {
     payload = await response.json();
   } catch (cause) {
     throw new Error(
-      "The career dataset could not be loaded. If you are running CareerPath "
+      "The career dataset could not be loaded. If you are running Helix "
       + "from a local folder, serve it over http rather than opening the file "
       + `directly. (${cause.message})`);
   }
@@ -79,7 +79,7 @@ export function buildCatalogue(payload) {
 
   return {
     meta: {
-      name: payload.dataset_name || "CareerPath career dataset",
+      name: payload.dataset_name || "Helix career dataset",
       version: payload.version || "unknown",
       generated: payload.generated || "",
       jurisdiction: payload.jurisdiction || "United Kingdom",

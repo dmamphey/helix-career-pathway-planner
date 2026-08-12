@@ -61,7 +61,7 @@ export function profileForm(draft, options = {}) {
         + ` (${item.status})`,
       () => registrationInputs(draft, onChange), onChange,
       "A professional-body membership is not the same thing as statutory "
-      + "registration, so they are recorded separately. CareerPath never treats "
+      + "registration, so they are recorded separately. Helix never treats "
       + "either as established eligibility."),
 
     sectorSection(draft, onChange),
@@ -256,7 +256,7 @@ function signalSection(draft, onChange) {
   return section("Skills and experience", [
     h("p", { class: "hint", text:
       "Tick anything you have real evidence for. Nothing here is a test — it is "
-      + "what CareerPath compares against each career, so it is worth being "
+      + "what Helix compares against each career, so it is worth being "
       + "accurate in both directions." }),
     body,
   ]);

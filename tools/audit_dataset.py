@@ -186,7 +186,7 @@ def main() -> int:
         for item in items if not item.startswith("No") and item != "None found.")
 
     lines = [
-        "# CareerPath dataset audit",
+        "# Helix dataset audit",
         "",
         f"Dataset: **{data['dataset_name']}** version {data['version']}, "
         f"generated {data['generated']}, {len(careers)} careers.",

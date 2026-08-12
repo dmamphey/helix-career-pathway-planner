@@ -1,5 +1,5 @@
 /**
- * CareerPath test suite.
+ * Helix test suite.
  *
  * Runs in the browser, because that is where the application runs: the document
  * parsers need real File objects, and the storage guarantees need a real
@@ -654,7 +654,7 @@ test("import round-trips an export", async () => {
   state.profile = demoProfile("graduate");
   state.savedCareerIds = ["CP-003", "CP-272"];
   const payload = {
-    application: "CareerPath", datasetVersion: "1.0", state,
+    application: "Helix", datasetVersion: "1.0", state,
   };
   const file = new File([JSON.stringify(payload)], "export.json",
                         { type: "application/json" });

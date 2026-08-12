@@ -243,7 +243,7 @@ export function verificationNote(gaps) {
   return h("div", { class: "callout callout-info" }, [
     h("p", {}, [
       h("strong", { text: "Requirements are not yet individually verified. " }),
-      "CareerPath has not verified a full role-specific requirements pack for "
+      "Helix has not verified a full role-specific requirements pack for "
       + "this career. Use the official sources to confirm current entry and "
       + "registration requirements.",
     ]),

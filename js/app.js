@@ -224,7 +224,7 @@ async function boot() {
   }
   router.fallback(() => show(async () => errorPanel(
     "Screen not found",
-    "That address does not match anything in CareerPath.",
+    "That address does not match anything in Helix.",
     [button("Back to start", () => router.navigate("/"), { variant: "primary" })]),
     {}));
 

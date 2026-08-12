@@ -32,14 +32,14 @@ export async function renderUpload(app) {
   return h("div", { class: "stack" }, [
     panel("Upload your CV", [
       h("p", { text:
-        "Upload your CV and CareerPath will use it to build a starting "
+        "Upload your CV and Helix will use it to build a starting "
         + "professional profile, identify possible career routes and highlight "
         + "what you may need to develop next." }),
       h("div", { class: "callout callout-good" }, [
         h("p", {}, [
           h("strong", { text: "Your CV stays on your device. " }),
           "It is read inside this browser tab. It is not uploaded to Optymum SS, "
-          + "and CareerPath does not store the document or its text. Contact "
+          + "and Helix does not store the document or its text. Contact "
           + "details are removed before the text is read, and the structured "
           + "profile has nowhere to put your name, email address, phone number "
           + "or address.",
@@ -50,7 +50,7 @@ export async function renderUpload(app) {
         input,
         h("p", { id: "cv-help", class: "hint", text:
           "Text-based PDF, DOCX or TXT. Scanned documents cannot be read: there "
-          + "is no optical character recognition, and CareerPath will say so "
+          + "is no optical character recognition, and Helix will say so "
           + "rather than pretend." }),
       ]),
       status,
@@ -78,7 +78,7 @@ async function handleFile(app, file, status, problem) {
     if (storage.hasSavedProfile()) {
       const proceed = await confirmDialog(
         "Replace your saved profile?",
-        "You already have a saved CareerPath profile. Building a new one from "
+        "You already have a saved Helix profile. Building a new one from "
         + "this CV will replace it once you confirm the review screen.",
         "Continue");
       if (!proceed) {
@@ -152,7 +152,7 @@ export async function renderReview(app) {
             ]),
         pending.notes.length
           ? h("div", { class: "callout callout-info" }, [
-              h("h3", { text: "What CareerPath could not establish" }),
+              h("h3", { text: "What Helix could not establish" }),
               h("ul", {}, pending.notes.map((note) => h("li", { text: note }))),
               h("p", { class: "hint", text:
                 "Nothing has been guessed to fill these in. Add them yourself if "
@@ -223,7 +223,7 @@ export async function renderQuestions(app) {
       ]),
 
       h("fieldset", { class: "form-section" }, [
-        h("legend", { text: "2. What would you like CareerPath to do?" }),
+        h("legend", { text: "2. What would you like Helix to do?" }),
         radios("goal", [
           ["target", "I know where I want to go"],
           ["explore", "Help me explore my options"],
