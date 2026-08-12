@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CareerPath tests</title>
+<style>
+  body { font: 15px/1.5 system-ui, sans-serif; margin: 0; padding: 1.5rem;
+         background: #f5f8fb; color: #101720; }
+  h1 { font-size: 1.3rem; color: #17395f; }
+  #summary { font-weight: 700; padding: .6rem .9rem; border-radius: 8px;
+             display: inline-block; }
+  #summary.pass { background: #e6f5ec; color: #17603a; }
+  #summary.fail { background: #fceee9; color: #8a3320; }
+  ul { list-style: none; padding: 0; max-width: 70rem; }
+  li { padding: .4rem .6rem; border-bottom: 1px solid #dde5ed;
+       font-family: ui-monospace, Consolas, monospace; font-size: .86rem; }
+  li.pass { color: #17603a; }
+  li.fail { color: #8a3320; background: #fceee9; font-weight: 700; }
+  pre { white-space: pre-wrap; margin: .4rem 0 0; font-size: .82rem; }
+  p { max-width: 70rem; }
+</style>
+</head>
+<body>
+<h1>CareerPath test suite</h1>
+<p>These run in the browser because that is where the application runs: the
+   document parsers need real files and the privacy guarantees need a real
+   localStorage. Serve the folder over http and reload this page.</p>
+<p><strong>Note:</strong> the storage tests write to and then clear CareerPath's
+   localStorage key on this origin. Do not run them in a browser profile holding
+   a CareerPath profile you want to keep.</p>
+<p id="summary">running…</p>
+<ul id="results"></ul>
+<script type="module" src="suite.js"></script>
+</body>
+</html>

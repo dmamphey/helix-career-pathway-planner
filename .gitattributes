@@ -1,0 +1,10 @@
+# Normalise to LF in the repository and on checkout, on every platform.
+#
+# This matters more than usual here: the career dataset is supposed to be the
+# supplied file byte for byte, and a CRLF checkout on Windows would quietly change
+# its bytes. Keeping LF everywhere means a clone can be verified against the
+# original with a checksum.
+* text=auto eol=lf
+
+# Third-party minified libraries: never touch them.
+assets/vendor/* -text -diff

@@ -1,0 +1,4 @@
+{
+  "note": "Career rule packs add researched, career-specific structure. The application works without any of them. To add one, put the career id in the list below and create <id>.json beside this file. A pack may only contribute 'required' items when requirementsVerified is true and verifiedDate is set — js/rules.js enforces that and demotes unverified requirements to 'usually expected'.",
+  "packs": ["CP-003", "CP-272"]
+}

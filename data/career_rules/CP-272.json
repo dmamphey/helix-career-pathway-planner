@@ -1,0 +1,159 @@
+{
+  "careerId": "CP-272",
+  "careerTitle": "Clinical Research Associate",
+  "ruleVersion": "1",
+  "requirementsVerified": false,
+  "verifiedDate": "",
+  "notes": "Structural pack only. Entry expectations for CRA roles are set by employers and sponsors rather than by a statutory register, and they vary between organisations. Nothing here is presented as a mandatory requirement: the 'required' list is deliberately empty until a verified requirements review has been completed against current official and employer sources.",
+
+  "required": [],
+
+  "usuallyExpected": [
+    {
+      "id": "gcp_training",
+      "domain": "gcp",
+      "title": "Recognised Good Clinical Practice training",
+      "detail": "Sponsors and contract research organisations commonly expect current ICH GCP training before a monitor works on a study. Which course is accepted varies by employer."
+    },
+    {
+      "id": "trial_lifecycle",
+      "domain": "clinical_research",
+      "title": "Working knowledge of the clinical trial lifecycle",
+      "detail": "Protocol and feasibility, site selection and initiation, consent processes, source data verification, deviations, and close-out."
+    },
+    {
+      "id": "life_science_background",
+      "domain": "research",
+      "title": "Life science, nursing or healthcare background",
+      "detail": "Most entrants hold a relevant degree or a clinical registration. Employers also recruit from research delivery and laboratory roles."
+    }
+  ],
+
+  "careerEnhancing": [
+    {
+      "id": "site_experience",
+      "domain": "clinical_research",
+      "title": "Experience on the site side of a study",
+      "detail": "Time as a research nurse, trial coordinator or clinical trial administrator is well regarded, because it shows how a protocol actually behaves in a clinic."
+    },
+    {
+      "id": "therapy_area",
+      "domain": "clinical_practice",
+      "title": "Depth in a therapy area",
+      "detail": "Oncology, rare disease and advanced therapies are frequently recruited for and reward specific clinical understanding."
+    },
+    {
+      "id": "quality_evidence",
+      "domain": "quality",
+      "title": "Audit, quality or inspection experience",
+      "detail": "Source data verification and deviation handling are quality activities, so prior audit experience transfers directly."
+    }
+  ],
+
+  "optional": [
+    {
+      "id": "pg_clinical_research",
+      "domain": "clinical_research",
+      "title": "Postgraduate qualification in clinical research",
+      "detail": "Helpful for career changers who need to evidence the subject matter, but not a general expectation for entry."
+    },
+    {
+      "id": "travel",
+      "domain": "",
+      "title": "Willingness to travel to investigator sites",
+      "detail": "Site monitoring has traditionally been a travelling role, though remote and hybrid monitoring models have grown. This is a working-pattern consideration rather than something to develop, so it sits here rather than among the expectations."
+    }
+  ],
+
+  "milestones": [
+    {
+      "id": "gcp",
+      "kind": "development",
+      "domain": "gcp",
+      "title": "Complete recognised GCP training",
+      "meaning": "A current ICH GCP certificate from a course your target employers accept.",
+      "why": "It is the common denominator across sponsor and CRO job descriptions, and usually the cheapest gap to close first.",
+      "action": "Complete a recognised GCP course and keep the certificate current."
+    },
+    {
+      "id": "lifecycle",
+      "kind": "development",
+      "domain": "clinical_research",
+      "title": "Learn the trial lifecycle end to end",
+      "meaning": "Being able to describe what happens from feasibility to close-out, and who is accountable at each step.",
+      "why": "Monitoring decisions only make sense in the context of the whole study.",
+      "action": "Work through a study from protocol to close-out, or shadow a monitoring visit if your organisation runs studies."
+    },
+    {
+      "id": "evidence",
+      "kind": "evidence",
+      "domain": "quality",
+      "title": "Build documented research or quality evidence",
+      "meaning": "Concrete examples: consent processes, data queries, deviations, audits, or coordinating a study visit.",
+      "why": "Employers recruit on demonstrated activity, not on training certificates alone.",
+      "action": "Volunteer for study delivery, data review or audit work, and record what you did."
+    },
+    {
+      "id": "bridge",
+      "kind": "role",
+      "domain": "clinical_research",
+      "title": "Bridge role, or a first monitoring role",
+      "meaning": "A clinical trial administrator, coordinator, in-house CRA or research delivery post.",
+      "why": "Most people reach CRA through one of these rather than directly.",
+      "action": "Target bridge roles in parallel with CRA applications."
+    },
+    {
+      "id": "cra",
+      "kind": "role",
+      "domain": "clinical_research",
+      "title": "Clinical Research Associate",
+      "meaning": "Monitoring assigned investigator sites against the protocol and GCP.",
+      "why": "The destination for this pathway.",
+      "action": "Apply once GCP training and demonstrable research evidence are in place."
+    },
+    {
+      "id": "senior",
+      "kind": "role",
+      "domain": "project_management",
+      "title": "Senior CRA, then trial management",
+      "meaning": "Larger or more complex studies, mentoring monitors, then owning study delivery.",
+      "why": "Shows where the route leads after entry.",
+      "action": "Plan for it, but do not treat it as a step to take now."
+    }
+  ],
+
+  "entryRoutes": [
+    "Research delivery or site-based study coordination, then monitoring",
+    "Clinical trial administrator or in-house CRA within a CRO, then field monitoring",
+    "Clinical or laboratory background plus GCP training and a therapy-area fit"
+  ],
+
+  "bridgeRoles": [
+    "Clinical Trial Administrator",
+    "Clinical Trial Coordinator",
+    "Research Nurse or Clinical Research Practitioner",
+    "In-house or centralised monitor"
+  ],
+
+  "progression": [
+    "Senior Clinical Research Associate",
+    "Clinical Trial Manager",
+    "Clinical Project Manager",
+    "Clinical quality or regulatory roles"
+  ],
+
+  "adjacentCareerIds": ["CP-294", "CP-289", "CP-279", "CP-264", "CP-275", "CP-355"],
+
+  "officialSources": [
+    {
+      "code": "NIHR",
+      "name": "National Institute for Health and Care Research",
+      "url": "https://www.nihr.ac.uk/"
+    },
+    {
+      "code": "GOV-LS",
+      "name": "UK Government - Office for Life Sciences",
+      "url": "https://www.gov.uk/government/organisations/office-for-life-sciences"
+    }
+  ]
+}

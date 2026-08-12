@@ -1,0 +1,154 @@
+{
+  "careerId": "CP-003",
+  "careerTitle": "Biomedical Scientist",
+  "ruleVersion": "1",
+  "requirementsVerified": false,
+  "verifiedDate": "",
+  "notes": "Structural pack only. Biomedical Scientist is a protected title in the UK and practising under it requires registration with the statutory regulator. This pack deliberately does not restate the registration criteria, because they must be read from the regulator directly, can change, and depend on an individual's own qualifications. The pathway therefore raises a 'needs official confirmation' gate and links to the regulator instead. The 'required' list stays empty until a verified requirements review has been completed.",
+
+  "required": [],
+
+  "usuallyExpected": [
+    {
+      "id": "accredited_degree",
+      "domain": "laboratory_science",
+      "title": "An accredited biomedical science degree, or an assessed equivalent",
+      "detail": "Entry normally rests on a degree accredited by the professional body, or on an assessment of equivalence where a degree was not accredited. Confirm what currently counts with the regulator and the professional body before committing to a course.",
+      "sourceCode": "HCPC"
+    },
+    {
+      "id": "registration_portfolio",
+      "domain": "diagnostics",
+      "title": "Completed pre-registration training portfolio",
+      "detail": "A period of assessed laboratory training, evidenced in a portfolio, is the usual route to registration.",
+      "sourceCode": "HCPC"
+    },
+    {
+      "id": "laboratory_practice",
+      "domain": "laboratory_science",
+      "title": "Supervised diagnostic laboratory practice",
+      "detail": "Hands-on analytical work in an accredited clinical laboratory, across the disciplines relevant to the department."
+    },
+    {
+      "id": "quality_systems",
+      "domain": "quality",
+      "title": "Working within an accredited quality system",
+      "detail": "Internal quality control, external quality assessment, document control and incident reporting are day-to-day expectations in a clinical laboratory."
+    }
+  ],
+
+  "careerEnhancing": [
+    {
+      "id": "specialist_qualification",
+      "domain": "pathology",
+      "title": "Specialist portfolio or postgraduate qualification",
+      "detail": "Specialist-level qualifications and portfolios are how progression beyond the entry grade is usually evidenced."
+    },
+    {
+      "id": "training_others",
+      "domain": "education",
+      "title": "Training and competency assessment of others",
+      "detail": "Assessing colleagues against competency frameworks becomes an expectation as staff become senior."
+    },
+    {
+      "id": "audit",
+      "domain": "quality",
+      "title": "Audit and service improvement",
+      "detail": "Leading an audit and closing the loop on the findings is strong evidence for senior and quality roles."
+    }
+  ],
+
+  "optional": [
+    {
+      "id": "research",
+      "domain": "research",
+      "title": "Research, evaluation or method development",
+      "detail": "Valuable for consultant-level and academic-facing routes, and for moves into industry."
+    }
+  ],
+
+  "milestones": [
+    {
+      "id": "confirm_route",
+      "kind": "gate",
+      "domain": "diagnostics",
+      "title": "Confirm the current registration route with the regulator",
+      "meaning": "Establishing, from the regulator itself, which route applies to your qualifications and what it requires today.",
+      "why": "The title is protected. Route requirements are set by the regulator, can change, and depend on your specific background.",
+      "action": "Check your position with the statutory regulator and the professional body before enrolling on anything.",
+      "sourceCode": "HCPC"
+    },
+    {
+      "id": "academic",
+      "kind": "development",
+      "domain": "laboratory_science",
+      "title": "Hold or obtain the required academic base",
+      "meaning": "An accredited degree, or a formal assessment of equivalence.",
+      "why": "It is the foundation the training portfolio is built on.",
+      "action": "Confirm the accreditation status of your degree, and the equivalence process if it is not accredited.",
+      "sourceCode": "HCPC"
+    },
+    {
+      "id": "portfolio",
+      "kind": "development",
+      "domain": "diagnostics",
+      "title": "Complete assessed pre-registration training",
+      "meaning": "A period of supervised laboratory training, assessed against a portfolio.",
+      "why": "It is how competence is demonstrated for registration.",
+      "action": "Secure a training post in an approved laboratory."
+    },
+    {
+      "id": "register",
+      "kind": "gate",
+      "domain": "diagnostics",
+      "title": "Registration with the statutory regulator",
+      "meaning": "Being on the register, which is what permits practice under the protected title.",
+      "why": "Without it the protected title cannot lawfully be used.",
+      "action": "Apply once the route requirements are met and confirmed.",
+      "sourceCode": "HCPC"
+    },
+    {
+      "id": "specialise",
+      "kind": "development",
+      "domain": "pathology",
+      "title": "Specialist practice in a discipline",
+      "meaning": "Depth in one or more pathology disciplines, evidenced by a specialist portfolio or qualification.",
+      "why": "It is the usual basis for progression beyond the entry grade.",
+      "action": "Plan a specialist portfolio with your training lead."
+    }
+  ],
+
+  "entryRoutes": [
+    "Accredited biomedical science degree with an integrated placement, then registration",
+    "Non-accredited degree plus assessed equivalence, then a training post",
+    "Support-grade laboratory role with part-time accredited study"
+  ],
+
+  "bridgeRoles": [
+    "Medical Laboratory Assistant",
+    "Associate Practitioner",
+    "Trainee Biomedical Scientist"
+  ],
+
+  "progression": [
+    "Specialist Biomedical Scientist",
+    "Senior Biomedical Scientist",
+    "Lead Biomedical Scientist",
+    "Laboratory Manager or Consultant Biomedical Scientist"
+  ],
+
+  "adjacentCareerIds": ["CP-046", "CP-044", "CP-031", "CP-197", "CP-204", "CP-019"],
+
+  "officialSources": [
+    {
+      "code": "HCPC",
+      "name": "Health and Care Professions Council - the professions it regulates",
+      "url": "https://www.hcpc-uk.org/about-us/who-we-regulate/the-professions/"
+    },
+    {
+      "code": "NSHCS",
+      "name": "National School of Healthcare Science",
+      "url": "https://nshcs.hee.nhs.uk/"
+    }
+  ]
+}
