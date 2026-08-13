@@ -27,7 +27,7 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from ..cache import FetchError, fetch_json, fetch_text
+from ..cache import FetchError, fetch_json, fetch_text, fetched_at
 
 INDEX_URL = "https://nationalcareers.service.gov.uk/explore-careers/all-careers"
 PROFILE_BASE = "https://nationalcareers.service.gov.uk/job-profiles/"
@@ -62,6 +62,9 @@ class Profile:
     alternative_titles: list[str] = field(default_factory=list)
     soc_code: str = ""
     access_route: str = "NCS_PUBLIC_PROFILE"
+    #: When the source was genuinely last retrieved — a cache hit keeps the date
+    #: of the original fetch, so a record cannot look fresher than its evidence.
+    retrieved_at: str = ""
 
     def has_salary(self) -> bool:
         return (self.salary_starter is not None
@@ -142,7 +145,10 @@ class PublicProvider:
             body = fetch_text(url, refresh=self.refresh, offline=self.offline)
         except FetchError:
             return None
-        return parse_public_profile(slug, title, url, body)
+        parsed = parse_public_profile(slug, title, url, body)
+        if parsed is not None:
+            parsed.retrieved_at = fetched_at(url) or ""
+        return parsed
 
 
 def parse_public_profile(slug: str, title: str, url: str,

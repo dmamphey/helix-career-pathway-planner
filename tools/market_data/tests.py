@@ -15,6 +15,7 @@ only, and the refresh workflow fails if that ever stops being true.
 
 from __future__ import annotations
 
+import datetime as dt
 import json
 import os
 import re
@@ -27,7 +28,10 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 from market_data import derive                                    # noqa: E402
 from market_data.providers.ncs import parse_public_profile        # noqa: E402
-from market_data.resolver import _round_range, qualitative_work_life  # noqa: E402
+from market_data.report import _alias_candidates, _qualifier_note  # noqa: E402
+from market_data.resolver import (                                # noqa: E402
+    _review_due, _round_range, _verified_on, qualitative_work_life,
+)
 from market_data.title_matcher import (                           # noqa: E402
     content_tokens, match_career, normalise,
 )
@@ -435,6 +439,119 @@ class PublishedData(unittest.TestCase):
 
 
 # ---------------------------------------------------------------- validation
+
+class Freshness(unittest.TestCase):
+    """A record must not look fresher than the evidence behind it.
+
+    The bug these pin down: every date was stamped with the date the script ran,
+    including on offline runs that fetch nothing. Re-running the pipeline made
+    every record look freshly verified, so `next_review_due` never arrived and the
+    stale-data warning could never fire.
+    """
+
+    def test_a_sourced_record_is_dated_by_its_source_not_the_run(self):
+        salary = {"source_records": [{"retrieved_at": "2020-01-01"}]}
+        self.assertEqual(_verified_on(salary), "2020-01-01")
+
+    def test_the_oldest_source_wins_when_there_are_several(self):
+        salary = {"source_records": [{"retrieved_at": "2024-06-01"},
+                                     {"retrieved_at": "2020-01-01"}]}
+        self.assertEqual(_verified_on(salary), "2020-01-01")
+
+    def test_a_derived_record_with_no_source_is_dated_today(self):
+        today = dt.date.today().isoformat()
+        self.assertEqual(_verified_on({"source_records": []}), today)
+
+    def test_review_is_counted_from_the_evidence_date(self):
+        due = _review_due("ncs_career_specific", "2020-01-01")
+        self.assertEqual(due, "2020-06-29")          # 2020-01-01 plus 180 days
+        self.assertLess(due, dt.date.today().isoformat(),
+                        "an old source should already be due for review")
+
+    def test_a_malformed_date_falls_back_rather_than_crashing(self):
+        self.assertTrue(_review_due("ncs_career_specific", "not-a-date"))
+
+    def test_published_records_are_dated_by_their_evidence(self):
+        for record in PUBLISHED["records"]:
+            salary = record["salary"]
+            sources = [s.get("retrieved_at") for s in salary["source_records"]
+                       if s.get("retrieved_at")]
+            if not sources:
+                continue
+            with self.subTest(career=record["career_id"]):
+                self.assertEqual(salary["last_verified"], min(sources),
+                                 "a sourced record is dated later than its source")
+
+    def test_no_record_claims_a_retrieval_date_in_the_future(self):
+        today = dt.date.today().isoformat()
+        for record in PUBLISHED["records"]:
+            for source in record["salary"]["source_records"]:
+                with self.subTest(career=record["career_id"]):
+                    self.assertLessEqual(source.get("retrieved_at", ""), today)
+
+    def test_review_dates_follow_from_verification_dates(self):
+        for record in PUBLISHED["records"]:
+            salary = record["salary"]
+            with self.subTest(career=record["career_id"]):
+                self.assertGreater(salary["next_review_due"],
+                                   salary["last_verified"],
+                                   "a record is due for review before it was "
+                                   "verified")
+
+
+class AliasCandidates(unittest.TestCase):
+    """The curation worklist has to warn where the score is misleading."""
+
+    def test_a_dropped_setting_word_is_flagged(self):
+        note = _qualifier_note("Clinical Photographer", "Photographer")
+        self.assertIn("clinical", note)
+        self.assertIn("one occupation", note)
+
+    def test_a_genuine_sub_specialism_is_not_flagged(self):
+        # "Biochemistry" is a content word, not a setting word: the score is
+        # already below 1.00 and the reviewer needs no extra warning.
+        self.assertEqual(
+            _qualifier_note("Biochemistry Laboratory Technician",
+                            "Laboratory technician"), "")
+
+    def test_an_employer_prefix_is_flagged_too(self):
+        self.assertIn("nhs", _qualifier_note("NHS Biomedical Scientist",
+                                             "Biomedical scientist"))
+
+    def test_identical_titles_carry_no_warning(self):
+        self.assertEqual(_qualifier_note("Biochemist", "Biochemist"), "")
+
+    def test_the_worklist_excludes_seniority_variants(self):
+        """Aliasing one would reintroduce, by hand, the bug the matcher prevents."""
+        class FakeResolver:
+            match_log = [
+                {"career_id": "CP-900", "career_title": "Senior Biomedical Scientist",
+                 "profile_slug": "biomedical-scientist",
+                 "profile_title": "Biomedical scientist",
+                 "match_method": "seniority_variant_rejected", "match_score": 1.0},
+                {"career_id": "CP-007", "career_title": "Clinical Biochemist",
+                 "profile_slug": "biochemist", "profile_title": "Biochemist",
+                 "match_method": "review_candidate", "match_score": 1.0},
+            ]
+
+        lines = "\n".join(_alias_candidates(
+            [{"career_id": "CP-007",
+              "salary": {"evidence_quality": "INDICATIVE"}}], FakeResolver()))
+        self.assertIn("Clinical Biochemist", lines)
+        self.assertNotIn("Senior Biomedical Scientist", lines)
+
+    def test_the_alias_file_is_valid_and_starts_empty(self):
+        path = ROOT / "data" / "reference" / "ncs_career_aliases.json"
+        self.assertTrue(path.exists(), "the alias file is missing")
+        data = json.loads(path.read_text(encoding="utf-8"))
+        self.assertIsInstance(data.get("aliases"), dict)
+        for key, value in data["aliases"].items():
+            with self.subTest(alias=key):
+                self.assertEqual(key, normalise(key),
+                                 "an alias key is not a normalised title")
+                self.assertIsInstance(value, str)
+                self.assertTrue(value, "an alias maps to an empty slug")
+
 
 class Validation(unittest.TestCase):
     """The validator has to fail on data the resolver would never produce.

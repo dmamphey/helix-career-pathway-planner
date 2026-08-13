@@ -49,9 +49,33 @@ def _today() -> str:
     return dt.date.today().isoformat()
 
 
-def _review_due(method: str) -> str:
+def _review_due(method: str, verified: str = "") -> str:
+    """When this record next needs looking at, counted from its evidence date."""
     days = REVIEW_DAYS.get(method, 180)
-    return (dt.date.today() + dt.timedelta(days=days)).isoformat()
+    try:
+        start = dt.date.fromisoformat(verified) if verified else dt.date.today()
+    except ValueError:
+        start = dt.date.today()
+    return (start + dt.timedelta(days=days)).isoformat()
+
+
+def _verified_on(salary: dict) -> str:
+    """The date the evidence behind a salary was actually obtained.
+
+    For a direct source it is the date that source was retrieved, which a cache
+    hit preserves from the original fetch. For a derived estimate there is no
+    fetch: the computation happened now, over anchors that carry their own dates,
+    so the run date is the honest answer for the derivation itself.
+
+    The distinction matters because it is what keeps `next_review_due` meaningful.
+    Dating everything "today" on every run — including offline runs that contact
+    nobody — would mean no record ever became due for review, and the stale-data
+    warning the interface shows would never fire.
+    """
+    dates = [record.get("retrieved_at") for record
+             in salary.get("source_records", [])
+             if record.get("retrieved_at")]
+    return min(dates) if dates else _today()
 
 
 def _round_range(low: float, high: float) -> tuple[float, float]:
@@ -148,7 +172,7 @@ class Resolver:
                     "source_url": profile.url,
                     "source_profile_id": profile.slug,
                     "source_title": profile.title,
-                    "retrieved_at": _today(),
+                    "retrieved_at": profile.retrieved_at or _today(),
                     "license": LICENCE,
                     "fields_used": ["salary", "hours", "description"],
                 }],
@@ -193,7 +217,7 @@ class Resolver:
                 "source_code": ("NCS_API" if profile.access_route == "NCS_API"
                                 else "NCS_PUBLIC_PROFILE"),
                 "source_url": profile.url,
-                "retrieved_at": _today(),
+                "retrieved_at": profile.retrieved_at or _today(),
                 "license": LICENCE,
                 "fields_used": ["hours", "work_patterns"],
             }] if profile.hours_min or profile.work_patterns else [],
@@ -345,8 +369,13 @@ class Resolver:
             "evidence_quality": salary.get("evidence_quality", "PENDING"),
             "confidence_score": salary.get("confidence_score"),
             "source_records": salary.get("source_records", []),
-            "last_verified": _today(),
-            "next_review_due": _review_due(salary.get("estimate_method") or ""),
+            # The date the *evidence* was obtained, not the date this script ran.
+            # A run that answered entirely from cache retrieved nothing, and
+            # stamping it with today would make every record permanently fresh and
+            # silently disable the review-due mechanism.
+            "last_verified": _verified_on(salary),
+            "next_review_due": _review_due(salary.get("estimate_method") or "",
+                                           _verified_on(salary)),
             "methodology_notes": salary.get("methodology_notes", []),
         }
         if salary.get("estimate_method") == "related_career_derived":

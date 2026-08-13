@@ -11,6 +11,7 @@ published static file and contacts nobody.
 
 from __future__ import annotations
 
+import datetime as dt
 import hashlib
 import json
 import time
@@ -79,6 +80,23 @@ def fetch_text(url: str, *, headers: dict | None = None, refresh: bool = False,
 
 def fetch_json(url: str, **kwargs) -> dict:
     return json.loads(fetch_text(url, **kwargs))
+
+
+def fetched_at(url: str, suffix: str = ".txt") -> str | None:
+    """The date this URL was actually last retrieved, or None if never.
+
+    Read from the cache file's modification time, because the alternative — using
+    the date of the *run* — quietly breaks the freshness mechanism. An offline
+    run, or any run that gets a cache hit, fetches nothing; stamping it with
+    today's date would make every record look freshly verified for ever and
+    guarantee that nothing is ever flagged for review. A record's age should
+    reflect when somebody last looked at the source, not when a script last read
+    its own cache.
+    """
+    path = _cache_path(url, suffix)
+    if not path.exists():
+        return None
+    return dt.date.fromtimestamp(path.stat().st_mtime).isoformat()
 
 
 def cached_count() -> int:

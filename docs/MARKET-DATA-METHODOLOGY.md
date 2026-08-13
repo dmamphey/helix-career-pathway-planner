@@ -175,6 +175,15 @@ substantial share of today's Limited-data estimates into career-specific
 evidence. Each alias is a judgement a person has to make, which is why they are
 not generated automatically.
 
+`docs/MARKET-DATA-AUDIT.md` lists the 42 careers currently one decision away,
+each with the profile it nearly matched. Two warnings apply to that list. A high
+score is not agreement: matching ignores setting words like *clinical* and
+*healthcare*, so *Clinical Photographer* and *Photographer* both reduce to the
+same tokens and score 1.00 while plainly being different jobs — those rows are
+flagged. And seniority variants are excluded entirely, because aliasing *Senior
+Biomedical Scientist* to the entry-grade profile would publish a starter salary
+as fact about a senior post.
+
 ---
 
 ## 6. Working life: hours, patterns and the inferred measures
@@ -212,6 +221,14 @@ fastest way to make everything else on the page untrustworthy.
 
 Every record carries the date it was last checked and a date it is next due for
 review.
+
+"Last checked" means **the date the evidence was obtained**, not the date the
+pipeline last ran. A record whose salary came from a National Careers Service
+profile is dated the day that page was actually fetched, and re-running the
+pipeline against its local cache does not move that date forward — otherwise
+every record would look permanently fresh and nothing would ever be flagged for
+review. Only a derived estimate carries the date of the run, because the
+derivation genuinely is the thing that happened that day.
 
 | Source | Review interval |
 |---|---|
