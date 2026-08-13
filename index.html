@@ -70,6 +70,11 @@
   </div>
 </main>
 
+<!-- The comparison tray. Outside <main> so a selection survives navigation, and
+     polite rather than assertive so it never steals focus mid-task. -->
+<div id="compare-tray" class="tray" role="region" aria-label="Career comparison"
+     aria-live="polite" hidden></div>
+
 <footer class="site-foot">
   <p class="disclaimer">
     Helix Career Pathway Planner provides career-development guidance and

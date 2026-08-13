@@ -36,6 +36,8 @@ export async function render(app) {
             careerCard(career, {
               match: app.hasProfile() ? app.matchFor(career) : null,
               saved: true,
+              comparing: app.isComparing(career.id),
+              onCompare: (id) => { app.toggleCompare(id); draw(); },
               onSave: () => {
                 app.toggleSaved(career.id);
                 selected.delete(career.id);

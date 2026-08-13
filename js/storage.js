@@ -12,6 +12,7 @@
  */
 
 import { normaliseProfile } from "./profile.js";
+import { normaliseIds } from "./comparison.js";
 
 /*
  * The key keeps its original name through the rename to Helix Career Pathway
@@ -31,6 +32,7 @@ export function emptyState() {
     profile: null,
     targetCareerId: null,
     savedCareerIds: [],
+    compareCareerIds: [],
     progress: {},
     settings: { jurisdictionAcknowledged: false, onboarded: false },
   };
@@ -119,6 +121,10 @@ function coerce(input) {
     .filter(isCareerId)
     .filter((id, index, all) => all.indexOf(id) === index)
     .slice(0, 24);
+  // Added after launch. Absent in state saved by an earlier version, which is why
+  // it defaults to empty rather than being required: a migration must never
+  // discard a profile because a newer field is missing.
+  base.compareCareerIds = normaliseIds(input.compareCareerIds);
 
   const progress = (input.progress && typeof input.progress === "object")
     ? input.progress : {};

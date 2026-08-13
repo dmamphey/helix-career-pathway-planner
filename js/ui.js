@@ -8,6 +8,7 @@
  */
 
 import { GAP_STATUS } from "./gap-engine.js";
+import * as market from "./market-data.js";
 import { MILESTONE_STATUS } from "./pathway-engine.js";
 
 /** Minimal element builder. Props starting with "on" become listeners. */
@@ -129,7 +130,10 @@ export function depthBadge(career) {
  * a career looks the same wherever it appears.
  */
 export function careerCard(career, options = {}) {
-  const tags = (career.core_tags || []).slice(0, 5);
+  const tags = (career.core_tags || []).slice(0, 4);
+  const pay = market.salary(career.id);
+  const work = market.workLife(career.id);
+
   return h("article", { class: "card career-card" }, [
     h("div", { class: "card-head" }, [
       h("h3", {}, [link(career.title, `#/career/${career.id}`,
@@ -137,14 +141,34 @@ export function careerCard(career, options = {}) {
       options.match ? alignmentBadge(options.match) : null,
     ]),
     h("p", { class: "card-family", text: career.family }),
+
+    // Salary leads, because it is the fact people came for. The evidence label
+    // travels with the number so a broad estimate is never read as a published
+    // range.
+    pay
+      ? h("p", { class: "card-pay" }, [
+          h("strong", { text: pay.range }),
+          h("span", { class: "hint", text: ` a year · ${pay.geography}` }),
+          evidenceBadge(pay),
+        ])
+      : h("p", { class: "hint", text: "Salary data not available" }),
+
+    work && work.hours
+      ? h("p", { class: "hint", text: work.hours })
+      : null,
+
     h("div", { class: "badges" }, [
       regulationBadge(career),
-      depthBadge(career),
+      options.effort ? effortBadge(options.effort) : null,
+      options.fit ? fitBadge(options.fit) : null,
     ]),
     h("ul", { class: "tags" }, tags.map((tag) => h("li", {}, chip(tag)))),
     options.note ? h("p", { class: "hint", text: options.note }) : null,
+    options.why ? h("p", { class: "card-why", text: options.why }) : null,
+
     h("div", { class: "card-actions" }, [
-      link("Explore career", `#/career/${career.id}`, { class: "btn btn-quiet" }),
+      link("View career", `#/career/${career.id}`, { class: "btn btn-quiet" }),
+      options.onCompare ? compareToggle(career, options) : null,
       options.onSave
         ? button(options.saved ? "Saved ✓" : "Save", options.onSave,
                  { variant: "quiet", pressed: Boolean(options.saved) })
@@ -152,6 +176,41 @@ export function careerCard(career, options = {}) {
       options.extra || null,
     ]),
   ]);
+}
+
+/**
+ * The compare control.
+ *
+ * A toggle rather than a link, with `aria-pressed`, because it changes state
+ * rather than navigating. Saving is not a prerequisite: this works straight from
+ * a card.
+ */
+export function compareToggle(career, options) {
+  const on = Boolean(options.comparing);
+  return button(on ? "Comparing ✓" : "Compare", () => options.onCompare(career.id),
+                { variant: on ? "primary" : "quiet", pressed: on });
+}
+
+/** Salary evidence, as a word plus a tooltip. Never colour alone. */
+export function evidenceBadge(pay) {
+  return h("span", {
+    class: `evidence evidence-${pay.evidenceKey.toLowerCase()}`,
+    title: `${pay.evidenceLabel}: ${pay.evidenceExplain}`,
+  }, [
+    h("span", { "aria-hidden": "true", text: pay.evidenceRank === 0 ? "◆" : "◇" }),
+    h("span", { text: pay.evidenceLabel }),
+    pay.stale ? h("span", { class: "hint", text: " · due review" }) : null,
+  ]);
+}
+
+export function effortBadge(effort) {
+  return h("span", { class: `effort effort-${effort.key}`,
+                     title: effort.explain || "" }, effort.label);
+}
+
+export function fitBadge(fit) {
+  return h("span", { class: `fit fit-${fit.key}`, title: fit.explain || "" },
+           fit.label);
 }
 
 /** An accessible modal dialog. Focus is trapped by the native dialog element. */

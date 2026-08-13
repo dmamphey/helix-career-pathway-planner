@@ -628,3 +628,78 @@ ul.plain, ol.plain { list-style: none; padding: 0; margin: 0; }
   .node:not(:last-child)::before { left: .95rem; }
   .node-marker { width: 1.9rem; height: 1.9rem; font-size: .9rem; }
 }
+
+/* --------------------------------------------------- salary, evidence, tray */
+
+.card-pay { margin: .1rem 0 .2rem; display: flex; flex-wrap: wrap;
+            gap: .25rem .45rem; align-items: baseline; }
+.card-pay strong { font-size: 1.06rem; color: var(--brand-navy); }
+.card-why { font-size: .88rem; color: var(--muted); font-style: italic; }
+
+/* Evidence class is text plus a shape, never colour alone. */
+.evidence {
+  display: inline-flex; align-items: center; gap: .3rem;
+  font-size: .74rem; font-weight: 700; border-radius: 999px;
+  padding: .1rem .5rem; border: 1px solid var(--line); background: #f4f6f9;
+  color: var(--muted); white-space: nowrap;
+}
+.evidence-verified_guide { background: var(--good-bg); border-color: var(--good-line); color: var(--good); }
+.evidence-strong_estimate { background: #e8f3fb; border-color: #b3d7ee; color: var(--brand-blue-dark); }
+.evidence-indicative { background: var(--warn-bg); border-color: var(--warn-line); color: var(--warn); }
+.evidence-limited_data { background: #f1f3f6; border-color: #d3d9e0; color: #4a5563; }
+
+.effort, .fit {
+  display: inline-flex; align-items: center; border-radius: 999px;
+  padding: .18rem .6rem; font-size: .78rem; font-weight: 700;
+  border: 1px solid var(--line); background: #f4f6f9; color: var(--muted);
+}
+
+/* The salary bar. Decoration over a number that is always readable in text. */
+.pay-line { display: flex; flex-wrap: wrap; gap: .3rem .5rem; align-items: baseline;
+            margin: 0 0 .35rem; }
+.pay-track { height: .5rem; background: #e7ecf2; border-radius: 999px; margin: 0 0 .35rem; }
+.pay-bar { height: 100%; background: var(--brand-cyan); border-radius: 999px; }
+.compare-row { padding: .8rem 0; border-top: 1px solid var(--line); }
+.compare-row:first-child { border-top: 0; }
+.compare-row h3 { margin: 0 0 .3rem; font-size: 1rem; }
+.standout { margin: 0 0 .6rem; padding-left: 1.2rem; }
+.standout li { margin-bottom: .45rem; }
+
+/* The persistent comparison tray. */
+.tray {
+  position: sticky; bottom: 0; z-index: 5;
+  background: var(--panel); border-top: 2px solid var(--brand-blue);
+  box-shadow: 0 -2px 14px rgba(16, 39, 66, .12);
+}
+.tray-inner {
+  max-width: var(--max); margin: 0 auto; padding: .7rem 1rem;
+  display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center;
+}
+.tray-count { margin: 0; }
+.tray-chips { list-style: none; display: flex; flex-wrap: wrap; gap: .35rem;
+              padding: 0; margin: 0; flex: 1 1 12rem; }
+.tray-actions { display: flex; gap: .5rem; margin-left: auto; }
+
+/* Comparison grid: a table when there is room, labelled stacks when there is not. */
+.compare-grid th[scope="row"] { width: 12rem; }
+@media (max-width: 46rem) {
+  .compare-grid { min-width: 0; }
+  .compare-grid thead { display: none; }
+  .compare-grid, .compare-grid tbody, .compare-grid tr, .compare-grid th,
+  .compare-grid td { display: block; width: auto; }
+  .compare-grid tr { border-bottom: 2px solid var(--line); padding-bottom: .5rem;
+                     margin-bottom: .6rem; }
+  .compare-grid th[scope="row"] { width: auto; font-size: .95rem;
+                                  color: var(--brand-navy); border: 0;
+                                  padding-bottom: .2rem; }
+  /* Each cell names its own career, since the header row is gone. */
+  .compare-grid td::before {
+    content: attr(data-career); display: block; font-size: .78rem;
+    text-transform: uppercase; letter-spacing: .05em; color: var(--muted);
+    font-weight: 700;
+  }
+  .compare-grid td { border-bottom: 1px solid var(--line); padding: .4rem .6rem; }
+  .tray-inner { padding: .6rem .75rem; }
+  .tray-actions { margin-left: 0; width: 100%; }
+  .tray-actions .btn { flex: 1 1 auto; }
+}

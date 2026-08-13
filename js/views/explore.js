@@ -46,6 +46,8 @@ export async function renderExplorer(app) {
               careerCard(career, {
                 match: app.hasProfile() ? app.matchFor(career) : null,
                 saved: app.isSaved(career.id),
+                comparing: app.isComparing(career.id),
+                onCompare: (id) => { app.toggleCompare(id); draw(); },
                 onSave: () => {
                   app.toggleSaved(career.id);
                   draw();
@@ -197,6 +199,8 @@ export async function renderMatches(app) {
                   careerCard(match.career, {
                     match,
                     saved: app.isSaved(match.careerId),
+                    comparing: app.isComparing(match.careerId),
+                    onCompare: (id) => { app.toggleCompare(id); draw(); },
                     onSave: () => { app.toggleSaved(match.careerId); draw(); },
                     extra: link("Build pathway", `#/pathway/${match.careerId}`,
                                 { class: "btn btn-quiet" }),

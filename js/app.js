@@ -10,13 +10,17 @@
 import * as router from "./router.js";
 import * as storage from "./storage.js";
 import { loadCareers, sourcesFor } from "./career-data.js";
+import * as market from "./market-data.js";
+import * as comparison from "./comparison.js";
 import { normaliseProfile } from "./profile.js";
 import { rankCareers, scoreCareer } from "./matcher.js";
 import { analyseGaps } from "./gap-engine.js";
 import { buildPathway } from "./pathway-engine.js";
 import { nextActions } from "./action-engine.js";
 import { loadRulePack } from "./rules.js";
-import { clear, errorPanel, clearNotice, notice, button } from "./ui.js";
+import {
+  clear, errorPanel, clearNotice, notice, button, h, link,
+} from "./ui.js";
 
 import * as homeView from "./views/home.js";
 import * as onboardingView from "./views/onboarding.js";
@@ -27,6 +31,7 @@ import * as pathwayView from "./views/pathway.js";
 import * as savedView from "./views/saved.js";
 import * as planView from "./views/plan.js";
 import * as dataView from "./views/data.js";
+import * as compareView from "./views/compare.js";
 
 /**
  * The application object passed to every view.
@@ -103,6 +108,42 @@ export const app = {
     return sourcesFor(career, this.catalogue.sources);
   },
 
+  /* --- comparison, which is a working set rather than a bookmark ---------- */
+
+  compareIds() {
+    return this.state.compareCareerIds || [];
+  },
+
+  isComparing(careerId) {
+    return this.compareIds().includes(careerId);
+  },
+
+  /**
+   * Add or remove a career from the comparison.
+   *
+   * Returns the action so the caller can explain a refusal: being told nothing
+   * when a fifth career will not fit is worse than being told why.
+   */
+  toggleCompare(careerId) {
+    const result = comparison.toggle(this.compareIds(), careerId);
+    if (result.action === "full") {
+      notice(result.message, "warn");
+      return result;
+    }
+    this.state.compareCareerIds = result.ids;
+    this.persist();
+    renderTray(this);
+    return result;
+  },
+
+  clearCompare() {
+    this.state.compareCareerIds = [];
+    this.persist();
+    renderTray(this);
+  },
+
+  market,
+
   isSaved(careerId) {
     return this.state.savedCareerIds.includes(careerId);
   },
@@ -155,7 +196,8 @@ const VIEWS = [
   ["/career/:id", careerView.render],
   ["/pathway/:id", pathwayView.render],
   ["/saved", savedView.render],
-  ["/compare", savedView.renderCompare],
+  ["/compare", compareView.render],
+  ["/compare/:ids", compareView.render],
   ["/plan/:id", planView.render],
   ["/data", dataView.render],
 ];
@@ -190,6 +232,55 @@ function markActiveNav() {
   }
 }
 
+/* --------------------------------------------------------------------- tray */
+
+/**
+ * The persistent comparison tray.
+ *
+ * Lives outside `#view`, so a selection made in the explorer is still there after
+ * opening a career and coming back. It announces its own count politely rather
+ * than stealing focus, and it hides itself entirely when nothing is selected so it
+ * never covers content for no reason.
+ */
+function renderTray(instance) {
+  const host = document.getElementById("compare-tray");
+  if (!host) return;
+  const ids = instance.compareIds();
+  clear(host);
+  host.hidden = ids.length === 0;
+  if (!ids.length) return;
+
+  const careers = ids.map((id) => instance.catalogue.get(id)).filter(Boolean);
+  const ready = comparison.canCompare(ids);
+
+  host.appendChild(h("div", { class: "tray-inner" }, [
+    h("p", { class: "tray-count" }, [
+      h("strong", { text: careers.length === 1
+        ? `${careers[0].title} selected`
+        : `${careers.length} careers selected` }),
+      h("span", { class: "hint", text: ready
+        ? ` · up to ${comparison.MAX_COMPARE}`
+        : " · add another to compare" }),
+    ]),
+    h("ul", { class: "tray-chips" }, careers.map((career) =>
+      h("li", { class: "chip chip-removable" }, [
+        h("span", { text: career.title }),
+        h("button", { type: "button", class: "chip-remove",
+          "aria-label": `Remove ${career.title} from the comparison`,
+          onClick: () => instance.toggleCompare(career.id) }, "×"),
+      ]))),
+    h("div", { class: "tray-actions" }, [
+      button("Clear", () => instance.clearCompare(), { variant: "quiet" }),
+      ready
+        ? link("Compare now", `#${comparison.routeFor(ids)}`,
+               { class: "btn btn-primary" })
+        : link("Find another career", "#/explore", { class: "btn" }),
+    ]),
+  ]));
+}
+
+export { renderTray };
+
 /* --------------------------------------------------------------------- boot */
 
 async function boot() {
@@ -205,6 +296,14 @@ async function boot() {
     return;
   }
 
+  // Salary data is additive: if it fails to load the taxonomy, matching,
+  // pathways and gaps all still work, so a failure degrades rather than blocks.
+  await market.loadMarketData();
+  const marketStatus = market.status();
+  if (!marketStatus.ok) {
+    notice(marketStatus.message, "warn");
+  }
+
   app.state = storage.load();
   // Progress is keyed by career id, so a dataset upgrade keeps it. Record which
   // version the current progress was built against.
@@ -217,7 +316,8 @@ async function boot() {
   app.persist();
 
   document.getElementById("dataset-note").textContent =
-    `${app.catalogue.count} UK careers · dataset v${app.catalogue.meta.version}`;
+    `${app.catalogue.count} UK careers · dataset v${app.catalogue.meta.version}`
+    + (marketStatus.ok ? ` · salary data v${marketStatus.meta.version}` : "");
 
   for (const [pattern, view] of VIEWS) {
     router.route(pattern, (context) => show(view, context));
@@ -229,6 +329,7 @@ async function boot() {
     {}));
 
   router.start();
+  renderTray(app);
 }
 
 document.addEventListener("DOMContentLoaded", boot);

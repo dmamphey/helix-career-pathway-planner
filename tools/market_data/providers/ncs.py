@@ -31,7 +31,15 @@ from ..cache import FetchError, fetch_json, fetch_text
 
 INDEX_URL = "https://nationalcareers.service.gov.uk/explore-careers/all-careers"
 PROFILE_BASE = "https://nationalcareers.service.gov.uk/job-profiles/"
-API_BASE = "https://api.nationalcareers.service.gov.uk/job-profiles/v1"
+# The gateway host is documented, but the API's path segment is only visible on the
+# API's own page in the developer portal, which requires a sign-in. It is therefore
+# configuration rather than a constant: set NCS_API_BASE to the base URL shown in
+# the portal's example request, e.g.
+#   NCS_API_BASE=https://api.nationalcareers.service.gov.uk/<path>/<version>
+# Nothing here guesses it — an unconfigured base leaves the API provider inert.
+API_BASE = os.environ.get(
+    "NCS_API_BASE",
+    "https://api.nationalcareers.service.gov.uk/job-profiles/v1").rstrip("/")
 
 LICENCE = "Open Government Licence v3.0"
 INDEX_FILE = (Path(__file__).resolve().parent.parent
