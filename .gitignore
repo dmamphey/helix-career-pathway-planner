@@ -9,3 +9,6 @@ __pycache__/
 # repository, so the document libraries have to be committed for the deployed app
 # to read a CV without contacting a third-party CDN. Fetch them with:
 #   python tools/fetch_libraries.py
+
+# Enrichment pipeline HTTP cache: rebuildable, not source.
+tools/market_data/.cache/

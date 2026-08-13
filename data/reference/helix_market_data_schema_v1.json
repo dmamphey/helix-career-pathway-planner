@@ -1,0 +1,346 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Helix UK Market Data Record",
+  "type": "object",
+  "required": [
+    "career_id",
+    "title",
+    "family",
+    "salary",
+    "work_life",
+    "role",
+    "mapping",
+    "enrichment"
+  ],
+  "properties": {
+    "career_id": {
+      "type": "string",
+      "pattern": "^CP-[0-9]{3}$"
+    },
+    "title": {
+      "type": "string"
+    },
+    "family": {
+      "type": "string"
+    },
+    "salary": {
+      "type": "object",
+      "required": [
+        "currency",
+        "period",
+        "geography",
+        "typical_low",
+        "typical_high",
+        "estimate_method",
+        "evidence_quality",
+        "source_records"
+      ],
+      "properties": {
+        "currency": {
+          "const": "GBP"
+        },
+        "period": {
+          "const": "year"
+        },
+        "geography": {
+          "type": "string"
+        },
+        "starter": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "experienced": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "median": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "typical_low": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "typical_high": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "estimate_method": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "evidence_quality": {
+          "enum": [
+            "VERIFIED_GUIDE",
+            "STRONG_ESTIMATE",
+            "INDICATIVE",
+            "LIMITED_DATA",
+            "PENDING"
+          ]
+        },
+        "confidence_score": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "source_records": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "last_verified": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "next_review_due": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "methodology_notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "work_life": {
+      "type": "object",
+      "properties": {
+        "hours_min": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "hours_max": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "work_patterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "work_settings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "remote_potential": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "variable",
+            "unknown"
+          ]
+        },
+        "travel": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "variable",
+            "unknown"
+          ]
+        },
+        "patient_contact": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "variable",
+            "unknown"
+          ]
+        },
+        "laboratory_intensity": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "variable",
+            "unknown"
+          ]
+        },
+        "research_intensity": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "variable",
+            "unknown"
+          ]
+        },
+        "commercial_intensity": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "variable",
+            "unknown"
+          ]
+        },
+        "source_records": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "role": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "summary_kind": {
+          "enum": [
+            "official_or_authoritative",
+            "taxonomy_fallback",
+            "pending"
+          ]
+        },
+        "alternative_titles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "progression": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "source_records": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "mapping": {
+      "type": "object",
+      "properties": {
+        "ncs_profile_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ncs_title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "soc2020_code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "soc2020_title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "match_method": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "match_score": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "review_status": {
+          "enum": [
+            "pending",
+            "auto_accepted",
+            "manual_review",
+            "human_verified"
+          ]
+        }
+      }
+    },
+    "enrichment": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "enum": [
+            "pending",
+            "resolved",
+            "partial",
+            "review_required",
+            "failed"
+          ]
+        },
+        "preferred_source_order": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "search_terms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "manual_review_required": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

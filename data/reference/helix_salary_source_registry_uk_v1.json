@@ -1,0 +1,128 @@
+{
+  "registry_name": "Helix UK salary, labour-market and career enrichment source registry",
+  "version": "1.0",
+  "generated": "2026-08-13",
+  "principles": [
+    "Prefer official UK sources and APIs.",
+    "Never expose API keys in the GitHub Pages frontend.",
+    "Do not perform arbitrary salary web searches from the end-user browser.",
+    "Cache and publish normalized data into the static application dataset.",
+    "Every published salary must carry provenance, geography, date, method and evidence quality.",
+    "A transparent indicative estimate is preferable to an invented or falsely precise salary."
+  ],
+  "sources": {
+    "NCS_API": {
+      "name": "National Careers Service Job Profiles API",
+      "provider": "National Careers Service",
+      "developer_portal": "https://portal.api.nationalcareers.service.gov.uk/",
+      "api_catalogue": "https://pp-portal.api.nationalcareers.service.gov.uk/apis",
+      "public_profiles": "https://nationalcareers.service.gov.uk/explore-careers/all-careers",
+      "information_sources": "https://nationalcareers.service.gov.uk/help/information-sources",
+      "license": "Open Government Licence v3.0, except where otherwise stated",
+      "auth": "API subscription key required. Store only as a GitHub Actions secret named NCS_API_KEY.",
+      "use_for": [
+        "career-specific starter and experienced salary ranges",
+        "typical weekly hours",
+        "working patterns and environment",
+        "alternative titles",
+        "role descriptions",
+        "entry-route context",
+        "progression context",
+        "SOC mapping where supplied by the API"
+      ],
+      "priority": 1,
+      "notes": "Preferred source when a career has an exact or strongly compatible NCS profile match. Salary figures are guidance estimates, not guaranteed pay."
+    },
+    "ONS_API": {
+      "name": "Office for National Statistics API and ASHE",
+      "provider": "Office for National Statistics",
+      "api_base": "https://api.beta.ons.gov.uk/v1",
+      "developer_docs": "https://developer.ons.gov.uk/",
+      "ashe_occupation_2digit": "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/datasets/occupation2digitsocashetable2",
+      "ashe_region_occupation": "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/datasets/regionbyoccupation2digitsocashetable3",
+      "ashe_industry_occupation": "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/datasets/earningsandhoursworkedbyindustryandoccupationashetable29",
+      "license": "Open Government Licence v3.0, except where otherwise stated",
+      "auth": "No API key required for the ONS Beta API.",
+      "use_for": [
+        "occupation-level earnings fallback",
+        "hours",
+        "regional context",
+        "industry and occupation context",
+        "validation of broader salary ranges"
+      ],
+      "priority": 3,
+      "notes": "Use the most detailed suitable SOC/ASHE data actually available. Clearly label broader occupational estimates."
+    },
+    "NHS_ENGLAND_AFC": {
+      "name": "NHS Agenda for Change pay scales, England",
+      "provider": "NHS Employers",
+      "current_2026_27": "https://www.nhsemployers.org/articles/pay-scales-202627",
+      "medical_dental": "https://www.nhsemployers.org/articles/pay-and-conditions-circulars-medical-and-dental-staff",
+      "auth": "None",
+      "use_for": [
+        "verified public-sector salary context when a career has a curated NHS band mapping",
+        "medical and dental pay context using the separate official circulars"
+      ],
+      "priority": 2,
+      "notes": "Never infer an NHS band solely from a career title. Use only curated or officially evidenced role-to-band mappings. Label geography as England."
+    },
+    "NHS_SCOTLAND": {
+      "name": "NHS Scotland pay rates",
+      "provider": "Scottish Government",
+      "url": "https://www.gov.scot/publications/nhs-staff-pay/",
+      "auth": "None",
+      "use_for": [
+        "Scotland-specific NHS pay context"
+      ],
+      "priority": 2,
+      "notes": "Keep separate from England, Wales and Northern Ireland pay contexts."
+    },
+    "NHS_WALES": {
+      "name": "NHS Wales pay award and pay-scale sources",
+      "provider": "Welsh Government",
+      "url": "https://www.gov.wales/written-statement-responding-39th-nhs-pay-review-body",
+      "auth": "None",
+      "use_for": [
+        "Wales-specific NHS pay context"
+      ],
+      "priority": 2,
+      "notes": "The enrichment pipeline should locate and use the current official detailed Welsh pay-scale publication where available, not assume England's cash values."
+    },
+    "HSC_NI": {
+      "name": "Health and Social Care Northern Ireland pay sources",
+      "provider": "Department of Health Northern Ireland",
+      "url": "https://www.health-ni.gov.uk/news/health-minister-reaffirms-commitment-time-pay-settlement-health-staff",
+      "auth": "None",
+      "use_for": [
+        "Northern Ireland-specific HSC pay context"
+      ],
+      "priority": 2,
+      "notes": "Use current detailed official HSC pay circulars where available. Do not assume England cash values."
+    },
+    "SKILLS_ENGLAND_OCCUPATIONAL_MAPS": {
+      "name": "Skills England Occupational Maps API",
+      "provider": "Skills England",
+      "docs": "https://occupational-maps.skillsengland.education.gov.uk/public-api/",
+      "api_root": "https://occupational-maps-api.skillsengland.education.gov.uk",
+      "license": "Open Government Licence v3.0",
+      "auth": "X-API-KEY required. Optional GitHub Actions secret: SKILLS_ENGLAND_API_KEY.",
+      "use_for": [
+        "occupation mapping",
+        "SOC-linked occupational information",
+        "progression relationships"
+      ],
+      "priority": 4,
+      "notes": "Optional enhancement. It is not a primary salary source."
+    },
+    "ONS_SOC": {
+      "name": "UK Standard Occupational Classification 2020",
+      "provider": "Office for National Statistics",
+      "url": "https://www.ons.gov.uk/methodology/classificationsandstandards/standardoccupationalclassificationsoc",
+      "auth": "None",
+      "use_for": [
+        "career-to-occupation mapping and audit"
+      ],
+      "priority": 4
+    }
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "name": "Helix first-class career comparison specification",
+  "version": "1.0",
+  "max_careers": 4,
+  "selection_surfaces": [
+    "Career Explorer cards",
+    "My Options cards",
+    "Career detail page",
+    "Saved careers"
+  ],
+  "persistent_tray": true,
+  "dedicated_route": "#/compare",
+  "sections": [
+    {
+      "name": "Headline decision factors",
+      "rows": [
+        "Typical salary range",
+        "Salary evidence quality",
+        "Typical weekly hours",
+        "Work pattern",
+        "Work setting"
+      ]
+    },
+    {
+      "name": "Fit for me",
+      "rows": [
+        "Background alignment",
+        "Preference fit",
+        "Transition effort",
+        "Strengths already demonstrated",
+        "Translation strengths",
+        "Largest development gaps"
+      ]
+    },
+    {
+      "name": "Professional route",
+      "rows": [
+        "Regulation/protected title",
+        "Mandatory requirements",
+        "Typical entry signal",
+        "Retraining/registration burden"
+      ]
+    },
+    {
+      "name": "Working life",
+      "rows": [
+        "Patient contact",
+        "Laboratory intensity",
+        "Research intensity",
+        "Commercial intensity",
+        "Remote/hybrid potential",
+        "Travel"
+      ]
+    },
+    {
+      "name": "Progression",
+      "rows": [
+        "Possible progression",
+        "Adjacent careers"
+      ]
+    },
+    {
+      "name": "Evidence",
+      "rows": [
+        "Salary source",
+        "Career sources",
+        "Last verified"
+      ]
+    }
+  ],
+  "mobile_behavior": "Do not squeeze four careers into tiny columns. Use a baseline career plus horizontally swipeable comparison cards or stacked grouped sections. Keep labels visible.",
+  "standout_summary_rules": [
+    "Highest typical salary high point",
+    "Strongest background alignment",
+    "Strongest preference fit",
+    "Lowest transition effort",
+    "Most restrictive verified professional requirement",
+    "Lowest/highest typical hours when enough data exists"
+  ],
+  "language_rules": [
+    "Never call alignment or preference fit a probability of getting a job.",
+    "Never call transition effort a probability or guarantee.",
+    "Use Salary not Compensation for UK user-facing copy unless context requires otherwise.",
+    "Always display salary geography and evidence quality on detail or source drill-down."
+  ]
+}
