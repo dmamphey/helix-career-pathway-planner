@@ -167,7 +167,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Audiologist Audiologist Alternative titles for this job include Audiologists and hearing aid dispensers work with children and adults who have hearing loss, tinnitus, or problems with balance.",
+    "summary": "Audiologists and hearing aid dispensers work with children and adults who have hearing loss, tinnitus, or problems with balance.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -278,7 +278,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Biomedical scientist Biomedical scientist Alternative titles for this job include Biomedical scientists test patient samples and help doctors and healthcare professionals diagnose, treat and prevent disease.",
+    "summary": "Biomedical scientists test patient samples and help doctors and healthcare professionals diagnose, treat and prevent disease.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -931,9 +931,13 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Clinical engineer Clinical engineer Alternative titles for this job include Biomedical engineer, bio-engineer, clinical technologist Clinical engineers design, develop and maintain medical equipment used to diagnose illness and treat patients.",
+    "summary": "Clinical engineers design, develop and maintain medical equipment used to diagnose illness and treat patients.",
     "summary_kind": "authoritative",
-    "alternative_titles": [],
+    "alternative_titles": [
+     "Biomedical engineer",
+     "bio-engineer",
+     "clinical technologist"
+    ],
     "progression": [],
     "source_records": [
      {
@@ -1581,9 +1585,11 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Clinical scientist Clinical scientist Alternative titles for this job include Healthcare scientist Clinical scientists research and develop techniques and equipment to help prevent, diagnose and treat illness.",
+    "summary": "Clinical scientists research and develop techniques and equipment to help prevent, diagnose and treat illness.",
     "summary_kind": "authoritative",
-    "alternative_titles": [],
+    "alternative_titles": [
+     "Healthcare scientist"
+    ],
     "progression": [],
     "source_records": [
      {
@@ -2236,9 +2242,11 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Healthcare science assistant Healthcare science assistant Alternative titles for this job include Assistant technical officer Healthcare science assistants support medical staff, with duties ranging from lab testing blood samples to monitoring patients’ heart function.",
+    "summary": "Healthcare science assistants support medical staff, with duties ranging from lab testing blood samples to monitoring patients’ heart function.",
     "summary_kind": "authoritative",
-    "alternative_titles": [],
+    "alternative_titles": [
+     "Assistant technical officer"
+    ],
     "progression": [],
     "source_records": [
      {
@@ -2811,9 +2819,12 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Medical physicist Medical physicist Alternative titles for this job include Clinical scientist, healthcare scientist Medical physicists design, develop and test the scanning and imaging equipment used in the diagnosis and treatment of patients.",
+    "summary": "Medical physicists design, develop and test the scanning and imaging equipment used in the diagnosis and treatment of patients.",
     "summary_kind": "authoritative",
-    "alternative_titles": [],
+    "alternative_titles": [
+     "Clinical scientist",
+     "healthcare scientist"
+    ],
     "progression": [],
     "source_records": [
      {
@@ -4318,9 +4329,11 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Art therapist Art therapist Alternative titles for this job include Art psychotherapist Art therapists help people express difficult thoughts and feelings through creative activities.",
+    "summary": "Art therapists help people express difficult thoughts and feelings through creative activities.",
     "summary_kind": "authoritative",
-    "alternative_titles": [],
+    "alternative_titles": [
+     "Art psychotherapist"
+    ],
     "progression": [],
     "source_records": [
      {
@@ -4665,7 +4678,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Clinical psychologist Clinical psychologist Alternative titles for this job include Clinical psychologists help people manage mental health issues, phobias and addiction.",
+    "summary": "Clinical psychologists help people manage mental health issues, phobias and addiction.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -4932,7 +4945,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Dietitian Dietitian Alternative titles for this job include Dietitians diagnose and treat people with nutrition problems and help them to make healthy lifestyle and dietary choices.",
+    "summary": "Dietitians diagnose and treat people with nutrition problems and help them to make healthy lifestyle and dietary choices.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -5040,7 +5053,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Dispensing optician Dispensing optician Alternative titles for this job include Dispensing opticians supply glasses and contact lenses for customers and give advice on vision care.",
+    "summary": "Dispensing opticians supply glasses and contact lenses for customers and give advice on vision care.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -5149,7 +5162,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Dramatherapist Dramatherapist Alternative titles for this job include Dramatherapists use group work, role play and movement to help people with their feelings and emotions.",
+    "summary": "Dramatherapists use group work, role play and movement to help people with their feelings and emotions.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -5573,9 +5586,13 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Forensic psychologist Forensic psychologist Alternative titles for this job include Criminal psychologist, investigative psychologist, legal psychologist Forensic psychologists study criminal behaviour and the reasons behind it, and help to treat people who have committed offences.",
+    "summary": "Forensic psychologists study criminal behaviour and the reasons behind it, and help to treat people who have committed offences.",
     "summary_kind": "authoritative",
-    "alternative_titles": [],
+    "alternative_titles": [
+     "Criminal psychologist",
+     "investigative psychologist",
+     "legal psychologist"
+    ],
     "progression": [],
     "source_records": [
      {
@@ -5841,7 +5858,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Music therapist Music therapist Alternative titles for this job include Music therapists use music and sound to help improve people's emotional well-being, relieve stress and build confidence.",
+    "summary": "Music therapists use music and sound to help improve people's emotional well-being, relieve stress and build confidence.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -5949,7 +5966,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Occupational therapist Occupational therapist Alternative titles for this job include Occupational therapists help people who have difficulties caused by physical or mental illness, disability, accident or ageing.",
+    "summary": "Occupational therapists help people who have difficulties caused by physical or mental illness, disability, accident or ageing.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -6059,7 +6076,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Operating department practitioner Operating department practitioner Alternative titles for this job include Operating department practitioners (ODPs) provide skilled care and support to patients during operations.",
+    "summary": "Operating department practitioners (ODPs) provide skilled care and support to patients during operations.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -6168,9 +6185,11 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Optometrist Optometrist Alternative titles for this job include Ophthalmic optician Optometrists test vision, identify eye health problems, prescribe glasses and fit contact lenses.",
+    "summary": "Optometrists test vision, identify eye health problems, prescribe glasses and fit contact lenses.",
     "summary_kind": "authoritative",
-    "alternative_titles": [],
+    "alternative_titles": [
+     "Ophthalmic optician"
+    ],
     "progression": [],
     "source_records": [
      {
@@ -6276,7 +6295,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Orthoptist Orthoptist Alternative titles for this job include Orthoptists diagnose, treat and manage conditions that affect eye movement and vision in children and adults.",
+    "summary": "Orthoptists diagnose, treat and manage conditions that affect eye movement and vision in children and adults.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -6543,9 +6562,11 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Paramedic Paramedic Alternative titles for this job include Ambulance paramedic Paramedics respond to emergency call-outs and give people life-saving medical help.",
+    "summary": "Paramedics respond to emergency call-outs and give people life-saving medical help.",
     "summary_kind": "authoritative",
-    "alternative_titles": [],
+    "alternative_titles": [
+     "Ambulance paramedic"
+    ],
     "progression": [],
     "source_records": [
      {
@@ -6730,9 +6751,11 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Physiotherapist Physiotherapist Alternative titles for this job include Sports physiotherapist Physiotherapists assess and treat mobility problems in patients caused by illness, injury, ageing or disability.",
+    "summary": "Physiotherapists assess and treat mobility problems in patients caused by illness, injury, ageing or disability.",
     "summary_kind": "authoritative",
-    "alternative_titles": [],
+    "alternative_titles": [
+     "Sports physiotherapist"
+    ],
     "progression": [],
     "source_records": [
      {
@@ -6838,9 +6861,11 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Podiatrist Podiatrist Alternative titles for this job include Chiropodist Podiatrists diagnose and treat foot and ankle problems to improve people's mobility and quality of life.",
+    "summary": "Podiatrists diagnose and treat foot and ankle problems to improve people's mobility and quality of life.",
     "summary_kind": "authoritative",
-    "alternative_titles": [],
+    "alternative_titles": [
+     "Chiropodist"
+    ],
     "progression": [],
     "source_records": [
      {
@@ -7340,9 +7365,11 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Sonographer Sonographer Alternative titles for this job include Ultrasound practitioner Sonographers use ultrasound equipment to screen and diagnose medical conditions.",
+    "summary": "Sonographers use ultrasound equipment to screen and diagnose medical conditions.",
     "summary_kind": "authoritative",
-    "alternative_titles": [],
+    "alternative_titles": [
+     "Ultrasound practitioner"
+    ],
     "progression": [],
     "source_records": [
      {
@@ -7449,7 +7476,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Speech and language therapist Speech and language therapist Alternative titles for this job include Speech and language therapists help people with speaking and communication problems and those with eating and swallowing difficulties.",
+    "summary": "Speech and language therapists help people with speaking and communication problems and those with eating and swallowing difficulties.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -7559,7 +7586,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Sport and exercise psychologist Sport and exercise psychologist Alternative titles for this job include Sport and exercise psychologists work with athletes, teams and coaches to improve their motivation and performance.",
+    "summary": "Sport and exercise psychologists work with athletes, teams and coaches to improve their motivation and performance.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -8145,7 +8172,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Children's nurse Children's nurse Alternative titles for this job include Children's nurses care for babies, children and young people recovering from illness, injury and other health issues.",
+    "summary": "Children's nurses care for babies, children and young people recovering from illness, injury and other health issues.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -8811,7 +8838,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "District nurse District nurse Alternative titles for this job include District nurses care for patients in their own homes, GP surgeries, community clinics and residential care homes.",
+    "summary": "District nurses care for patients in their own homes, GP surgeries, community clinics and residential care homes.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -9077,7 +9104,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Health visitor Health visitor Alternative titles for this job include Health visitors work with families with a child aged 0 to 5 to identify health needs, promote healthy lifestyles and prevent illness.",
+    "summary": "Health visitors work with families with a child aged 0 to 5 to identify health needs, promote healthy lifestyles and prevent illness.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -9425,7 +9452,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Learning disability nurse Learning disability nurse Alternative titles for this job include Learning disability nurses take care of the social, psychological and physical health needs of people with a learning disability.",
+    "summary": "Learning disability nurses take care of the social, psychological and physical health needs of people with a learning disability.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -9615,7 +9642,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Mental health nurse Mental health nurse Alternative titles for this job include Mental health nurses support people in their recovery from mental health issues. They work in hospitals, clinics and community services.",
+    "summary": "Mental health nurses support people in their recovery from mental health issues. They work in hospitals, clinics and community services.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -9725,7 +9752,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Midwife Midwife Alternative titles for this job include Midwives support pregnant people and their babies before, during and after, childbirth.",
+    "summary": "Midwives support pregnant people and their babies before, during and after, childbirth.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -9995,9 +10022,11 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Nursing associate Nursing associate Alternative titles for this job include Nurse associate Nursing associates care for sick people of all ages in hospital and in the community, working closely with registered nurses.",
+    "summary": "Nursing associates care for sick people of all ages in hospital and in the community, working closely with registered nurses.",
     "summary_kind": "authoritative",
-    "alternative_titles": [],
+    "alternative_titles": [
+     "Nurse associate"
+    ],
     "progression": [],
     "source_records": [
      {
@@ -10106,7 +10135,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Occupational health nurse Occupational health nurse Alternative titles for this job include Occupational health nurses support the health and wellbeing of people at work.",
+    "summary": "Occupational health nurses support the health and wellbeing of people at work.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -10375,9 +10404,13 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Pharmacist Pharmacist Alternative titles for this job include Dispensing chemist, community pharmacist, hospital pharmacist Pharmacists give advice on the use and supply of medicines and medical appliances.",
+    "summary": "Pharmacists give advice on the use and supply of medicines and medical appliances.",
     "summary_kind": "authoritative",
-    "alternative_titles": [],
+    "alternative_titles": [
+     "Dispensing chemist",
+     "community pharmacist",
+     "hospital pharmacist"
+    ],
     "progression": [],
     "source_records": [
      {
@@ -10646,9 +10679,11 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Pharmacy technician Pharmacy technician Alternative titles for this job include Pharmaceutical technician Pharmacy technicians prepare and supply medicines for prescriptions, under the supervision of a pharmacist.",
+    "summary": "Pharmacy technicians prepare and supply medicines for prescriptions, under the supervision of a pharmacist.",
     "summary_kind": "authoritative",
-    "alternative_titles": [],
+    "alternative_titles": [
+     "Pharmaceutical technician"
+    ],
     "progression": [],
     "source_records": [
      {
@@ -10756,7 +10791,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Practice nurse Practice nurse Alternative titles for this job include Practice nurses work in GP surgeries to assess, screen, treat and educate patients, and help doctors give medical care.",
+    "summary": "Practice nurses work in GP surgeries to assess, screen, treat and educate patients, and help doctors give medical care.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -11103,9 +11138,11 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "School nurse School nurse Alternative titles for this job include Specialist community public health nurse School nurses work with schools and families to improve the health and wellbeing of children and young people.",
+    "summary": "School nurses work with schools and families to improve the health and wellbeing of children and young people.",
     "summary_kind": "authoritative",
-    "alternative_titles": [],
+    "alternative_titles": [
+     "Specialist community public health nurse"
+    ],
     "progression": [],
     "source_records": [
      {
@@ -11370,7 +11407,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Anaesthetist Anaesthetist Alternative titles for this job include Anaesthetists are doctors who give anaesthetics to patients before, during and after surgery.",
+    "summary": "Anaesthetists are doctors who give anaesthetics to patients before, during and after surgery.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -11950,9 +11987,11 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Dental hygienist Dental hygienist Alternative titles for this job include Oral health practitioner Dental hygienists work to prevent tooth decay and gum disease, and give patients advice on how to improve their oral health.",
+    "summary": "Dental hygienists work to prevent tooth decay and gum disease, and give patients advice on how to improve their oral health.",
     "summary_kind": "authoritative",
-    "alternative_titles": [],
+    "alternative_titles": [
+     "Oral health practitioner"
+    ],
     "progression": [],
     "source_records": [
      {
@@ -12061,7 +12100,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Dental nurse Dental nurse Alternative titles for this job include Dental nurses support dentists in all areas of dental care.",
+    "summary": "Dental nurses support dentists in all areas of dental care.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -12251,9 +12290,11 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Dental technician Dental technician Alternative titles for this job include Dental technologist Dental technicians make and repair dental appliances used to improve patients' appearance, speech or ability to eat.",
+    "summary": "Dental technicians make and repair dental appliances used to improve patients' appearance, speech or ability to eat.",
     "summary_kind": "authoritative",
-    "alternative_titles": [],
+    "alternative_titles": [
+     "Dental technologist"
+    ],
     "progression": [],
     "source_records": [
      {
@@ -12360,7 +12401,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Dental therapist Dental therapist Alternative titles for this job include Dental therapists provide a range of dental services to adults and children, like x-rays, tooth impressions, scaling and polishing.",
+    "summary": "Dental therapists provide a range of dental services to adults and children, like x-rays, tooth impressions, scaling and polishing.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -12470,9 +12511,12 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Dentist Dentist Alternative titles for this job include Dental surgeon, dental practitioner Dentists promote good oral hygiene, diagnose and treat teeth and mouth problems and help prevent dental disease",
+    "summary": "Dentists promote good oral hygiene, diagnose and treat teeth and mouth problems and help prevent dental disease",
     "summary_kind": "authoritative",
-    "alternative_titles": [],
+    "alternative_titles": [
+     "Dental surgeon",
+     "dental practitioner"
+    ],
     "progression": [],
     "source_records": [
      {
@@ -12969,9 +13013,12 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "GP GP Alternative titles for this job include General practitioner, doctor General practitioners (GPs) are doctors who provide medical services to people in their local community.",
+    "summary": "GPs) are doctors who provide medical services to people in their local community.",
     "summary_kind": "authoritative",
-    "alternative_titles": [],
+    "alternative_titles": [
+     "General practitioner",
+     "doctor General practitioners ("
+    ],
     "progression": [],
     "source_records": [
      {
@@ -14640,7 +14687,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Paediatrician Paediatrician Alternative titles for this job include Paediatricians diagnose and treat health conditions that affect babies, children and young people.",
+    "summary": "Paediatricians diagnose and treat health conditions that affect babies, children and young people.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -14749,9 +14796,12 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Plastic surgeon Plastic surgeon Alternative titles for this job include Reconstructive surgeon, cosmetic surgeon Plastic surgeons perform operations to restore someone's movement or appearance either for personal reasons or following an illness or injury.",
+    "summary": "Plastic surgeons perform operations to restore someone's movement or appearance either for personal reasons or following an illness or injury.",
     "summary_kind": "authoritative",
-    "alternative_titles": [],
+    "alternative_titles": [
+     "Reconstructive surgeon",
+     "cosmetic surgeon"
+    ],
     "progression": [],
     "source_records": [
      {
@@ -14858,7 +14908,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Psychiatrist Psychiatrist Alternative titles for this job include Psychiatrists are doctors who diagnose and treat patients with mental health problems.",
+    "summary": "Psychiatrists are doctors who diagnose and treat patients with mental health problems.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -17674,7 +17724,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Phlebotomist Phlebotomist Alternative titles for this job include Phlebotomists collect blood samples from patients, and send them off for analysis and testing.",
+    "summary": "Phlebotomists collect blood samples from patients, and send them off for analysis and testing.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -18214,9 +18264,11 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Biochemist Biochemist Alternative titles for this job include Biological scientist Biochemists investigate the chemical processes that take place inside all living things, such as viruses, bacteria and people.",
+    "summary": "Biochemists investigate the chemical processes that take place inside all living things, such as viruses, bacteria and people.",
     "summary_kind": "authoritative",
-    "alternative_titles": [],
+    "alternative_titles": [
+     "Biological scientist"
+    ],
     "progression": [],
     "source_records": [
      {
@@ -18706,7 +18758,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Geneticist Geneticist Alternative titles for this job include Geneticists study how genes work in humans, animals, plants and microbes, and how they are passed on.",
+    "summary": "Geneticists study how genes work in humans, animals, plants and microbes, and how they are passed on.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -19200,7 +19252,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Microbiologist Microbiologist Alternative titles for this job include Microbiologists study organisms like bacteria, viruses, fungi and algae to make advances in environmental science, medicine and agriculture.",
+    "summary": "Microbiologists study organisms like bacteria, viruses, fungi and algae to make advances in environmental science, medicine and agriculture.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -19463,7 +19515,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Pharmacologist Pharmacologist Alternative titles for this job include Pharmacologists study the effects of drugs and chemicals on living things, and develop new products to help tackle disease.",
+    "summary": "Pharmacologists study the effects of drugs and chemicals on living things, and develop new products to help tackle disease.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -20650,7 +20702,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Research scientist Research scientist Alternative titles for this job include Research scientists plan and lead experiments and investigations on a range of scientific topics.",
+    "summary": "Research scientists plan and lead experiments and investigations on a range of scientific topics.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],
@@ -46920,9 +46972,11 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Environmental health practitioner Environmental health practitioner Alternative titles for this job include Environmental health officer Environmental health practitioners make sure that legal standards are met in food safety, housing, public health, and air and water quality.",
+    "summary": "Environmental health practitioners make sure that legal standards are met in food safety, housing, public health, and air and water quality.",
     "summary_kind": "authoritative",
-    "alternative_titles": [],
+    "alternative_titles": [
+     "Environmental health officer"
+    ],
     "progression": [],
     "source_records": [
      {
@@ -47546,9 +47600,11 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Food scientist Food scientist Alternative titles for this job include Food technologist Food scientists and food technologists develop food and drink products, making sure they are safe to consume.",
+    "summary": "Food scientists and food technologists develop food and drink products, making sure they are safe to consume.",
     "summary_kind": "authoritative",
-    "alternative_titles": [],
+    "alternative_titles": [
+     "Food technologist"
+    ],
     "progression": [],
     "source_records": [
      {
@@ -48390,7 +48446,7 @@
     "qualitative_note": "Patient contact, laboratory, research and commercial intensity, remote potential and travel are inferred from this career's taxonomy tags, not from surveyed labour-market data."
    },
    "role": {
-    "summary": "Veterinary nurse Veterinary nurse Alternative titles for this job include Veterinary nurses support vets in the treatment and care of sick and injured animals.",
+    "summary": "Veterinary nurses support vets in the treatment and care of sick and injured animals.",
     "summary_kind": "authoritative",
     "alternative_titles": [],
     "progression": [],

@@ -30,6 +30,14 @@ import { nextActions } from "../js/action-engine.js";
 import { normalisePack, loadRulePack } from "../js/rules.js";
 import { similarity, adjacentCareers } from "../js/adjacency.js";
 import * as storage from "../js/storage.js";
+import * as market from "../js/market-data.js";
+import * as comparison from "../js/comparison.js";
+import { preferenceFit, FIT_LEVELS, SCORED_PREFERENCE_KEYS }
+  from "../js/preference-fit.js";
+import { transitionEffort } from "../js/transition-effort.js";
+import {
+  PREFERENCE_FIELDS, PREFERENCE_GROUPS, hasPreferences,
+} from "../js/profile.js";
 
 const tests = [];
 const results = [];
@@ -702,6 +710,498 @@ test("a manually built profile matches as well as a parsed one", () => {
   assert(ranked[0].score >= 50,
          `manual profile only reached ${ranked[0].score}`);
 });
+
+/* ----------------------------------------------------------- market data */
+
+let marketLoaded = false;
+
+test("the market data loads", async () => {
+  await market.loadMarketData();
+  const state = market.status();
+  assert(state.ok, `market data did not load: ${state.detail}`);
+  marketLoaded = true;
+});
+
+test("there is exactly one market record for every career", () => {
+  assert(marketLoaded, "market data is not loaded");
+  equal(market.status().count, catalogue.count,
+        "market record count differs from the career count");
+  for (const career of catalogue.careers) {
+    assert(market.forCareer(career.id),
+           `${career.id} (${career.title}) has no market record`);
+  }
+});
+
+test("every career has a usable published salary", () => {
+  // §58's completeness assertion, run in the browser against the served file.
+  for (const career of catalogue.careers) {
+    const pay = market.salary(career.id);
+    assert(pay, `${career.id} has no salary`);
+    assert(Number.isFinite(pay.low) && Number.isFinite(pay.high),
+           `${career.id} salary is not numeric`);
+    assert(pay.low > 0, `${career.id} low is ${pay.low}`);
+    assert(pay.high >= pay.low, `${career.id} high is below low`);
+    assert(pay.evidenceKey !== "PENDING", `${career.id} is PENDING`);
+    assert(pay.method, `${career.id} has no estimate method`);
+    assert(pay.sources.length > 0 || pay.notes.length > 0,
+           `${career.id} has neither a source nor methodology notes`);
+    assert(pay.geography, `${career.id} has no geography`);
+    assert(pay.lastVerified, `${career.id} has no last-verified date`);
+  }
+});
+
+test("every evidence class maps to a label the interface can show", () => {
+  for (const career of catalogue.careers) {
+    const pay = market.salary(career.id);
+    assert(market.EVIDENCE[pay.evidenceKey],
+           `${career.id} has unknown evidence class ${pay.evidenceKey}`);
+    assert(pay.evidenceLabel && pay.evidenceExplain,
+           `${pay.evidenceKey} has no user-facing wording`);
+  }
+});
+
+test("no salary label uses the word verified in a way that promises pay", () => {
+  for (const entry of Object.values(market.EVIDENCE)) {
+    assert(!/guarantee|promised|will earn/i.test(entry.label + entry.explain),
+           `"${entry.label}" implies a guarantee`);
+  }
+});
+
+test("a derived salary always says what it was derived from", () => {
+  for (const career of catalogue.careers) {
+    const pay = market.salary(career.id);
+    if (pay.method !== "related_career_derived") continue;
+    assert(pay.derivedFrom.length > 0,
+           `${career.id} is derived but names no contributing careers`);
+  }
+});
+
+test("a career-specific guide always carries a source record", () => {
+  for (const career of catalogue.careers) {
+    const pay = market.salary(career.id);
+    if (pay.evidenceKey !== "VERIFIED_GUIDE") continue;
+    assert(pay.sources.length > 0,
+           `${career.id} claims a career-specific guide with no source`);
+  }
+});
+
+test("money formatting avoids false precision", () => {
+  equal(market.money(30000), "£30k");
+  equal(market.money(53000), "£53k");
+  equal(market.money(30500), "£30,500");
+  equal(market.money(NaN), "—");
+});
+
+test("hours are absent rather than invented", () => {
+  // Only the careers with a matched official profile have hours. The rest must
+  // return null so the interface can say "Not yet available".
+  let withHours = 0;
+  for (const career of catalogue.careers) {
+    const work = market.workLife(career.id);
+    assert(work, `${career.id} has no work-life record`);
+    if (work.hours === null) continue;
+    withHours += 1;
+    assert(Number.isFinite(work.hoursMin) && Number.isFinite(work.hoursMax),
+           `${career.id} reports hours text without numbers`);
+  }
+  assert(withHours > 0 && withHours < catalogue.count,
+         `${withHours} careers have hours — expected some but not all`);
+});
+
+test("an authoritative role summary is only ever shown when attributed", () => {
+  for (const career of catalogue.careers) {
+    const role = market.role(career.id);
+    if (!role || !role.summary) continue;
+    equal(role.summaryKind, "authoritative",
+          `${career.id} exposes a summary that is not authoritative`);
+    assert(role.sources.length > 0,
+           `${career.id} has an authoritative summary with no source`);
+  }
+});
+
+test("no role summary carries page furniture", () => {
+  for (const career of catalogue.careers) {
+    const role = market.role(career.id);
+    if (!role || !role.summary) continue;
+    for (const fragment of ["Alternative titles", "Skip to main content",
+                            "Explore careers", "Average salary"]) {
+      assert(!role.summary.includes(fragment),
+             `${career.id} summary contains "${fragment}"`);
+    }
+  }
+});
+
+/* -------------------------------------------------------------- comparison */
+
+test("comparison holds between two and four careers", () => {
+  equal(comparison.MIN_COMPARE, 2);
+  equal(comparison.MAX_COMPARE, 4);
+  let ids = [];
+  for (const id of ["CP-003", "CP-019", "CP-272", "CP-001"]) {
+    ids = comparison.toggle(ids, id).ids;
+  }
+  equal(ids.length, 4, "four careers were not accepted");
+  const fifth = comparison.toggle(ids, "CP-092");
+  equal(fifth.action, "full", "a fifth career was accepted");
+  equal(fifth.ids.length, 4, "the selection changed when it should not have");
+  assert(fifth.message, "the refusal came with no explanation");
+});
+
+test("removing and clearing a comparison works", () => {
+  let ids = ["CP-003", "CP-019"];
+  const removed = comparison.toggle(ids, "CP-003");
+  equal(removed.action, "removed");
+  equal(removed.ids.join(","), "CP-019");
+  equal(comparison.canCompare(removed.ids), false, "one career is not a comparison");
+  equal(comparison.canCompare(["CP-003", "CP-019"]), true);
+});
+
+test("a comparison route round-trips, and carries career ids only", () => {
+  const ids = ["CP-003", "CP-019", "CP-272"];
+  const route = comparison.routeFor(ids);
+  equal(route, "/compare/CP-003,CP-019,CP-272");
+  equal(comparison.idsFromRoute("CP-003,CP-019,CP-272").join(","), ids.join(","));
+  // Nothing personal may appear in a shareable link.
+  assert(!/profile|preference|name|email/i.test(route),
+         "the compare route carries more than career ids");
+});
+
+test("a hostile comparison route cannot inject anything", () => {
+  const ids = comparison.idsFromRoute("CP-003,../../etc/passwd,<script>,CP-019");
+  equal(ids.join(","), "CP-003,CP-019", "an invalid id survived");
+  equal(comparison.idsFromRoute("").length, 0);
+});
+
+test("comparison selection survives a save and load cycle", () => {
+  storage.reset();
+  const state = storage.emptyState();
+  state.compareCareerIds = ["CP-003", "CP-019"];
+  storage.save(state, catalogue.meta.version);
+  equal(storage.load().compareCareerIds.join(","), "CP-003,CP-019",
+        "the comparison selection was lost");
+  storage.reset();
+});
+
+test("state saved before Compare existed still loads, and keeps its careers", () => {
+  storage.reset();
+  window.localStorage.setItem("careerpath.v1", JSON.stringify({
+    schema: 1, profile: demoProfile("bms"), savedCareerIds: ["CP-003"],
+    progress: { "CP-272": { gcp: "completed" } },
+    // No compareCareerIds at all — the shape of state written by an earlier
+    // version. A migration must add the field, never discard the profile.
+  }));
+  const loaded = storage.load();
+  assert(loaded.profile, "the profile was discarded by the migration");
+  equal(loaded.savedCareerIds.join(","), "CP-003", "saved careers were lost");
+  equal(loaded.progress["CP-272"].gcp, "completed", "progress was lost");
+  equal(loaded.compareCareerIds.length, 0, "compare should default to empty");
+  storage.reset();
+});
+
+test("what stands out reports only what the data supports", () => {
+  const entries = ["CP-003", "CP-019"].map((id) => ({
+    career: catalogue.get(id),
+    salary: market.salary(id),
+    work: market.workLife(id),
+  }));
+  const notes = comparison.standoutSummary(entries);
+  assert(notes.length > 0, "no observations were produced");
+  for (const note of notes) {
+    assert(!/\bbest\b|\bworst\b|you should/i.test(note.text),
+           `an observation named a best career: "${note.text}"`);
+  }
+  equal(comparison.standoutSummary(entries.slice(0, 1)).length, 0,
+        "a single career produced comparison observations");
+});
+
+/* -------------------------------------------------------------- preferences */
+
+test("preferences are optional, and absent ones are not scored", () => {
+  const profile = demoProfile("bms");
+  equal(hasPreferences(profile), false,
+        "a fresh demo profile reports stated preferences");
+  const fit = preferenceFit(profile, catalogue.get("CP-003"));
+  equal(fit.scored, false, "a career was scored with no preferences stated");
+  equal(fit.key, "unknown");
+  equal(fit.label, FIT_LEVELS.unknown.label);
+  equal(fit.score, null, "an unscored result carried a number");
+});
+
+test("every preference question has a scoring rule behind it", () => {
+  // A question whose answer is never used is a question that should not be
+  // asked. openToSectorChange is asked for context and is not a fit dimension.
+  const scored = new Set(SCORED_PREFERENCE_KEYS);
+  for (const field of PREFERENCE_FIELDS) {
+    if (field.key === "openToSectorChange") continue;
+    assert(scored.has(field.key),
+           `"${field.question}" is asked but never scored`);
+  }
+  for (const field of PREFERENCE_FIELDS) {
+    assert(PREFERENCE_GROUPS.some((group) => group.id === field.group),
+           `${field.key} is in unknown group "${field.group}"`);
+    assert(field.options.length >= 2, `${field.key} has too few options`);
+  }
+});
+
+test("preference fit is deterministic", () => {
+  const profile = withPreferences({ salaryTarget: 50000, patientContact: "avoid",
+                                    laboratoryWork: "seek" });
+  const career = catalogue.get("CP-003");
+  equal(JSON.stringify(preferenceFit(profile, career)),
+        JSON.stringify(preferenceFit(profile, career)),
+        "two identical calls produced different results");
+});
+
+test("changing preferences never changes background alignment", () => {
+  // The separation §31 requires, tested directly. Alignment answers "how much of
+  // this do I already do"; preferences answer "would I want it". Blending them
+  // is what this test exists to prevent regressing.
+  const base = demoProfile("bms");
+  const before = rankCareers(base, catalogue.careers)
+    .map((m) => `${m.careerId}:${m.score}`).join(",");
+
+  for (const preferences of [
+    { patientContact: "avoid", laboratoryWork: "seek" },
+    { patientContact: "seek", laboratoryWork: "avoid" },
+    { salaryTarget: 100000, earningsImportance: "high", remoteWorking: "important",
+      travelTolerance: "minimal", researchWork: "avoid", commercialWork: "seek",
+      leadershipWork: "seek", workLifeBalance: "high",
+      unsocialHours: "prefer_standard", retrainingTolerance: "minimal" },
+  ]) {
+    const after = rankCareers(withPreferences(preferences), catalogue.careers)
+      .map((m) => `${m.careerId}:${m.score}`).join(",");
+    equal(after, before,
+          `alignment moved when preferences changed: ${JSON.stringify(preferences)}`);
+  }
+});
+
+test("a career is never penalised for data Helix does not hold", () => {
+  /*
+   * The rule that makes normalising over available dimensions honest. Two
+   * careers with identical values on the dimensions they share must score the
+   * same, whether or not one of them also has hours and working-pattern data.
+   */
+  const profile = withPreferences({ patientContact: "avoid",
+                                    laboratoryWork: "seek",
+                                    workLifeBalance: "high",
+                                    unsocialHours: "prefer_standard" });
+
+  const withHours = catalogue.careers.filter((career) => {
+    const work = market.workLife(career.id);
+    return work && work.hours && work.patterns.length;
+  });
+  const withoutHours = catalogue.careers.filter((career) => {
+    const work = market.workLife(career.id);
+    return work && !work.hours && !work.patterns.length;
+  });
+  assert(withHours.length && withoutHours.length,
+         "the dataset no longer contains both kinds of career");
+
+  for (const career of withoutHours.slice(0, 40)) {
+    const fit = preferenceFit(profile, career);
+    // The two dimensions Helix cannot answer are absent, not scored as zero.
+    const keys = fit.dimensions.map((d) => d.key);
+    assert(!keys.includes("hours") && !keys.includes("pattern"),
+           `${career.id} was scored on data it does not have`);
+    assert(fit.unscored.some((item) => item.key === "hours"),
+           `${career.id} did not report hours as unscored`);
+  }
+
+  // Directly: the same career, with and without its hours data available.
+  const sample = withoutHours[0];
+  const fit = preferenceFit(profile, sample);
+  const contributions = fit.dimensions.map((d) => d.score);
+  assert(contributions.every((score) => score > 0),
+         "a missing dimension contributed a zero");
+});
+
+test("preference fit rises and falls with what was asked for", () => {
+  const laboratory = catalogue.careers.find((career) =>
+    market.workLife(career.id).laboratory === "high"
+    && market.workLife(career.id).patientContact === "low");
+  assert(laboratory, "no laboratory career with low patient contact");
+
+  const wantsLab = preferenceFit(
+    withPreferences({ laboratoryWork: "seek", patientContact: "avoid" }),
+    laboratory);
+  const avoidsLab = preferenceFit(
+    withPreferences({ laboratoryWork: "avoid", patientContact: "seek" }),
+    laboratory);
+
+  assert(wantsLab.score > avoidsLab.score,
+         `wanting the career's own characteristics scored ${wantsLab.score} `
+         + `against ${avoidsLab.score} for wanting the opposite`);
+  assert(wantsLab.reasons.length > 0, "a strong fit gave no reasons");
+  assert(avoidsLab.mismatches.length > 0, "a poor fit named no mismatch");
+});
+
+test("a salary target is scored against the published range", () => {
+  const career = catalogue.get("CP-003");
+  const pay = market.salary(career.id);
+  const reachable = preferenceFit(
+    withPreferences({ salaryTarget: 30000, earningsImportance: "high" }), career);
+  const unreachable = preferenceFit(
+    withPreferences({ salaryTarget: 100000, earningsImportance: "high" }), career);
+  assert(pay.high < 100000, "fixture assumption no longer holds");
+  assert(reachable.score > unreachable.score,
+         "a reachable target did not score above an unreachable one");
+});
+
+test("preference fit never claims a probability", () => {
+  const profile = withPreferences({ laboratoryWork: "seek", salaryTarget: 40000 });
+  for (const career of catalogue.careers.slice(0, 60)) {
+    const fit = preferenceFit(profile, career);
+    const words = `${fit.label} ${fit.summary} ${fit.explain}`;
+    assert(!/%|chance|probability|likelihood|will get|guarantee/i.test(words),
+           `preference wording implies a prediction: "${words}"`);
+  }
+  for (const level of Object.values(FIT_LEVELS)) {
+    assert(!/%|chance|probability/i.test(level.label),
+           `"${level.label}" implies a prediction`);
+  }
+});
+
+test("preference fit is bounded and banded consistently", () => {
+  const profile = withPreferences({ laboratoryWork: "seek", patientContact: "avoid",
+                                    remoteWorking: "important",
+                                    salaryTarget: 40000 });
+  for (const career of catalogue.careers) {
+    const fit = preferenceFit(profile, career);
+    if (!fit.scored) continue;
+    assert(fit.score >= 0 && fit.score <= 1,
+           `${career.id} scored ${fit.score}`);
+    const expected = fit.score >= 0.8 ? "very_strong"
+      : fit.score >= 0.65 ? "strong"
+      : fit.score >= 0.45 ? "mixed" : "low";
+    equal(fit.key, expected, `${career.id} scored ${fit.score} but banded as `
+      + `${fit.key}`);
+  }
+});
+
+test("retraining tolerance is scored only when the effort is known", () => {
+  const profile = withPreferences({ retrainingTolerance: "minimal" });
+  const career = catalogue.get("CP-003");
+
+  const withoutEffort = preferenceFit(profile, career);
+  assert(!withoutEffort.dimensions.some((d) => d.key === "retraining"),
+         "retraining was scored with no transition effort available");
+  assert(withoutEffort.unscored.some((item) => item.key === "retraining"),
+         "retraining was not reported as unscored");
+
+  const match = scoreCareer(profile, career);
+  const gaps = analyseGaps(profile, match, null, catalogue.sources);
+  const effort = transitionEffort(profile, match, gaps);
+  const withEffort = preferenceFit(profile, career, { effort });
+  assert(withEffort.dimensions.some((d) => d.key === "retraining"),
+         "retraining was not scored when the effort was supplied");
+});
+
+test("preferences survive storage, and carry no personal data", () => {
+  storage.reset();
+  const state = storage.emptyState();
+  state.profile = withPreferences({ salaryTarget: 50000, patientContact: "avoid",
+                                    remoteWorking: "important" });
+  const written = storage.save(state, catalogue.meta.version);
+  equal(written.profile.preferences.salaryTarget, 50000);
+  equal(written.profile.preferences.patientContact, "avoid");
+  const loaded = storage.load();
+  equal(loaded.profile.preferences.remoteWorking, "important",
+        "a preference was lost in storage");
+  for (const key of ["name", "email", "phone", "address", "employer"]) {
+    assert(!(key in loaded.profile.preferences),
+           `preferences hold a ${key} field`);
+  }
+  storage.reset();
+});
+
+test("a hand-edited preference value is rejected, not stored", () => {
+  const profile = normaliseProfile({
+    preferences: {
+      salaryTarget: 999999,            // not one of the offered rungs
+      patientContact: "<script>",      // not one of the offered answers
+      laboratoryWork: "seek",          // valid, and must survive
+    },
+  });
+  equal(profile.preferences.salaryTarget, null, "an arbitrary target was kept");
+  equal(profile.preferences.patientContact, null, "an invalid answer was kept");
+  equal(profile.preferences.laboratoryWork, "seek", "a valid answer was dropped");
+});
+
+test("preferences written as booleans by an older version are migrated", () => {
+  // Nothing in the interface ever wrote these, but an exported file could carry
+  // them and a migration that dropped them would lose a stated answer.
+  const profile = normaliseProfile({
+    preferences: { patientFacing: false, laboratoryBased: true,
+                   remoteWorkInterest: true, researchIntensity: false },
+  });
+  equal(profile.preferences.patientContact, "avoid");
+  equal(profile.preferences.laboratoryWork, "seek");
+  equal(profile.preferences.remoteWorking, "important");
+  equal(profile.preferences.researchWork, "avoid");
+});
+
+test("transition effort stays separate from alignment and fit", () => {
+  const profile = withPreferences({ laboratoryWork: "seek" });
+  const career = catalogue.get("CP-019");
+  const match = scoreCareer(profile, career);
+  const gaps = analyseGaps(profile, match, null, catalogue.sources);
+  const effort = transitionEffort(profile, match, gaps);
+  const fit = preferenceFit(profile, career, { effort });
+
+  assert(effort.label && effort.reasons.length, "effort gave no explanation");
+  assert(!/%|probability|chance/i.test(effort.label + effort.summary),
+         "effort wording implies a prediction");
+  // Three different vocabularies, so no screen can present them as one scale.
+  assert(effort.label !== match.label && effort.label !== fit.label,
+         "two of the three measures share a label");
+});
+
+/* --------------------------------------------------------- deployment paths */
+
+test("no module or asset path is absolute", async () => {
+  // GitHub Pages serves this from a subdirectory. A leading slash would resolve
+  // against the domain root and 404 in production while working locally.
+  const html = await (await fetch(new URL("../index.html", import.meta.url))).text();
+  const absolute = [...html.matchAll(/(?:src|href)="(\/[^/][^"]*)"/g)]
+    .map((hit) => hit[1]);
+  equal(absolute.length, 0, `absolute paths in index.html: ${absolute}`);
+});
+
+test("every internal link is a hash route", async () => {
+  const html = await (await fetch(new URL("../index.html", import.meta.url))).text();
+  const links = [...html.matchAll(/href="([^"]+)"/g)].map((hit) => hit[1]);
+  for (const href of links) {
+    const external = /^(https?:|mailto:|data:)/.test(href);
+    assert(external || href.startsWith("#") || !href.startsWith("/"),
+           `"${href}" is neither external, a hash route nor relative`);
+  }
+});
+
+test("the frontend contains no API key", async () => {
+  // §49: the browser reads a static dataset and holds no credentials at all.
+  const files = ["../index.html", "../js/app.js", "../js/market-data.js",
+                 "../js/preference-fit.js", "../js/comparison.js"];
+  for (const file of files) {
+    const text = await (await fetch(new URL(file, import.meta.url))).text();
+    for (const pattern of [/[a-f0-9]{32,}/i, /ocp-apim-subscription-key/i,
+                           /NCS_API_KEY\s*=\s*["'][^"']+["']/]) {
+      assert(!pattern.test(text), `${file} matched ${pattern}`);
+    }
+  }
+});
+
+test("the market data is fetched from this site and nowhere else", async () => {
+  const source = await (await fetch(
+    new URL("../js/market-data.js", import.meta.url))).text();
+  const urls = [...source.matchAll(/https?:\/\/[^\s"'`)]+/g)].map((hit) => hit[0]);
+  equal(urls.length, 0,
+        `market-data.js references outside origins: ${urls.join(", ")}`);
+});
+
+/** A profile carrying only the given preferences. */
+function withPreferences(preferences) {
+  return normaliseProfile({ ...demoProfile("bms"), preferences });
+}
 
 /* --------------------------------------------------------------- runner */
 

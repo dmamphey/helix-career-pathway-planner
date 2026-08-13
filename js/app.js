@@ -12,7 +12,8 @@ import * as storage from "./storage.js";
 import { loadCareers, sourcesFor } from "./career-data.js";
 import * as market from "./market-data.js";
 import * as comparison from "./comparison.js";
-import { normaliseProfile } from "./profile.js";
+import { normaliseProfile, hasPreferences } from "./profile.js";
+import { preferenceFit } from "./preference-fit.js";
 import { rankCareers, scoreCareer } from "./matcher.js";
 import { analyseGaps } from "./gap-engine.js";
 import { buildPathway } from "./pathway-engine.js";
@@ -33,6 +34,7 @@ import * as savedView from "./views/saved.js";
 import * as planView from "./views/plan.js";
 import * as dataView from "./views/data.js";
 import * as compareView from "./views/compare.js";
+import * as preferencesView from "./views/preferences.js";
 
 /**
  * The application object passed to every view.
@@ -46,6 +48,8 @@ export const app = {
   state: storage.emptyState(),
   pending: null,
   rankedCache: null,
+  fitCache: new Map(),
+  effortCache: new Map(),
 
   profile() {
     return this.state.profile;
@@ -55,12 +59,39 @@ export const app = {
     return Boolean(this.state.profile);
   },
 
+  /** Has the user answered any of the career-priority questions? */
+  hasPreferences() {
+    return hasPreferences(this.state.profile);
+  },
+
   /** Replace the profile. Ranking is invalidated because it depends on it. */
   setProfile(profile, options = {}) {
     this.state.profile = normaliseProfile(profile);
     this.rankedCache = null;
+    this.fitCache.clear();
+    this.effortCache.clear();
     if (options.save !== false) this.persist();
     return this.state.profile;
+  },
+
+  /**
+   * Preference fit for a career.
+   *
+   * Cached per career because the explorer asks for it while filtering and
+   * sorting all 677. The cache is cleared whenever the profile changes, which is
+   * the only thing that can alter the answer — the career data is static.
+   *
+   * `effort` is optional and deliberately bypasses the cache: it comes from an
+   * async gap analysis that the card lists do not run, so a result computed with
+   * it must not be stored where a caller without it would pick it up.
+   */
+  fitFor(career, effort) {
+    if (!this.state.profile) return null;
+    if (effort) return preferenceFit(this.state.profile, career, { effort });
+    if (!this.fitCache.has(career.id)) {
+      this.fitCache.set(career.id, preferenceFit(this.state.profile, career));
+    }
+    return this.fitCache.get(career.id);
   },
 
   persist() {
@@ -106,7 +137,38 @@ export const app = {
     // so they can never contradict what the rest of the screen shows.
     const effort = transitionEffort(this.state.profile, match, gaps);
     const why = whyThisCareer(this.state.profile, match, gaps);
-    return { career, pack, match, gaps, pathway, actions, effort, why };
+    // Preference fit is computed with the effort in hand, so retraining
+    // tolerance can be one of its dimensions.
+    const fit = this.fitFor(career, effort);
+    return { career, pack, match, gaps, pathway, actions, effort, why, fit };
+  },
+
+  /**
+   * Transition effort alone, for every career the explorer needs to sort or
+   * filter by.
+   *
+   * `analysisFor` builds a pathway and three actions as well, which the explorer
+   * never uses and cannot afford 677 times. This is the same effort object built
+   * from the same match and gap analysis, so the value here and the badge on the
+   * career page can never disagree.
+   */
+  async effortFor(careerId) {
+    if (this.effortCache.has(careerId)) return this.effortCache.get(careerId);
+    const career = this.catalogue.get(careerId);
+    const match = career ? this.matchFor(career) : null;
+    if (!match) return null;
+    const gaps = analyseGaps(this.state.profile, match, await loadRulePack(careerId),
+                             this.catalogue.sources);
+    const effort = transitionEffort(this.state.profile, match, gaps);
+    this.effortCache.set(careerId, effort);
+    return effort;
+  },
+
+  /** Effort for every career, computed once and reused. */
+  async allEfforts() {
+    if (!this.state.profile) return new Map();
+    for (const career of this.catalogue.careers) await this.effortFor(career.id);
+    return this.effortCache;
   },
 
   sourcesFor(career) {
@@ -183,6 +245,8 @@ export const app = {
     this.state = storage.reset();
     this.pending = null;
     this.rankedCache = null;
+    this.fitCache.clear();
+    this.effortCache.clear();
   },
 
   navigate: router.navigate,
@@ -196,6 +260,7 @@ const VIEWS = [
   ["/review", onboardingView.renderReview],
   ["/questions", onboardingView.renderQuestions],
   ["/profile", profileView.render],
+  ["/preferences", preferencesView.render],
   ["/explore", exploreView.renderExplorer],
   ["/matches", exploreView.renderMatches],
   ["/career/:id", careerView.render],

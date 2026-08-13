@@ -36,7 +36,11 @@ The four JSON files beside it are already copied into `data/reference/`.
    already reads `NCS_API_BASE` from the environment, so no code change is needed
    when a route appears.
 
-## State: three commits of upgrade work, all pushed
+## State: the upgrade is complete against §74
+
+All phases of the specification are implemented and verified in a browser.
+
+### Earlier commits
 
 | Commit | What |
 |---|---|
@@ -51,15 +55,49 @@ The four JSON files beside it are already copied into `data/reference/`.
   Skills England), title matcher, derive, resolver, validate, report, CLI.
 - `data/helix_market_data_uk_v1.json` — 677/677 salary: **54 VERIFIED_GUIDE**
   (career-specific National Careers Service profiles), **202 INDICATIVE**,
-  **421 LIMITED_DATA**. Validation passes.
+  **421 LIMITED_DATA**. Validation passes. 54 attributed role summaries,
+  23 with alternative titles.
 - `js/market-data.js`, `js/comparison.js`, `js/transition-effort.js`,
-  `js/views/compare.js`.
-- Career cards: salary, evidence badge, hours, Compare toggle. Career ID and
-  pathway-depth badges removed from cards.
-- Compare: own state separate from Saved, toggles on Explorer/My Options/Saved
-  cards, persistent tray, `#/compare/CP-003,CP-019` shareable route, "what stands
-  out", mobile stacked layout.
-- 54 pre-existing browser tests still pass.
+  `js/preference-fit.js`, `js/views/compare.js`, `js/views/preferences.js`.
+- Career cards: salary, evidence badge, hours, fit, effort, Compare toggle.
+  Career ID and pathway-depth badges removed.
+- Compare: own state separate from Saved, toggles on Explorer/My Options/Saved/
+  career pages, persistent tray, `#/compare/CP-003,CP-019` shareable route,
+  "what stands out", mobile stacked layout, preference-fit rows.
+- **Preference fit** (§30–§32): 12 optional questions at `#/preferences` and
+  folded into the onboarding questions step. Scores only dimensions where both
+  the preference and the career data exist, normalises over what was scored, and
+  never penalises missing data. Kept entirely out of alignment.
+- **Explorer** (§35–§37): salary "reaches at least" filter, seven sort orders,
+  work-pattern / remote / patient-contact / lab / research / commercial /
+  evidence / fit filters. Pathway depth demoted to Advanced filters and renamed
+  "Helix content depth".
+- **Career detail** (§39–§41): decision header, salary and working-life section
+  with an "About this salary" drill-down dialog, authoritative role descriptions
+  where they exist, Compare and Save, separate evidence sections.
+- **Saved** (§42): its duplicate comparison table removed; it now drives the same
+  selection every other screen drives.
+- **PDF plan** (§44): salary and evidence, working life, the three measures with
+  their reasons, "other options considered" from the shortlist, salary source.
+- `.github/workflows/refresh-market-data.yml` (§47) and
+  `docs/MARKET-DATA-METHODOLOGY.md` (§66).
+- **Tests: 90 browser checks and 48 Python checks, all passing.**
+
+### Two behaviour changes worth knowing about
+
+1. **`matcher.js` no longer reads `profile.preferences`.** The "stated interests"
+   component used to fold in an orientation-preference term, which is the exact
+   conflation §31 forbids. No interface ever wrote those fields, so the term was
+   a constant 0.5 for every real profile; it was replaced by the constant it
+   contributed, and **no alignment score anybody has seen has changed**. The
+   suite now tests that changing a preference cannot move a single score.
+2. **The NCS public-profile parser was producing role summaries full of page
+   furniture** ("Biomedical scientist Biomedical scientist Alternative titles for
+   this job include Biomedical scientists test patient samples…"). It was
+   invisible until the career page started rendering summaries. Fixed by
+   anchoring the description at the job title used as its subject; the dataset
+   was regenerated offline from the HTTP cache, so it cost no API quota. All 54
+   now extract cleanly, and both suites test for the regression.
 
 ## Invariants — breaking any of these is a regression
 
@@ -87,56 +125,39 @@ The four JSON files beside it are already copied into `data/reference/`.
    `enrich.py`). A limited run has few anchors, so unresolved careers come back
    empty — those must not overwrite good published records.
 
-## What remains
+## What would come next
 
-### Phase 3 (finish) — preference fit  ← start here
-Spec §30–§32. The biggest missing piece.
-- New profile fields: salary aspiration, work-life-balance importance, shift and
-  on-call tolerance, remote/hybrid preference, travel tolerance, patient-contact
-  preference, lab/research/commercial/leadership orientation, retraining tolerance.
-  Optional and skippable; local only; no personal identifiers.
-- `js/preference-fit.js`: deterministic, scores only dimensions where **both** the
-  preference and the career data exist, normalises over what is available, and
-  never penalises a career for missing data. Labels: Very strong / Strong / Mixed /
-  Low fit / Not enough preference data. Show contributing reasons and mismatches.
-- **Must stay separate from background alignment.** Changing preferences must not
-  change alignment scores — the spec asks for a test proving it.
-- Wiring already exists: `careerCard({ fit })` renders a badge, and the Compare
-  "Fit for you" panel has a slot.
+Nothing in the specification is outstanding. What is left is data quality, and
+all of it needs either a decision or an external unblock.
 
-### Phase 4 — Explorer, career detail, PDF
-- **Explorer** (§35–§38): salary filter ("typical salary reaches at least £30k /
-  £40k / …"), salary sort by `typical_high` descending with title-then-id
-  tie-break, work-pattern/hours/remote/patient-contact/lab/research/commercial
-  filters, effort and fit filters when a profile exists. Remove or demote pathway
-  depth.
-- **Career detail** (§39–§41): currently untouched and now inconsistent with the
-  cards. Needs a decision header (salary, evidence, hours, work pattern, alignment,
-  fit, effort), salary + working-life section with drill-down, role-specific
-  description where authoritative (54 careers have one), Compare and Save actions,
-  and removal of the career-ID and pathway-depth badges.
-- **PDF plan** (§44): add salary and evidence label, working-life summary,
-  transition effort, preference fit, and optionally "other options considered".
-
-### Phase 5 — automation, docs, tests
-- `.github/workflows/refresh-market-data.yml` (§47): `workflow_dispatch` + monthly,
-  pinned deps, reads `NCS_API_KEY`, runs enrich → validate → audit, **fails if
-  coverage is not 677/677 or if secrets appear in output**, opens a PR rather than
-  pushing to `main`.
-- `docs/MARKET-DATA-METHODOLOGY.md` (§66): readable by a non-developer.
-- Tests (§56–§58): market-data integrity, resolver fixtures (exact match, alias,
-  ambiguous rejection, derivation, family fallback, anomaly, large-change flag),
-  Compare behaviour, preference determinism, privacy, GitHub Pages paths.
-  Existing suite: `tests/suite.js`, run at `/tests/` in a browser.
+1. **Curate `data/reference/ncs_career_aliases.json`.** The single highest-value
+   piece of work available. 737 public NCS profiles exist and only 54 matched by
+   exact title, so curated aliases would convert a large share of the 421
+   LIMITED_DATA estimates into career-specific evidence without waiting for
+   anybody. The resolver already reads the file; each entry is a human judgement.
+2. **Human-verified SOC 2020 codes.** There are currently zero STRONG_ESTIMATE
+   records, because the ONS tier needs a defensible SOC mapping and none is
+   verified. This is the second-largest lever.
+3. **The NCS API**, once it exists — see the conflict note above.
+4. **Regional salary contexts.** The schema holds them; no data is loaded, and a
+   blanket London multiplier would be worse than nothing.
+5. **Work settings.** `work_settings` is empty for all 677: the public profile
+   pages do not carry it in a form the parser can trust. The career page and
+   Compare already say "Not yet available" rather than guessing.
 
 ## How to run and verify
 
 ```bash
 python tools/serve.py                 # http://localhost:8766 (threaded, no-cache)
 ```
-Tests: open `http://localhost:8766/tests/` — 54 should pass. They need fixtures:
+Browser tests: open `http://localhost:8766/tests/` — **90 should pass**. They need
+fixtures:
 ```bash
 python tests/make_fixtures.py
+```
+Pipeline tests — no browser, no network, no API quota. **48 should pass**:
+```bash
+python tools/market_data/tests.py
 ```
 Enrichment (offline is safe and costs no API quota):
 ```bash
@@ -157,11 +178,15 @@ Build DOM with `h()` from `js/ui.js`, never `innerHTML` for data. Every status
 carries text or a symbol, never colour alone. British English. Comments explain
 *why*, not what. Verify in a real browser before claiming something works.
 
+Both conflicts noted at the top of this file are still open and still unresolved
+in the pack's favour: the live URL has not been changed, and the NCS provider
+still reads `NCS_API_BASE` from the environment.
+
 ## Ask the user about
 
-1. The `/career-pathway/` vs `/helix-career-pathway-planner/` URL conflict.
+1. The `/career-pathway/` vs `/helix-career-pathway-planner/` URL conflict. The
+   long path is still live and the README still says so; §4 of the pack still
+   says the opposite. Nothing has been changed either way.
 2. Whether NCS has attached the API and supplied a base URL.
-3. Whether to curate `data/reference/ncs_career_aliases.json` — 737 public NCS
-   profiles exist and only 54 matched by exact title, so curated aliases would
-   convert a large share of the 421 LIMITED_DATA estimates into career-specific
-   evidence without waiting for anyone. Each entry is a human judgement.
+3. Whether to curate `data/reference/ncs_career_aliases.json`, and whether to
+   commission verified SOC 2020 mappings — items 1 and 2 above.

@@ -194,23 +194,117 @@ def parse_public_profile(slug: str, title: str, url: str,
         patterns.append("home working possible")
     profile.work_patterns = patterns
 
-    # The opening sentence of a profile is its role summary. Bounded length, and
-    # stored as text rather than markup: provider output is data, never HTML.
-    lead = re.split(r"Average salary \(a year\)", text)[0]
-    lead = re.sub(r"^.*?(?:Skip to main content|Hide)\s*", "", lead)
-    lead = re.split(r"(?:National Careers Service|Menu|Explore careers)\s*", lead)[-1]
-    sentence = re.split(r"(?<=[.!?])\s+", lead.strip())
-    summary = " ".join(s for s in sentence if len(s) > 30)[:600]
-    profile.summary = summary.strip()
-
-    also = re.search(r"Also known as\s*(.{0,200}?)(?:Average salary|What you)", text,
-                     re.I)
-    if also:
-        profile.alternative_titles = [
-            part.strip() for part in re.split(r",|/", also.group(1))
-            if 2 < len(part.strip()) < 60][:6]
-
+    profile.summary, profile.alternative_titles = _lead(text, title)
     return profile
+
+
+def _plural_forms(title: str) -> list[str]:
+    """The title and the plurals a description might open with.
+
+    Only the regular English rules plus the two irregular endings that actually
+    occur in this catalogue — "midwife" becomes "midwives", not "midwifes". The
+    longest forms come first so the alternation prefers "midwives" over a
+    partial match on "midwife".
+    """
+    forms = {title}
+    lower = title.lower()
+    if lower.endswith(("fe",)):
+        forms.add(f"{title[:-2]}ves")
+    elif lower.endswith("f"):
+        forms.add(f"{title[:-1]}ves")
+    elif lower.endswith("man"):
+        forms.add(f"{title[:-2]}en")
+    elif lower.endswith("y") and not lower.endswith(("ay", "ey", "oy", "uy")):
+        forms.add(f"{title[:-1]}ies")
+    elif lower.endswith(("s", "x", "ch", "sh")):
+        forms.add(f"{title}es")
+    else:
+        forms.add(f"{title}s")
+    forms.add(f"{title}'s")
+    return sorted(forms, key=len, reverse=True)
+
+
+def _lead(text: str, title: str) -> tuple[str, list[str]]:
+    """Split the page furniture from the role description and the alt titles.
+
+    A profile page runs: navigation, breadcrumb, the title twice, optionally
+    "Alternative titles for this job include" and a list of them, then the one
+    real sentence describing the role, then "Average salary (a year)". None of
+    those parts are delimited by punctuation, so cutting on sentence boundaries
+    alone produced summaries reading "Biomedical scientist Biomedical scientist
+    Alternative titles for this job include Biomedical scientists test patient
+    samples..." — the heading, the label and the description run together.
+
+    The boundary that does hold is the title itself: NCS descriptions open with
+    the job title as their subject, usually pluralised. So the description starts
+    at the last occurrence of the title in the remainder, and anything between the
+    "Alternative titles" label and that point is the alternative-title list.
+
+    Where the title cannot be found the summary is left empty rather than guessed
+    at. An empty summary makes the career fall back to the honest family
+    description; a wrong one would be published as an authoritative role
+    description, which is worse.
+    """
+    lead = re.split(r"Average salary \(a year\)", text)[0]
+    lead = re.split(r"Home\s+Explore careers\s+", lead)[-1]
+    lead = re.sub(r"^.*?(?:Skip to main content|Hide)\s*", "", lead)
+    lead = re.split(r"(?:National Careers Service|Menu|Explore careers)\s*",
+                    lead)[-1].strip()
+
+    alternatives: list[str] = []
+    label = re.search(r"Alternative titles for this job include\s*", lead, re.I)
+    if label:
+        head, tail = lead[:label.start()], lead[label.end():]
+    else:
+        head, tail = lead, lead
+
+    # Drop the repeated heading from the front of the remainder. The lookahead
+    # matters: without it "Geneticist" eats the start of "Geneticists study how
+    # genes work", and the description is lost along with its first word.
+    escaped = re.escape(title.strip())
+    tail = re.sub(rf"^(?:{escaped}(?![A-Za-z])\s*)+", "", tail,
+                  flags=re.I).strip()
+
+    # The description begins where the title is used as a subject, allowing the
+    # plural and a possessive. Only mentions inside the opening window can be
+    # that opening — a later mention is the description talking about itself, and
+    # anchoring on it would cut the description in half.
+    window = 200
+    subject = "|".join(re.escape(form) for form in _plural_forms(title.strip()))
+    starts = [m for m in re.finditer(rf"(?:{subject})\b", tail, re.I)]
+    opening = [m for m in starts if m.start() < window]
+    match = opening[-1] if opening else (starts[0] if starts else None)
+
+    if match:
+        begin = match.start()
+        if label and begin > 0:
+            alternatives = [
+                part.strip() for part in re.split(r",|/|\band\b", tail[:begin])
+                if 2 < len(part.strip()) < 60][:6]
+        summary = tail[begin:].strip()
+    else:
+        summary = ""
+
+    # Prefer complete sentences: anything that never terminates is usually page
+    # furniture that survived the cuts above. But a few profiles simply run
+    # straight into the salary block with no closing full stop, and dropping a
+    # correctly anchored description over missing punctuation would lose real
+    # content — so an unterminated remainder is kept as it stands. Nothing is
+    # added to it, including a full stop Helix would be inventing.
+    sentences = re.findall(r"[^.!?]{25,}[.!?]", summary)
+    if sentences:
+        summary = " ".join(s.strip() for s in sentences)
+    summary = summary[:600].strip()
+
+    if not alternatives and not label:
+        also = re.search(r"Also known as\s*(.{0,200}?)(?:Average salary|What you)",
+                         head, re.I)
+        if also:
+            alternatives = [
+                part.strip() for part in re.split(r",|/", also.group(1))
+                if 2 < len(part.strip()) < 60][:6]
+
+    return summary, alternatives
 
 
 class ApiProvider:

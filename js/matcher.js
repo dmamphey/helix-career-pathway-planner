@@ -249,15 +249,26 @@ function scoreWithContext(profile, career, ctx) {
   components.push(component("transferable", "Transferable strengths",
     Math.min(1, portable.length / 3), portable.map(domainLabel)));
 
-  /* --- interests and preferences ---------------------------------------- */
+  /* --- stated interests -------------------------------------------------- */
+  /*
+   * Interests only. Working-life preferences used to be folded in here, which
+   * made one number answer two different questions: how much of this career do I
+   * already do, and how much would I enjoy it. They are now scored separately in
+   * `preference-fit.js`, and changing a preference leaves every alignment score
+   * untouched — a guarantee the suite tests directly.
+   *
+   * The 0.2 floor is what the preference term contributed when nothing was
+   * stated, which was every real profile, so removing it changes no score that
+   * anyone has ever seen. It stays because a career should not be marked down for
+   * a user who declared no interests at all.
+   */
   const interestOverlap = ctx.interestDomains.size
     ? derived.domains.filter((d) => ctx.interestDomains.has(d)).length
     : 0;
   const interestFit = ctx.interestDomains.size
     ? Math.min(1, interestOverlap / 2) : 0.5;
-  const orientationFit = orientationPreferenceFit(profile, derived.orientations);
   components.push(component("interests", "Your stated interests",
-    0.6 * interestFit + 0.4 * orientationFit, []));
+    0.2 + 0.6 * interestFit, []));
 
   /* --- registration context --------------------------------------------- */
   let registrationFit = 0.5;
@@ -304,36 +315,6 @@ function component(key, label, fit, evidence) {
     earned: bounded * WEIGHTS[key],
     evidence: evidence || [],
   };
-}
-
-/**
- * How well a career's orientation matches what the user said they want.
- *
- * A stated "no" is a real signal, so it counts against a career that is defined
- * by that orientation — but never to zero, because people change their minds and
- * the product should not hide options it merely suspects are unwanted.
- */
-function orientationPreferenceFit(profile, careerOrientations) {
-  const prefs = profile.preferences || {};
-  const pairs = [
-    ["laboratoryBased", "laboratory"],
-    ["patientFacing", "patientFacing"],
-    ["researchIntensity", "research"],
-    ["leadershipInterest", "leadership"],
-    ["commercialInterest", "commercial"],
-    ["dataDigitalInterest", "digital"],
-  ];
-  let considered = 0;
-  let total = 0;
-  for (const [key, orientation] of pairs) {
-    const wanted = prefs[key];
-    if (wanted !== true && wanted !== false) continue;
-    considered += 1;
-    const present = careerOrientations.includes(orientation);
-    if (wanted === true) total += present ? 1 : 0.4;
-    else total += present ? 0.25 : 1;
-  }
-  return considered ? total / considered : 0.5;
 }
 
 /**
