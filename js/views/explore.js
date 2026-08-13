@@ -172,6 +172,23 @@ export async function renderMatches(app) {
   const host = h("div", { class: "stack" });
   const shown = { closest: 4, adjacent: 4, pivots: 4 };
 
+  // Effort and the "why" line need the gap analysis, which is async because a rule
+  // pack may load. They are computed once for the careers actually on screen
+  // rather than for all 677.
+  const decorations = new Map();
+  const decorate = async () => {
+    const onScreen = ["closest", "adjacent", "pivots"].flatMap(
+      (key) => groups[key].items.slice(0, shown[key]));
+    for (const match of onScreen) {
+      if (decorations.has(match.careerId)) continue;
+      const analysis = await app.analysisFor(match.careerId);
+      decorations.set(match.careerId, {
+        effort: analysis.effort,
+        whyLine: analysis.why.why,
+      });
+    }
+  };
+
   const draw = () => {
     host.replaceChildren(
       panel("Career options from your profile", [
@@ -198,6 +215,10 @@ export async function renderMatches(app) {
                 group.items.slice(0, shown[key]).map((match) =>
                   careerCard(match.career, {
                     match,
+                    effort: decorations.get(match.careerId)
+                      ? decorations.get(match.careerId).effort : null,
+                    why: decorations.get(match.careerId)
+                      ? decorations.get(match.careerId).whyLine : null,
                     saved: app.isSaved(match.careerId),
                     comparing: app.isComparing(match.careerId),
                     onCompare: (id) => { app.toggleCompare(id); draw(); },
@@ -208,8 +229,9 @@ export async function renderMatches(app) {
             : empty("Nothing fell into this group for your profile."),
           group.items.length > shown[key]
             ? h("div", { class: "card-actions center" }, [
-                button("View more", () => {
+                button("View more", async () => {
                   shown[key] += 4;
+                  await decorate();
                   draw();
                 }, { variant: "quiet" }),
               ])
@@ -219,6 +241,7 @@ export async function renderMatches(app) {
       summary(ranked),
     );
   };
+  await decorate();
   draw();
   return host;
 }

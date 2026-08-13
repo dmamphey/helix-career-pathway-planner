@@ -54,6 +54,8 @@ export async function render(app, context) {
       role: market.role(id),
       match: analysis ? analysis.match : null,
       gaps: analysis ? analysis.gaps : null,
+      effort: analysis ? analysis.effort : null,
+      why: analysis ? analysis.why : null,
       pack: await loadRulePack(id),
     });
   }
@@ -164,6 +166,11 @@ function fitPanel(app, entries) {
     grid(entries, [
       ["Background alignment", (entry) => entry.match
         ? alignmentBadge(entry.match) : text("—")],
+      ["Transition effort", (entry) => entry.effort
+        ? h("span", { class: `effort effort-${entry.effort.key}`,
+                      title: entry.effort.explain }, entry.effort.label)
+        : text("—")],
+      ["Why it appeared", (entry) => text(entry.why ? entry.why.why : "—")],
       ["Strengths you already have", (entry) => list(
         entry.gaps ? entry.gaps.transitions.transferable.slice(0, 4) : [])],
       ["Strengths needing translation", (entry) => list(

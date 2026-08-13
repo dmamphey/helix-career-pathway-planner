@@ -17,6 +17,7 @@ import { rankCareers, scoreCareer } from "./matcher.js";
 import { analyseGaps } from "./gap-engine.js";
 import { buildPathway } from "./pathway-engine.js";
 import { nextActions } from "./action-engine.js";
+import { transitionEffort, whyThisCareer } from "./transition-effort.js";
 import { loadRulePack } from "./rules.js";
 import {
   clear, errorPanel, clearNotice, notice, button, h, link,
@@ -101,7 +102,11 @@ export const app = {
                                  this.state.progress[careerId] || {});
     const actions = nextActions(this.state.profile, match, gaps, pathway,
                                 { registry: this.catalogue.sources });
-    return { career, pack, match, gaps, pathway, actions };
+    // Effort and the explanation are derived from the same match and gap objects,
+    // so they can never contradict what the rest of the screen shows.
+    const effort = transitionEffort(this.state.profile, match, gaps);
+    const why = whyThisCareer(this.state.profile, match, gaps);
+    return { career, pack, match, gaps, pathway, actions, effort, why };
   },
 
   sourcesFor(career) {
