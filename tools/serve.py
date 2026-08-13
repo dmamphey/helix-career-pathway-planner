@@ -19,7 +19,6 @@ from __future__ import annotations
 import argparse
 import functools
 import http.server
-import socketserver
 import sys
 from pathlib import Path
 
@@ -54,8 +53,11 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
 
     handler = functools.partial(NoCacheHandler, directory=str(ROOT))
-    socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer((args.bind, args.port), handler) as server:
+    # Threaded, not the single-request-at-a-time default. A browser opens several
+    # connections at once for the modules and the dataset, and a single-threaded
+    # server can stall until one of them times out.
+    http.server.ThreadingHTTPServer.allow_reuse_address = True
+    with http.server.ThreadingHTTPServer((args.bind, args.port), handler) as server:
         print(f"Helix on http://{args.bind}:{args.port}/")
         print(f"Tests      on http://{args.bind}:{args.port}/tests/")
         print("Ctrl+C to stop.")

@@ -110,8 +110,15 @@ a:hover { text-decoration-thickness: 2px; }
 }
 .brand-mark { color: var(--brand-cyan); display: inline-flex; }
 .brand-text { display: flex; flex-direction: column; line-height: 1.15; }
-.brand-text strong { font-size: 1.2rem; letter-spacing: -.01em; }
-.brand-text small { font-size: .74rem; color: #cfe3f6; }
+/* Both lines are the product name, so both are bold and both are white. The
+   second line is smaller only to fit the bar, not because it is a strapline. */
+.brand-text strong { font-size: 1.24rem; letter-spacing: -.01em; }
+.brand-text small {
+  font-size: .82rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: .005em;
+}
 
 #nav { display: flex; flex-wrap: wrap; gap: .2rem .35rem; }
 #nav a {

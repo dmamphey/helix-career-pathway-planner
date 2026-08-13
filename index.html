@@ -12,7 +12,7 @@
 <meta property="og:description" content="Explore career possibilities, understand what your chosen pathway may require, identify development gaps and turn them into a practical action plan.">
 <meta name="twitter:card" content="summary">
 <!-- Inline favicon, so the app stays self-contained and works from any subdirectory. -->
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='13' fill='%2317395f'/%3E%3Cpath d='M14 44 L28 30 L38 40 L52 20' stroke='%2322a7d0' stroke-width='6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='52' cy='20' r='6' fill='%231878c4'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='13'%20fill='%2317395f'/%3E%3Cg%20stroke='%2322a7d0'%20fill='none'%20stroke-width='5'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M32%206L38%209L43%2012L45%2015L44%2018L40%2021L34%2024L28%2027L22%2030L19%2033L19%2036L22%2039L28%2042L34%2045L40%2048L44%2051L45%2054L43%2057'/%3E%3Cpath%20d='M32%206L26%209L21%2012L19%2015L20%2018L24%2021L30%2024L36%2027L42%2030L45%2033L45%2036L42%2039L36%2042L30%2045L24%2048L20%2051L19%2054L21%2057'/%3E%3Cpath%20d='M19%2015.5L45%2015.5'%20stroke-width='4'/%3E%3Cpath%20d='M19%2034.5L45%2034.5'%20stroke-width='4'/%3E%3Cpath%20d='M19%2053.5L45%2053.5'%20stroke-width='4'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -23,10 +23,18 @@
   <div class="bar">
     <a class="brand" href="#/">
       <span class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 64 64" width="28" height="28" focusable="false">
-          <path d="M8 46 L26 28 L38 40 L56 16" stroke="currentColor"
-                stroke-width="7" fill="none" stroke-linecap="round"
-                stroke-linejoin="round"/>
+        <!-- A DNA double helix: two sine backbones in antiphase with three
+             base-pair rungs. The strands are sampled polylines rather than
+             Béziers because at these sizes the two are indistinguishable and this
+             is half the path data. -->
+        <svg viewBox="0 0 64 64" width="34" height="34" focusable="false"
+             stroke="currentColor" fill="none" stroke-width="5"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M32 6L38 9L43 12L45 15L44 18L40 21L34 24L28 27L22 30L19 33L19 36L22 39L28 42L34 45L40 48L44 51L45 54L43 57"/>
+          <path d="M32 6L26 9L21 12L19 15L20 18L24 21L30 24L36 27L42 30L45 33L45 36L42 39L36 42L30 45L24 48L20 51L19 54L21 57"/>
+          <path d="M19 15.5L45 15.5" stroke-width="4"/>
+          <path d="M19 34.5L45 34.5" stroke-width="4"/>
+          <path d="M19 53.5L45 53.5" stroke-width="4"/>
         </svg>
       </span>
       <!-- The full product name, set over two lines so it reads as one name in
