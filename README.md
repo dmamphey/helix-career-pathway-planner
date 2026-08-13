@@ -333,10 +333,10 @@ The enrichment pipeline has its own suite, which needs no browser and no network
 python tools/market_data/tests.py
 ```
 
-48 checks covering title matching (including the rule that a seniority variant is
+62 checks covering title matching (including the rule that a seniority variant is
 never a direct match), salary derivation, range rounding, profile-page parsing,
-the published file's completeness, and the validator's ability to reject data the
-resolver would never produce.
+record freshness, the alias worklist, the published file's completeness, and the
+validator's ability to reject data the resolver would never produce.
 
 ### Testing privacy yourself
 

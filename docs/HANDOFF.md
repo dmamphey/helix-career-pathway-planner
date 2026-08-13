@@ -81,7 +81,7 @@ All phases of the specification are implemented and verified in a browser.
   their reasons, "other options considered" from the shortlist, salary source.
 - `.github/workflows/refresh-market-data.yml` (§47) and
   `docs/MARKET-DATA-METHODOLOGY.md` (§66).
-- **Tests: 90 browser checks and 48 Python checks, all passing.**
+- **Tests: 90 browser checks and 62 Python checks, all passing.**
 
 ### Two behaviour changes worth knowing about
 
@@ -155,7 +155,7 @@ fixtures:
 ```bash
 python tests/make_fixtures.py
 ```
-Pipeline tests — no browser, no network, no API quota. **48 should pass**:
+Pipeline tests — no browser, no network, no API quota. **62 should pass**:
 ```bash
 python tools/market_data/tests.py
 ```
