@@ -24,6 +24,7 @@ import {
   dialog, empty, scoredFit,
 } from "../ui.js";
 import * as market from "../market-data.js";
+import { money } from "../market-data.js";
 import { adjacentCareers } from "../adjacency.js";
 import { loadRulePack } from "../rules.js";
 import { developmentIndicators } from "../matcher.js";
@@ -234,6 +235,28 @@ function economicsCard(career, pay, work) {
             h("span", { class: "hint", text: ` a year · ${pay.geography}` }),
             evidenceBadge(pay),
           ]),
+          /*
+           * Say which end is which. A published career range spans entry to
+           * experienced, and without labels its top end gets read as the
+           * ceiling of a single pay grade — which is how a biomedical
+           * scientist's £53k comes to look wrong against an NHS Band 5.
+           */
+          pay.spansCareer
+            ? h("p", { class: "pay-ends" }, [
+                h("span", {}, [h("strong", { text: money(pay.starter) }),
+                               " starting out"]),
+                h("span", { class: "pay-ends-sep", "aria-hidden": "true",
+                            text: "→" }),
+                h("span", {}, [h("strong", { text: money(pay.experienced) }),
+                               " when experienced"]),
+              ])
+            : null,
+          pay.spansCareer
+            ? h("p", { class: "hint", text: "That is the span of a whole career, "
+                + "from a starting salary to an experienced one. It is not the "
+                + "range of a single pay grade, and the upper figure usually "
+                + "reflects progression into more senior posts." })
+            : null,
           h("p", { class: "hint", text: `${pay.methodLabel}. Last checked `
             + `${pay.lastVerified}.`
             + (pay.stale ? " This record is past its review date." : "") }),
@@ -301,6 +324,14 @@ function salaryDialog(career, pay) {
       h("dd", { text: pay.geography }),
       h("dt", { text: "Range" }),
       h("dd", { text: `${pay.range} a year` }),
+      ...(pay.spansCareer ? [
+        h("dt", { text: "What the two ends mean" }),
+        h("dd", { text: `${money(pay.starter)} is a starting salary and `
+          + `${money(pay.experienced)} an experienced one. The range covers a `
+          + `whole career including progression, not one pay grade. Where a role `
+          + `sits on a public-sector pay framework, that framework's bands are `
+          + `the thing to compare a specific post against.` }),
+      ] : []),
       h("dt", { text: "Last checked" }),
       h("dd", { text: pay.lastVerified || "Not recorded" }),
       h("dt", { text: "Next review due" }),

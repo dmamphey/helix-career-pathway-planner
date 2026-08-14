@@ -35,6 +35,28 @@ issued. A derived figure is rounded to the nearest thousand, because it is the
 output of an average rather than a published number, and its digits should not
 claim a precision the arithmetic cannot support.
 
+### What a published range actually spans
+
+A National Careers Service range runs from a **starting salary** to an
+**experienced** one, across the whole of a career. It is not the span of a single
+pay grade.
+
+That distinction matters most in the NHS. Biomedical Scientist is published as
+£30,000 to £53,000, and a biomedical scientist entering the profession is on
+Agenda for Change Band 5 — whose top is well below £53,000 nationally. The two
+figures are not in conflict: the £53,000 end describes an experienced biomedical
+scientist who has progressed, typically into the specialist and senior grades
+above Band 5, not somebody at the top of Band 5. Helix now labels the two ends
+explicitly on each career page for exactly this reason.
+
+So a higher upper figure does not mean the private sector pays more. It usually
+means the range covers more of a career.
+
+Where a role sits on a public-sector pay framework, that framework's own bands
+are the right thing to compare a specific post against. Helix is built to show
+them alongside the market estimate (never instead of it), but only from a curated
+mapping recorded by a person with its source — see the limitations.
+
 ---
 
 ## 2. The two datasets, and why they are separate
@@ -326,6 +348,12 @@ Helix does not claim ownership of Crown copyright source data.
 
 ## 11. Known limitations
 
+- **NHS pay-band context is not yet populated.** Helix supports showing an
+  Agenda for Change band beside the market estimate, and refuses to infer one
+  from a job title. That requires the official pay scale transcribed by a person
+  with its source and effective date, into
+  `data/reference/nhs_pay_framework_map.json`. Until that exists, no bands are
+  shown — an invented band would look official and be wrong.
 - **Regional variation is not modelled.** All figures are UK-wide. The schema can
   hold regional ranges, but applying a blanket London uplift to every career
   would invent a pattern that does not exist evenly across sectors.

@@ -747,6 +747,15 @@ ul.plain, ol.plain { list-style: none; padding: 0; margin: 0; }
 .decision-fact dd { margin: 0; }
 .pay-headline { font-size: 1.15rem; }
 
+/* The two ends of a published career range, named so the upper figure is not
+   read as the ceiling of a single pay grade. */
+.pay-ends {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem .6rem;
+  margin: .1rem 0 .35rem; color: var(--muted);
+}
+.pay-ends strong { color: var(--brand-navy); }
+.pay-ends-sep { color: var(--brand-cyan); font-weight: 700; }
+
 /* Each of the three personal measures gets its own block, so alignment,
    preference fit and effort read as three answers rather than one verdict. */
 .fit-block {

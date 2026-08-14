@@ -648,6 +648,18 @@ export const QUALIFICATION_LEVELS = [
   { level: "BSc", rank: 4, patterns: ["bsc", "b.sc", "bachelor of science",
     "bachelors", "bachelor's", "ba (hons)", "bs hons"] },
   { level: "BEng", rank: 4, patterns: ["beng", "b.eng"] },
+  /*
+   * Catch-alls for the qualifications this list will never enumerate.
+   *
+   * UK life sciences and healthcare draws people from everywhere, and the named
+   * entries above cover the common British routes and little else. Somebody with
+   * a BTech, an LLB, a DVM or a professional doctorate had no honest option but
+   * to pick a level that was not theirs, which puts a wrong qualification into a
+   * profile that education matching then reads. The patterns are only the
+   * unambiguous abbreviations; anything else is chosen from the dropdown.
+   */
+  { level: "Other Bachelors", rank: 4,
+    patterns: ["btech", "b.tech", "llb", "bvsc", "bvetmed", "bpharm"] },
   { level: "MPharm", rank: 5, patterns: ["mpharm", "pharmd"] },
   { level: "MEng", rank: 5, patterns: ["meng", "m.eng"] },
   { level: "MBBS/MBChB", rank: 6, patterns: ["mbbs", "mbchb", "mb bs",
@@ -660,6 +672,10 @@ export const QUALIFICATION_LEVELS = [
   { level: "MRes", rank: 5, patterns: ["mres", "m.res"] },
   { level: "MPH", rank: 5, patterns: ["mph", "master of public health"] },
   { level: "MBA", rank: 5, patterns: ["mba"] },
+  // "LLM" is deliberately absent: in a life sciences or digital-health CV it now
+  // reads as large language model at least as often as Master of Laws.
+  { level: "Other Masters", rank: 5,
+    patterns: ["mtech", "m.tech", "mmath", "mbiol", "mgeol"] },
   { level: "MPhil", rank: 6, patterns: ["mphil", "m.phil"] },
   { level: "PhD", rank: 7, patterns: ["phd", "ph.d", "dphil", "doctorate",
     "doctor of philosophy"] },
@@ -675,6 +691,16 @@ export const QUALIFICATION_LEVELS = [
    */
   { level: "DBA", rank: 7,
     patterns: ["doctor of business administration", "d.b.a."] },
+  /*
+   * Two obvious abbreviations are left out on purpose, both because they collide
+   * with far commoner words in exactly this sector: "EdD" against the estimated
+   * due date that appears throughout obstetric and midwifery work, and "DHSc"
+   * against the Department of Health and Social Care. Either would read a
+   * routine sentence as a doctorate.
+   */
+  { level: "Other Doctorate", rank: 7,
+    patterns: ["dvm", "engd", "eng.d", "psyd", "dclinpsy",
+               "professional doctorate", "doctor of education"] },
 ];
 
 /**

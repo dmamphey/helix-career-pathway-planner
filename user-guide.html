@@ -27,8 +27,33 @@
   .guide th, .guide td { text-align: left; vertical-align: top;
                          padding: .5rem .6rem; border-bottom: 1px solid var(--line); }
   .guide th { color: var(--brand-navy); }
-  .guide .back { display: inline-block; margin-bottom: 1.2rem; font-weight: 600; }
+  .guide .back { display: inline-block; font-weight: 600; }
+  .guide-actions { display: flex; flex-wrap: wrap; gap: .6rem 1.2rem;
+                   align-items: center; margin-bottom: 1.3rem; }
+  .print-url { display: none; }
   @media (max-width: 46rem) { .guide .contents ol { columns: 1; } }
+
+  /* Printing is how this page becomes a PDF, so the print rules are part of the
+     feature rather than an afterthought. Navigation and the buttons themselves
+     are dropped, the contents list keeps its numbering but loses the link
+     styling, and the site address is printed once so a shared copy can be traced
+     back to the tool. */
+  @media print {
+    @page { size: A4; margin: 15mm 14mm 18mm; }
+    body { background: #fff; font-size: 10.5pt; }
+    .site-head, .site-foot, .skip, .guide-actions, #nav { display: none !important; }
+    .guide { max-width: none; padding: 0; }
+    .guide h1 { font-size: 20pt; }
+    .guide h2 { font-size: 12pt; break-after: avoid; page-break-after: avoid; }
+    .guide h3 { font-size: 10.5pt; break-after: avoid; }
+    .guide h2, .guide h3, .guide table, .guide ul, .guide ol { break-inside: auto; }
+    .guide table, .guide .contents { break-inside: avoid; }
+    .guide .contents { border: 1px solid #999; }
+    .guide .contents ol { columns: 2; }
+    a { color: #000; text-decoration: none; }
+    .print-url { display: block; font-size: 9pt; color: #444;
+                 margin-bottom: 1rem; }
+  }
 </style>
 </head>
 <body>
@@ -62,12 +87,19 @@
 
 <main id="guide-main" class="guide" tabindex="-1">
 
-<a class="back" href="index.html">← Back to Helix</a>
+<div class="guide-actions">
+  <a class="back" href="index.html">← Back to Helix</a>
+  <button type="button" class="btn btn-primary" id="download-pdf">
+    Download as PDF
+  </button>
+</div>
 
 <h1>Helix user guide</h1>
 <p class="lede">How to build a profile, explore 677 UK life sciences and
    healthcare careers, compare your options and produce a plan. Nothing here
    requires an account, and your CV never leaves your device.</p>
+<p class="print-url">Helix Career Pathway Planner —
+   https://tools.optymumss.com/helix-career-pathway-planner/</p>
 
 <nav class="contents" aria-labelledby="contents-heading">
   <h2 id="contents-heading">Contents</h2>
@@ -357,9 +389,30 @@
    professional eligibility, guarantee employment or replace advice from
    regulators, professional bodies, employers or training providers.</p>
 
-<p><a class="back" href="index.html">← Back to Helix</a></p>
+<div class="guide-actions" style="margin-top:2rem">
+  <a class="back" href="index.html">← Back to Helix</a>
+  <button type="button" class="btn btn-primary" id="download-pdf-foot">
+    Download as PDF
+  </button>
+</div>
 
 </main>
+
+<script>
+  /*
+   * The browser's own print-to-PDF, rather than a committed PDF file.
+   *
+   * A binary checked into the repository goes stale the moment the guide is
+   * edited, and nothing makes that visible — you find out when somebody quotes a
+   * version of the instructions that no longer exists. Printing is generated
+   * from the page itself, so it cannot disagree with it, and it produces a real
+   * selectable, searchable PDF with working internal links.
+   */
+  for (const id of ["download-pdf", "download-pdf-foot"]) {
+    const button = document.getElementById(id);
+    if (button) button.addEventListener("click", () => window.print());
+  }
+</script>
 
 <footer class="site-foot">
   <p class="foot-links">

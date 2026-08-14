@@ -144,6 +144,21 @@ export function salary(careerId) {
     low: raw.typical_low,
     high: raw.typical_high,
     range: `${money(raw.typical_low)} to ${money(raw.typical_high)}`,
+    /*
+     * The two ends of a career, where the source gave them separately.
+     *
+     * This matters more than it looks. A National Careers Service range runs
+     * from a starting salary to an experienced one *across the whole career*,
+     * so a biomedical scientist's £30k to £53k spans entry through to the
+     * senior grades — it is not the span of one pay band, and reading it as one
+     * makes the top look implausible against an NHS Band 5. Naming the two ends
+     * is the difference between a figure that can be checked and a figure that
+     * invites the wrong comparison.
+     */
+    starter: Number.isFinite(raw.starter) ? raw.starter : null,
+    experienced: Number.isFinite(raw.experienced) ? raw.experienced : null,
+    spansCareer: Number.isFinite(raw.starter) && Number.isFinite(raw.experienced)
+      && raw.starter !== raw.experienced,
     currency: raw.currency || "GBP",
     period: raw.period || "year",
     geography: raw.geography || "UK",
