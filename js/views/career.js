@@ -166,11 +166,19 @@ function regulationCard(career, app) {
 /**
  * What the career involves.
  *
- * An authoritative role summary is used where one exists — 54 careers have a
- * matched official job profile — and it is attributed. Where none exists the
- * screen shows the career family's description and says plainly that that is
- * what it is. Generating confident role-specific prose for the other 623 would be
- * the single easiest way to make this product untrustworthy.
+ * Every career gets a description of its own, and the screen always says which
+ * of two kinds it is reading.
+ *
+ * An authoritative summary — 143 careers have a matched official job profile —
+ * is the publisher's own words, and is attributed to them. Otherwise the
+ * pipeline composes a description from that career's recorded attributes, and
+ * the note beneath it says so. The composed text arrives in its own field, so
+ * the attribution line above cannot reach it however this function is edited.
+ *
+ * The family paragraph used to stand in for a missing description. It was
+ * honest but useless — fifty careers in a family shared one paragraph, so it
+ * could not tell any of them apart. It is now folded underneath, where it reads
+ * as context rather than as the answer to what this job is.
  */
 function aboutCard(career, role) {
   const authoritative = role && role.summary;
@@ -188,13 +196,29 @@ function aboutCard(career, role) {
             ", used under the Open Government Licence v3.0.",
           ]),
         ])
+      /*
+       * A composed description, clearly marked as one.
+       *
+       * It used to show the career family's paragraph — the same words across
+       * fifty careers — which answered "what is this area of work" rather than
+       * "what is this job". The composed text is assembled from this career's
+       * own recorded attributes, so it is at least about the right career, and
+       * the note below says plainly where it came from. The family paragraph
+       * follows as context rather than as the answer.
+       */
       : h("div", {}, [
-          h("p", { text: career.derived.familyAbout }),
-          h("p", { class: "hint", text:
-            "That paragraph describes the career family this role sits in, not "
-            + "the role itself. Helix has not matched an official job profile for "
-            + "this specific career, and does not write a role description it "
-            + "cannot source." }),
+          h("p", { text: role && role.composedSummary
+            ? role.composedSummary : career.derived.familyAbout }),
+          h("p", { class: "hint", text: (role && role.summaryNote)
+            || "No organisation has published a profile for this exact job "
+               + "title, so this is composed from what Helix records about the "
+               + "career rather than quoted from a source." }),
+          role && role.composedSummary
+            ? h("details", { class: "family-context" }, [
+                h("summary", { text: `About ${career.family}` }),
+                h("p", { text: career.derived.familyAbout }),
+              ])
+            : null,
         ]),
 
     role && role.alternativeTitles.length
@@ -682,9 +706,13 @@ function evidenceCard(app, career, pay, work, role, pack) {
     h("h3", { text: "Role description" }),
     h("p", { text: role && role.summary
       ? "The description on this page comes from an official job profile matched "
-        + "to this career."
-      : "No official job profile has been matched to this career, so the page "
-        + "describes the career family instead and says so." }),
+        + "to this career, and is attributed to its publisher."
+      : "No organisation publishes a job profile for this exact title, so the "
+        + "description on this page is composed by Helix from the career's own "
+        + "recorded attributes — its grade, family, subject areas, regulatory "
+        + "status and working-life profile. Every statement in it traces to a "
+        + "recorded field. It is not an official job description, and Helix does "
+        + "not write prose about duties or employers it has no source for." }),
 
     h("p", { class: "hint", text: `Helix content depth for this career: `
       + `${depthWords(career.pathway_depth)}. That describes how much researched `

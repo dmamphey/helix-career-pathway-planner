@@ -171,8 +171,11 @@ in the codebase edits, reorders or filters out a supplied record.
 Each record carries an id, title, family, jurisdiction, regulatory status,
 regulator or body, pathway depth, core tags, a typical entry signal, official
 source codes and a verification date. There are no per-career descriptions or
-requirements, which is why Helix describes a career's *family* rather than
-inventing prose about the role.
+requirements in the supplied file. Descriptions are supplied by the enrichment
+pipeline instead: 143 careers carry an official job profile's own wording, and
+the rest carry one composed from that career's recorded attributes and labelled
+as composed. See
+[MARKET-DATA-METHODOLOGY.md](docs/MARKET-DATA-METHODOLOGY.md) §7.
 
 Derived attributes — domains, work orientations, a search index — are computed at
 load time from fields the dataset already contains, under a `derived` key so it is
@@ -425,8 +428,9 @@ records stay in the launch taxonomy and are documented for a human decision.
 
 ## Limitations
 
-- No per-career descriptions exist in the dataset, so the detail screen describes
-  the career *family* and says that it is doing so.
+- Only 143 of 716 descriptions are an official job profile's own wording. The
+  rest are composed from recorded attributes and say so; they state what the
+  dataset holds and do not describe duties, employers or prospects.
 - Requirements are unverified for all 677 careers at launch. Two structural rule
   packs exist (CP-003, CP-272), neither carrying verified requirements.
 - The parser is rule-based and conservative. It will miss things, which is why

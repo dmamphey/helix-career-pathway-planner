@@ -629,16 +629,75 @@ class PublishedData(unittest.TestCase):
                 self.assertTrue(record["salary"]["source_records"],
                                 "VERIFIED_GUIDE with no source record")
 
-    def test_a_role_summary_exists_only_where_it_is_attributed(self):
+    def test_every_career_has_a_description(self):
+        """The point of composing them: nobody sees a blank."""
+        for record in self.records:
+            with self.subTest(career=record["career_id"]):
+                self.assertTrue(record["role"].get("summary"),
+                                "this career has no description at all")
+
+    def test_a_description_is_either_attributed_or_marked_as_composed(self):
+        """Two kinds, and no way to mistake one for the other.
+
+        An attributed summary was written by somebody and carries the source
+        record that says who. A composed one is assembled from Helix's own
+        recorded fields and must carry no source at all — attributing it would
+        be the exact dishonesty §21 permits the fallback only by avoiding.
+        """
         for record in self.records:
             role = record["role"]
+            kind = role.get("summary_kind")
             with self.subTest(career=record["career_id"]):
-                if role.get("summary_kind") == "authoritative":
-                    self.assertTrue(role.get("summary"))
+                self.assertIn(kind, {"authoritative", "taxonomy_composed"})
+                if kind == "authoritative":
                     self.assertTrue(role.get("source_records"),
                                     "an authoritative summary with no source")
                 else:
-                    self.assertIsNone(role.get("summary"))
+                    self.assertFalse(
+                        role.get("source_records"),
+                        "a composed description carries a source record, which "
+                        "would present it as somebody's published words")
+                    self.assertTrue(
+                        role.get("summary_note"),
+                        "a composed description with nothing saying it is one")
+                    self.assertIn("Composed by Helix", role["summary_note"])
+
+    def test_a_composed_description_states_only_recorded_facts(self):
+        """Every clause has to trace to a field on the career record."""
+        by_id = {c["id"]: c for c in BASE["careers"]}
+        for record in self.records:
+            role = record["role"]
+            if role.get("summary_kind") != "taxonomy_composed":
+                continue
+            career = by_id[record["career_id"]]
+            summary = role["summary"]
+            with self.subTest(career=record["career_id"]):
+                self.assertIn(career["title"], summary,
+                              "the description does not name its own career")
+                self.assertIn(career["family"], summary)
+                # Nothing about duties, employers or prospects, which Helix has
+                # no source for and must not invent.
+                for invented in ("you will", "typically involves working with",
+                                 "employers such as", "career prospects",
+                                 "day-to-day duties include"):
+                    self.assertNotIn(invented, summary.lower())
+
+    def test_a_composed_description_is_deterministic(self):
+        from market_data import describe
+        by_id = {c["id"]: c for c in BASE["careers"]}
+        for record in self.records[:40]:
+            if record["role"].get("summary_kind") != "taxonomy_composed":
+                continue
+            career = by_id[record["career_id"]]
+            first = describe.compose(career, record["work_life"],
+                                     record["seniority_class"])
+            second = describe.compose(career, record["work_life"],
+                                      record["seniority_class"])
+            with self.subTest(career=record["career_id"]):
+                self.assertEqual(first, second)
+                self.assertEqual(first, record["role"]["summary"],
+                                 "the published text differs from a fresh "
+                                 "composition of the same inputs")
 
     def test_no_role_summary_carries_page_furniture(self):
         """The bug this catches shipped once and was visible on 54 pages."""

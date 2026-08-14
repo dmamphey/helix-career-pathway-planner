@@ -922,6 +922,51 @@ test("hours are absent rather than invented", () => {
          `${withHours} careers have hours — expected some but not all`);
 });
 
+test("every career has a description of its own", () => {
+  // The family paragraph was the same words across fifty careers. Every career
+  // now carries either a sourced description or one composed from its own
+  // recorded attributes, and the two are never confusable.
+  for (const career of catalogue.careers) {
+    const role = market.role(career.id);
+    assert(role, `${career.id} has no role record`);
+    const text = role.summary || role.composedSummary;
+    assert(text, `${career.id} has no description`);
+    if (role.summary) {
+      equal(role.summaryKind, "authoritative", `${career.id} kind mismatch`);
+    } else {
+      equal(role.summaryKind, "taxonomy_composed",
+            `${career.id} has a composed description with the wrong kind`);
+      assert(role.summaryNote,
+             `${career.id} shows composed text with nothing saying so`);
+      assert(text.includes(career.title),
+             `${career.id} composed description does not name its career`);
+    }
+  }
+});
+
+test("a composed description is never exposed as a sourced one", () => {
+  /*
+   * `summary` is what the attribution line and the sources panel read, so it
+   * must stay empty unless somebody actually published the words. A composed
+   * description lives in its own field that a caller has to ask for by name.
+   */
+  let composed = 0;
+  for (const career of catalogue.careers) {
+    const role = market.role(career.id);
+    if (role.summaryKind === "taxonomy_composed") {
+      composed += 1;
+      equal(role.summary, null,
+            `${career.id} exposes composed text as a sourced summary`);
+      equal(role.sources.length, 0,
+            `${career.id} attributes a composed description to a source`);
+    } else {
+      equal(role.composedSummary, null,
+            `${career.id} carries both a sourced and a composed description`);
+    }
+  }
+  assert(composed > 0, "no composed descriptions were found at all");
+});
+
 test("an authoritative role summary is only ever shown when attributed", () => {
   for (const career of catalogue.careers) {
     const role = market.role(career.id);

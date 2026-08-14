@@ -152,8 +152,9 @@ function marketPanel(app) {
       h("dd", { text: `${counts.withHours} — from official job profiles only. `
         + `The rest show “Not yet available” rather than an estimate.` }),
       h("dt", { text: "Careers with an official role description" }),
-      h("dd", { text: `${counts.withRole}. The others show their career family's `
-        + `description, labelled as such.` }),
+      h("dd", { text: `${counts.withRole} of ${counts.total}. Every other career `
+        + `has a description composed from its own recorded attributes and `
+        + `labelled as composed — none is left showing only its family's.` }),
       h("dt", { text: "Records past their review date" }),
       h("dd", { text: counts.stale
         ? `${counts.stale} — shown with a “due review” note wherever they appear`

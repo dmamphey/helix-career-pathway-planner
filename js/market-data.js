@@ -233,8 +233,20 @@ export function role(careerId) {
   const record = forCareer(careerId);
   const raw = record && record.role;
   if (!raw) return null;
+  const authoritative = raw.summary_kind === "authoritative";
   return {
-    summary: raw.summary_kind === "authoritative" ? raw.summary : null,
+    /*
+     * `summary` stays the sourced one, and only the sourced one.
+     *
+     * Every consumer that treats a summary as evidence — the attribution line,
+     * the sources panel, the tests that check nothing unsourced is attributed —
+     * reads this field, so widening it would quietly turn a composed sentence
+     * into an official description. The composed text is a separate field that
+     * a caller has to ask for by name and label for itself.
+     */
+    summary: authoritative ? raw.summary : null,
+    composedSummary: authoritative ? null : (raw.summary || null),
+    summaryNote: raw.summary_note || "",
     summaryKind: raw.summary_kind || "pending",
     alternativeTitles: raw.alternative_titles || [],
     progression: raw.progression || [],

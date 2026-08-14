@@ -24,7 +24,7 @@ import datetime as dt
 import json
 from pathlib import Path
 
-from . import derive
+from . import derive, describe
 from .providers import nhs, nhs_careers, ons
 from .providers.ncs import LICENCE, ApiProvider, PublicProvider
 from .title_matcher import match_career
@@ -412,6 +412,19 @@ class Resolver:
         # providers/nhs_careers.py for why NHS Health Careers is never copied.
         further = self.nhs_careers.link_for(career)
         role["external_profiles"] = [further] if further else []
+
+        # Every career says what it involves. Where no source describes this one,
+        # a description is composed from its own recorded attributes and labelled
+        # as composed — never as though somebody had written it. §21 allows a
+        # taxonomy fallback on exactly those terms. See describe.py.
+        if role.get("summary_kind") != "authoritative" or not role.get("summary"):
+            role["summary"] = describe.compose(
+                career, work_life, derive.seniority_class(career["title"]))
+            role["summary_kind"] = "taxonomy_composed"
+            role["summary_note"] = (
+                "Composed by Helix from this career's recorded attributes. It is "
+                "not an official job description, and no organisation has "
+                "published a profile for this exact job title.")
 
         mapping = dict((part or {}).get("mapping") or {})
         for key in ("ncs_profile_id", "ncs_title", "soc2020_code", "soc2020_title",

@@ -801,3 +801,10 @@ ul.plain, ol.plain { list-style: none; padding: 0; margin: 0; }
   .tray-actions { margin-left: 0; width: 100%; }
   .tray-actions .btn { flex: 1 1 auto; }
 }
+
+/* The career-family paragraph, kept as background rather than as the answer to
+   "what is this job". Folded away so the composed description leads. */
+.family-context { margin-top: .6rem; }
+.family-context > summary { cursor: pointer; color: var(--brand-blue-dark);
+                            font-weight: 600; font-size: .92rem; }
+.family-context p { margin: .5rem 0 0; color: var(--muted); }

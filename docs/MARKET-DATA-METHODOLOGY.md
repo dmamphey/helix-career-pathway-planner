@@ -314,13 +314,42 @@ ever grows a field that could hold borrowed prose.
 
 
 
-Where an official job profile has been matched, Helix shows that profile's
-description of the role and attributes it.
+Every career has a description of its own. There are exactly two kinds, and the
+data model keeps them apart so that neither can be mistaken for the other.
 
-Where none has been matched, Helix shows a description of the **career family**
-and states plainly that this is what it is. It does not generate a role-specific
-description. Writing confident prose about 623 jobs from nothing would be the
-fastest way to make everything else on the page untrustworthy.
+**`authoritative` (143 careers).** An official job profile was matched, so Helix
+shows that publisher's own wording and attributes it. This text lives in the
+record's `summary` field, which is the only field the attribution line and the
+sources panel read.
+
+**`taxonomy_composed` (573 careers).** No publisher has written a profile for
+this exact job title, so Helix composes one from what it already records about
+*that* career: its family and seniority class, its subject areas, its working
+conditions (laboratory intensity, patient contact, research and commercial
+work), whether statutory registration applies, and the typical entry background.
+The record carries a `summary_note` saying it was composed, and it carries **no**
+`source_records` — because there is no source, and attributing it to one would be
+the exact dishonesty the composition is designed to avoid.
+
+The composition is a deterministic function of those recorded fields
+(`tools/market_data/describe.py`): the same career always yields the same
+sentences, and the test suite re-composes published records to prove the text on
+disk matches its inputs. It is closer to reading a structured record aloud than
+to writing prose.
+
+What it deliberately never says: duties, employers, day-to-day activity, or
+career prospects. Helix has no source for any of that, and the tests assert those
+phrasings are absent. Generating confident prose about 573 jobs from nothing
+would be the fastest way to make everything else on the page untrustworthy —
+composing a description strictly from recorded attributes is not that, and the
+interface says which kind you are reading in both cases.
+
+This replaced an earlier approach that showed the **career family's** description
+in place of a missing role description. That was honest but not useful: fifty
+careers in a family shared one paragraph, so the description could not help
+anyone tell them apart. The family paragraph is still available on the career
+page, folded under *About this career family*, where it reads as context rather
+than as an answer.
 
 ---
 
