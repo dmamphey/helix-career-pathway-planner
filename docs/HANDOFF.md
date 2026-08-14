@@ -7,7 +7,7 @@ Paste this whole file as the opening prompt of a new session.
 ## What you are working on
 
 **Helix Career Pathway Planner** — a static, privacy-first, rules-based career
-navigator for UK life sciences and healthcare. 677 careers. No backend, no
+navigator for UK life sciences and healthcare. 716 careers. No backend, no
 accounts, no AI.
 
 - Local: `C:\Users\dmamp\OneDrive\D A Mamphey Private\OPTYMUM SS LTD (Latest)\CODING\Claude Code\career-pathway`
@@ -152,7 +152,7 @@ all of it needs either a decision or an external unblock.
 3. **The NCS API**, once it exists — see the conflict note above.
 4. **Regional salary contexts.** The schema holds them; no data is loaded, and a
    blanket London multiplier would be worse than nothing.
-5. **Work settings.** `work_settings` is empty for all 677: the public profile
+5. **Work settings.** `work_settings` is empty for every career: the public profile
    pages do not carry it in a form the parser can trust. The career page and
    Compare already say "Not yet available" rather than guessing.
 

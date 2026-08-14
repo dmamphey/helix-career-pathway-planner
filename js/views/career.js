@@ -1,7 +1,7 @@
 /**
  * The career detail screen: a decision dossier for one career.
  *
- * Every one of the 677 careers reaches this screen, and what it shows depends
+ * Every one of the 716 careers reaches this screen, and what it shows depends
  * entirely on how much is actually known. The decision header carries the facts
  * somebody weighs a career on — pay, hours, working pattern, regulation, and the
  * three personal measures when a profile exists — and everything below it exists
@@ -29,6 +29,7 @@ import { adjacentCareers } from "../adjacency.js";
 import { loadRulePack } from "../rules.js";
 import { developmentIndicators } from "../matcher.js";
 import { lowerLabel } from "../ontology.js";
+import { REGIONS, regionLabel, isUk } from "../regions.js";
 
 export async function render(app, context) {
   const career = app.catalogue.get(context.params.id);
@@ -53,7 +54,7 @@ export async function render(app, context) {
     header(app, career, { match, analysis, pay, work, redraw }),
     regulationCard(career, app),
     aboutCard(career, role),
-    economicsCard(career, pay, work),
+    economicsCard(career, pay, work, app, redraw),
     entryCard(career, pack, analysis),
     analysis ? fitCard(app, career, analysis) : noProfileCard(app),
     progressionCard(app, career, pack, role, redraw),
@@ -261,6 +262,162 @@ function aboutCard(career, role) {
   ], { id: "about-heading" });
 }
 
+/* ---------------------------------------------------------- salary by region */
+
+/**
+ * How pay for this kind of work varies across the UK.
+ *
+ * Deliberately framed as *variation* rather than as a set of local salaries. The
+ * level comes from the career's own evidence; only the regional shape comes from
+ * ONS, so the honest claim is "health professionals in London earn about 13% more
+ * than health professionals nationally", not "this job pays £X in London".
+ *
+ * Three things this must never do: offer a region ONS suppressed, show the UK
+ * figure under a regional heading, or carry the UK figure's evidence class. All
+ * three are handled in `market.salaryForRegion`, and the interface below simply
+ * renders whichever answer it gets — including the refusal.
+ */
+function regionalBlock(app, career, pay, redraw) {
+  if (!pay) return null;
+  const context = market.regionalContext();
+  if (!context) return null;
+  const available = new Set(market.regionsWithData(career.id));
+  if (!available.size) {
+    return h("div", { class: "region-block" }, [
+      h("h3", { text: "Salary by region" }),
+      h("p", { class: "hint", text: "Helix has no regional breakdown for this "
+        + "career's occupation group, so it does not estimate one. The figure "
+        + "above is UK-wide." }),
+    ]);
+  }
+
+  const selected = app.region();
+  const regional = market.salaryForRegion(career.id, selected);
+
+  const select = h("select", {
+    id: "region-select", class: "region-select",
+    onChange: (event) => { app.setRegion(event.target.value); redraw(); },
+  }, REGIONS.filter((entry) => entry.key === "uk" || available.has(entry.key))
+      .map((entry) => h("option", {
+        value: entry.key, text: entry.label,
+        selected: entry.key === selected ? "selected" : null,
+      })));
+
+  return h("div", { class: "region-block" }, [
+    h("h3", { text: "Salary by region" }),
+    h("div", { class: "region-picker" }, [
+      h("label", { for: "region-select", text: "Show pay for" }),
+      select,
+    ]),
+
+    isUk(selected)
+      ? h("p", { class: "hint", text: "Showing the UK-wide figure. Choose a "
+          + "region to see how pay for this kind of work varies." })
+      : regionBody(regional, pay, context),
+
+    h("p", { class: "hint" }, [
+      `Regional variation from ${context.source} (${context.year}), `,
+      context.source_url
+        ? link("published data", context.source_url, { external: true })
+        : h("span", { text: "published data" }),
+      `, used under the ${context.licence}.`,
+    ]),
+  ]);
+}
+
+function regionBody(regional, pay, context) {
+  if (!regional) return null;
+  if (regional.unavailable) {
+    return h("p", { class: "hint", text: regional.reason });
+  }
+  const higher = regional.differencePercent > 0;
+  const same = Math.abs(regional.differencePercent) < 0.5;
+  return h("div", { class: "stack" }, [
+    h("p", { class: "pay-line" }, [
+      h("strong", { class: "pay-headline", text: regional.range }),
+      h("span", { class: "hint",
+        text: ` a year · ${regionLabel(regional.region)}` }),
+      evidenceBadge(regional),
+    ]),
+    h("p", { class: "region-delta" }, [
+      same
+        ? h("span", { text: "About the same as the UK figure for this kind of "
+            + "work." })
+        : h("span", {}, [
+            h("strong", { text: `${higher ? "+" : ""}`
+              + `${regional.differencePercent}%` }),
+            ` against the UK figure. In ${regionLabel(regional.region)}, `
+            + `${regional.occupationGroup.toLowerCase()} are paid `
+            + `${higher ? "more" : "less"} than the same group nationally.`,
+          ]),
+    ]),
+    h("p", { class: "hint", text: "Helix applies that regional difference to "
+      + `this career's own UK range of ${pay.range}. No source publishes a `
+      + "salary for this job in this region, which is why the estimate can "
+      + "never be better evidenced than indicative however well evidenced the "
+      + "UK figure is." }),
+  ]);
+}
+
+/* ---------------------------------------------------------- salary by sector */
+
+/**
+ * What Helix can and cannot say about sector pay.
+ *
+ * This block is mostly an admission, and that is the point. The question "does
+ * industry pay more than the NHS for this job?" is the one people most want
+ * answered, and the honest answer today is that no official source publishes
+ * earnings by occupation *and* sector. ASHE splits by sector or by occupation,
+ * never both.
+ *
+ * So there are exactly two things to show: the pay framework somebody curated for
+ * this career, where one exists, and the whole-economy public/private difference,
+ * labelled unmistakably as whole-economy. Inventing a "pharma premium" from the
+ * industry table would mean multiplying this career's range by the average pay of
+ * everyone working in pharmaceutical manufacturing, cleaners and directors
+ * included, and calling the result a scientist's salary.
+ */
+function sectorBlock(career, pay) {
+  const context = market.sectorContext();
+  if (!pay) return null;
+
+  const medians = (context && context.medians) || {};
+  const publicUk = (medians["public sector"] || {}).uk;
+  const privateUk = (medians["private sector"] || {}).uk;
+  const gap = (Number.isFinite(publicUk) && Number.isFinite(privateUk))
+    ? Math.round(((publicUk / privateUk) - 1) * 1000) / 10 : null;
+
+  return h("div", { class: "region-block" }, [
+    h("h3", { text: "Salary by sector" }),
+    h("p", { text: "Helix does not publish a sector-by-sector salary for this "
+      + "career, because no official source publishes earnings broken down by "
+      + "occupation and sector at the same time. What follows is context, not a "
+      + "figure for this job." }),
+
+    pay.payFramework
+      ? h("p", {}, [
+          h("strong", { text: "Public sector: " }),
+          `${pay.payFramework.framework}, ${pay.payFramework.band}. `,
+          "That is the framework a public-sector employer would use for this "
+          + "role. It is a curated mapping, not an inference from the job title.",
+        ])
+      : h("p", { class: "hint", text: "No public-sector pay band has been curated "
+          + "for this career. Helix will not infer one from a job title, because "
+          + "words like Senior and Specialist mean different things in different "
+          + "organisations." }),
+
+    gap !== null
+      ? h("p", { class: "hint", text: "Across the whole UK economy, median "
+          + `full-time pay in the public sector was ${gap > 0 ? gap : Math.abs(gap)}% `
+          + `${gap > 0 ? "higher" : "lower"} than in the private sector in `
+          + `${context.year} (${money(publicUk)} against ${money(privateUk)}). `
+          + "That covers every occupation in the country, not this one — sector "
+          + "differences vary enormously by job, and this figure should not be "
+          + "applied to the range above." })
+      : null,
+  ]);
+}
+
 /* -------------------------------------------------------- salary and hours */
 
 /**
@@ -270,7 +427,7 @@ function aboutCard(career, role) {
  * appears under a mouse pointer is provenance that a phone and a keyboard cannot
  * reach, and this is the part of the screen most worth checking.
  */
-function economicsCard(career, pay, work) {
+function economicsCard(career, pay, work, app, redraw) {
   const level = (value) => value && value !== "unknown"
     ? sentenceCase(value) : "Not yet available";
 
@@ -324,6 +481,9 @@ function economicsCard(career, pay, work) {
           h("p", { class: "hint", text: pay.disclaimer }),
         ])
       : empty("No salary record exists for this career."),
+
+    regionalBlock(app, career, pay, redraw),
+    sectorBlock(career, pay),
 
     h("h3", { text: "Working life" }),
     h("dl", { class: "summary" }, [

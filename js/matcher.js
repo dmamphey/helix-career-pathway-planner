@@ -320,7 +320,7 @@ function component(key, label, fit, evidence) {
 /**
  * Rank every career for a profile.
  *
- * 677 careers is small enough to score exhaustively, which keeps the result
+ * 716 careers is small enough to score exhaustively, which keeps the result
  * exact rather than dependent on a pre-filter.
  */
 export function rankCareers(profile, careers) {

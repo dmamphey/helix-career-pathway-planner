@@ -1,7 +1,7 @@
 /**
  * Career Explorer, and the grouped results of the explore journey.
  *
- * 677 cards are never in the document at once: the list renders a page at a time
+ * 716 cards are never in the document at once: the list renders a page at a time
  * and grows on request, and search is debounced. Filtering runs over the whole
  * catalogue in memory, so the count is always the true count rather than the count
  * of what happens to be rendered.
@@ -113,7 +113,7 @@ export async function renderExplorer(app) {
    * Anything that changes the result set.
    *
    * Effort is the one measure that is not already in memory: it needs a gap
-   * analysis per career, which costs about a second for all 677. It is computed
+   * analysis per career, which costs about a second for all 716. It is computed
    * once, on the first request for it, and the control says so rather than
    * appearing to hang.
    */
@@ -191,7 +191,7 @@ export async function renderExplorer(app) {
    * Dropdowns are staged, then applied together.
    *
    * Every change used to redraw immediately, so choosing four filters meant four
-   * passes over 677 careers — and picking the effort sort started a second of
+   * passes over 716 careers — and picking the effort sort started a second of
    * gap analysis before the rest of the choices had even been made. Selections
    * now collect in `pending` until Apply commits them, which is also what makes
    * the count meaningful: it describes what is on screen rather than a state the
@@ -471,7 +471,7 @@ export async function renderMatches(app) {
 
   // Effort and the "why" line need the gap analysis, which is async because a rule
   // pack may load. They are computed once for the careers actually on screen
-  // rather than for all 677.
+  // rather than for all 716.
   const decorations = new Map();
   const decorate = async () => {
     const onScreen = ["closest", "adjacent", "pivots"].flatMap(

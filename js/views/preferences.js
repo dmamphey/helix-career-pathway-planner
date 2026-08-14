@@ -134,7 +134,7 @@ export async function render(app) {
         h("li", { text: "A question is scored only when you have answered it and "
           + "Helix has the matching fact about that career. Typical weekly hours, "
           + "for example, come from official job profiles and exist for 54 of the "
-          + "677 careers." }),
+          + "716 careers." }),
         h("li", { text: "The result is worked out across the questions that could "
           + "actually be compared, not across all of them. A career is never "
           + "marked down because something about it is unknown." }),

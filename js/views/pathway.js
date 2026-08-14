@@ -40,12 +40,13 @@ export async function render(app, context) {
 
   const draw = async () => {
     const analysis = await app.analysisFor(careerId);
-    const { match, gaps, pathway, actions, pack } = analysis;
+    const { match, gaps, pathway, actions, pack, bridge } = analysis;
     host.replaceChildren(
       header(app, career, match, pathway),
       verificationNote(gaps),
       actionsPanel(actions, app),
       mapPanel(app, career, pathway, gaps, draw),
+      bridgePanel(app, career, bridge, draw),
       gapsPanel(gaps),
       transitionsPanel(gaps),
       routesPanel(pack, pathway),
@@ -258,6 +259,101 @@ function transitionsPanel(gaps) {
              development, "chip-gap"),
     ]),
   ], { id: "transitions-heading" });
+}
+
+/* -------------------------------------------------------------- bridge roles */
+
+/**
+ * The two routes, side by side.
+ *
+ * The direct route is always shown, always first, and never disparaged. A bridge
+ * is an option that trades time for a smaller step, and presenting it as the
+ * sensible choice would be advice Helix has no standing to give — it does not
+ * know whether somebody can afford two more years.
+ */
+function bridgePanel(app, career, bridge, redraw) {
+  if (!bridge) return null;
+
+  return panel("Getting there: direct, or by way of another role", [
+    h("div", { class: "route-pair" }, [
+      h("div", { class: "route-card" }, [
+        h("h3", { text: "Direct route" }),
+        h("ol", { class: "route-steps" }, [
+          h("li", { text: app.profile().currentRole || "Where you are now" }),
+          h("li", {}, [h("strong", { text: career.title })]),
+        ]),
+        h("p", { class: "hint", text: bridge.direct.openGapCount
+          ? `${bridge.direct.openGapCount} development `
+            + `${bridge.direct.openGapCount === 1 ? "area" : "areas"} to build `
+            + "while you are still in your current role."
+          : "No development gaps were identified, so this is a matter of "
+            + "applying." }),
+      ]),
+
+      bridge.hasBridge
+        ? h("div", { class: "route-card" }, [
+            h("h3", { text: "By way of a bridge role" }),
+            h("ol", { class: "route-steps" }, [
+              h("li", { text: app.profile().currentRole || "Where you are now" }),
+              h("li", {}, [h("em", { text: bridge.bridges[0].career.title })]),
+              h("li", {}, [h("strong", { text: career.title })]),
+            ]),
+            h("p", { class: "hint", text: "Longer, and each step is smaller. "
+              + "Whether that is worth it is your call, not Helix's." }),
+          ])
+        : null,
+    ]),
+
+    !bridge.hasBridge
+      ? h("p", { class: "hint", text: bridge.reason })
+      : h("div", { class: "stack" }, [
+          h("h3", { text: bridge.bridges.length === 1
+            ? "The bridge role Helix found"
+            : `${bridge.bridges.length} possible bridge roles` }),
+          h("p", { class: "hint", text: "Chosen because each one is closer to "
+            + "your current profile than the destination is, works in an area "
+            + "the destination needs, and sits next to it in the catalogue. "
+            + "None of them is a required step." }),
+          ...bridge.bridges.map((item) => bridgeCard(app, item, career, redraw)),
+        ]),
+  ], { id: "bridge-heading" });
+}
+
+function bridgeCard(app, item, target, redraw) {
+  const pay = app.market.salary(item.career.id);
+  return h("article", { class: "bridge-card" }, [
+    h("h4", {}, [link(item.career.title, `#/career/${item.career.id}`)]),
+    h("p", { class: "eyebrow", text: item.career.family }),
+
+    h("dl", { class: "summary" }, [
+      h("dt", { text: "Why this role helps" }),
+      h("dd", { text: item.whyItHelps }),
+      h("dt", { text: "What transfers from where you are" }),
+      h("dd", { text: item.whatTransfers }),
+      h("dt", { text: "What it can give you" }),
+      h("dd", { text: item.whatItProvides.length
+        ? item.whatItProvides.join(", ")
+        : "Relevant sector experience." }),
+      h("dt", { text: `Gaps it closes for ${target.title}` }),
+      h("dd", { text: item.closesGaps.length
+        ? item.closesGaps.join(", ") : "None identified." }),
+      h("dt", { text: "Typical salary" }),
+      h("dd", { text: pay ? `${pay.range} a year` : "Not yet available" }),
+      h("dt", { text: "Possible next move" }),
+      h("dd", { text: item.nextMove }),
+    ]),
+
+    item.gradeNote
+      ? h("p", { class: "callout callout-warn", text: item.gradeNote })
+      : null,
+    h("p", { class: "hint", text: item.optional }),
+    h("div", { class: "card-actions" }, [
+      link("Open this career", `#/career/${item.career.id}`, { class: "btn" }),
+      button(app.isComparing(item.career.id) ? "In comparison ✓" : "Compare",
+             () => { app.toggleCompare(item.career.id); redraw(); },
+             { variant: "quiet", pressed: app.isComparing(item.career.id) }),
+    ]),
+  ]);
 }
 
 function routesPanel(pack, pathway) {

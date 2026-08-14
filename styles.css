@@ -744,6 +744,49 @@ ul.plain, ol.plain { list-style: none; padding: 0; margin: 0; }
 .pay-ends strong { color: var(--brand-navy); }
 .pay-ends-sep { color: var(--brand-cyan); font-weight: 700; }
 
+/* The two routes, shown as equals. The direct route is never styled as the
+   lesser option — whether a longer route is worth it is not Helix's call. */
+.route-pair {
+  display: grid; gap: .8rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  margin-bottom: 1rem;
+}
+.route-card {
+  border: 1px solid var(--line); border-radius: 12px; padding: .9rem 1rem;
+  background: var(--surface-muted, #f7f9fb);
+}
+.route-card h3 { margin: 0 0 .5rem; font-size: 1rem; }
+.route-steps { margin: 0 0 .5rem; padding-left: 1.1rem; }
+.route-steps li { margin-bottom: .25rem; }
+.route-steps li + li { position: relative; }
+
+.bridge-card {
+  border: 1px solid var(--line); border-left: 4px solid var(--brand-cyan);
+  border-radius: 10px; padding: .9rem 1rem; margin-bottom: .8rem;
+}
+.bridge-card h4 { margin: 0 0 .1rem; font-size: 1.02rem; }
+.bridge-card .eyebrow { margin: 0 0 .6rem; }
+.bridge-card .summary { margin-bottom: .5rem; }
+
+/* Salary by region. Set apart from the UK figure above it, because it answers a
+   different question and carries weaker evidence. */
+.region-block {
+  border-top: 1px solid var(--line); margin-top: 1.1rem; padding-top: .9rem;
+}
+.region-block h3 { margin-top: 0; }
+.region-picker {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .6rem;
+  margin-bottom: .7rem;
+}
+.region-picker label { font-weight: 600; color: var(--brand-navy); }
+.region-select {
+  padding: .45rem .6rem; border: 1px solid var(--line); border-radius: 8px;
+  background: #fff; font: inherit; color: inherit; min-height: 44px;
+  max-width: 100%;
+}
+.region-select:focus-visible { outline: 3px solid var(--brand-cyan); outline-offset: 1px; }
+.region-delta { margin: .1rem 0 .4rem; }
+.region-delta strong { color: var(--brand-navy); }
+
 /* Each of the three personal measures gets its own block, so alignment,
    preference fit and effort read as three answers rather than one verdict. */
 .fit-block {

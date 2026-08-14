@@ -268,7 +268,7 @@ def from_related(target: dict, resolved: list[tuple[dict, dict]],
 
 
 def from_family(target: dict, resolved: list[tuple[dict, dict]]) -> Derived:
-    """Tier 5. The last resort, and the reason coverage can reach 677/677."""
+    """Tier 5. The last resort, and the reason coverage can reach 716/716."""
     family = target.get("family")
     target_class = seniority_class(target["title"])
 

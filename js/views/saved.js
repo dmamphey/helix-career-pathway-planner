@@ -36,7 +36,7 @@ export async function render(app) {
 
   /*
    * Effort needs a gap analysis per career, so it is fetched for the saved list
-   * only — at most 24 careers, not all 677 — and the cards are drawn twice: once
+   * only — at most 24 careers, not all 716 — and the cards are drawn twice: once
    * immediately, then again when the analysis arrives. Waiting for it before
    * showing anything would make Saved feel slower than it is.
    */

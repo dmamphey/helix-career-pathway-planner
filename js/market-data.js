@@ -97,6 +97,8 @@ export async function loadMarketData() {
       },
       byId,
       count: byId.size,
+      regional: payload.regional_context || null,
+      sectorContext: payload.sector_context || null,
     };
   } catch (error) {
     loadFailure = error.message || String(error);
@@ -177,6 +179,116 @@ export function salary(careerId) {
     payFramework: record.pay_framework || null,
     disclaimer: SALARY_DISCLAIMER,
   };
+}
+
+/* ------------------------------------------------------- regional context */
+
+/** The ONS index table, or null when the extract was never built. */
+export function regionalContext() {
+  return dataset ? dataset.regional : null;
+}
+
+/** Whole-economy public/private medians, published as context only. */
+export function sectorContext() {
+  return dataset ? dataset.sectorContext : null;
+}
+
+/**
+ * The same career's salary, seen from one UK region.
+ *
+ * Multiplies the career's own UK range by the ONS regional index for the
+ * occupation group its family maps to. The level is Helix's; only the regional
+ * shape is ONS's — which is why the result can never be better evidenced than
+ * "indicative" however good the UK figure was. Nobody published a regional range
+ * for this job.
+ *
+ * Returns null, never a fallback, when:
+ *   - the region is the UK (the caller already has that from `salary()`)
+ *   - the extract is absent
+ *   - the career's family has no mapped occupation group
+ *   - ONS suppressed that region for that group
+ *
+ * A null is rendered as "not available for this region". Showing the UK figure
+ * under a regional heading would be the one dishonest option.
+ */
+export function salaryForRegion(careerId, regionKey) {
+  if (!regionKey || regionKey === "uk") return null;
+  const base = salary(careerId);
+  const context = regionalContext();
+  if (!base || !context) return null;
+
+  const record = forCareer(careerId);
+  const groupKey = record && record.salary && record.salary.regional_soc_group;
+  const group = groupKey ? context.groups[groupKey] : null;
+  if (!group) return null;
+
+  const index = group.regions[regionKey];
+  if (!Number.isFinite(index)) {
+    return {
+      unavailable: true,
+      region: regionKey,
+      reason: `The Office for National Statistics does not publish a separate `
+            + `figure for ${context.group_labels[groupKey] || "this occupation "
+            + "group"} in this area, so Helix does not estimate one.`,
+    };
+  }
+
+  const step = context.precision || 500;
+  const low = Math.round((base.low * index) / step) * step;
+  const high = Math.round((base.high * index) / step) * step;
+  const evidence = EVIDENCE[worseOf(base.evidenceKey, context.evidence_floor)]
+    || EVIDENCE.INDICATIVE;
+
+  return {
+    unavailable: false,
+    region: regionKey,
+    low,
+    high,
+    range: `${money(low)} to ${money(high)}`,
+    index,
+    /*
+     * The comparison people actually want: is this region above or below the
+     * national figure, and by how much. Expressed as a percentage of the UK
+     * figure rather than a pound difference, because the index is what ONS
+     * measured and the pounds are the derivation.
+     */
+    differencePercent: Math.round((index - 1) * 1000) / 10,
+    ukLow: base.low,
+    ukHigh: base.high,
+    occupationGroup: context.group_labels[groupKey] || "",
+    basis: (record.salary && record.salary.regional_basis) || "",
+    evidenceKey: worseOf(base.evidenceKey, context.evidence_floor),
+    evidenceLabel: evidence.label,
+    evidenceExplain: evidence.explain,
+    evidenceRank: evidence.rank,
+    method: "ons_regional_index",
+    methodLabel: "ONS regional index applied to the UK range",
+    year: context.year,
+    source: context.source,
+    sourceUrl: context.source_url,
+    licence: context.licence,
+    disclaimer: SALARY_DISCLAIMER,
+  };
+}
+
+/** Which of two evidence keys is the weaker. */
+function worseOf(a, b) {
+  const rankA = (EVIDENCE[a] || EVIDENCE.LIMITED_DATA).rank;
+  const rankB = (EVIDENCE[b] || EVIDENCE.LIMITED_DATA).rank;
+  return rankA >= rankB ? a : b;
+}
+
+/**
+ * Which regions have a figure for this career, for building a selector that
+ * cannot offer a dead option.
+ */
+export function regionsWithData(careerId) {
+  const record = forCareer(careerId);
+  const context = regionalContext();
+  const groupKey = record && record.salary && record.salary.regional_soc_group;
+  const group = context && groupKey ? context.groups[groupKey] : null;
+  if (!group) return [];
+  return Object.keys(group.regions);
 }
 
 /** £30k / £30,500 — thousands where the figure is round, to avoid false precision. */

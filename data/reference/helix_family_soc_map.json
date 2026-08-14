@@ -1,0 +1,103 @@
+{
+  "schema": "helix.family_soc_map.v1",
+  "purpose": "Choose which ONS occupation group's regional earnings pattern applies to a Helix career, so that a regional salary can be derived without inventing one.",
+  "what_this_is_not": "This is not a claim that a career belongs to a SOC unit group, and it is never used to set a salary level. It selects a regional ratio only. Helix has no verified career-to-SOC mapping, which is why no career carries an ONS occupation earnings figure as its headline range.",
+  "why_a_ratio_tolerates_a_coarse_mapping": "A regional ratio is far more robust to an approximate occupation mapping than a pay level is. Health professionals earn 13.3% above the UK median in London; the whole economy earns 26.9% above. Picking the right broad group matters; picking the exact unit group inside it barely moves the ratio. Using the whole-economy figure for a nurse, by contrast, would overstate London pay by roughly twelve percentage points.",
+  "maintained_by": "Helix editorial. Review whenever ONS revises SOC or a family is added.",
+  "last_reviewed": "2026-08-14",
+  "groups": {
+    "11": "Corporate managers and directors",
+    "21": "Science, research, engineering and technology professionals",
+    "22": "Health professionals",
+    "24": "Business, media and public service professionals",
+    "31": "Science, engineering and technology associate professionals",
+    "32": "Health and social care associate professionals",
+    "35": "Business and public service associate professionals",
+    "all": "All occupations"
+  },
+  "professional_to_associate": {
+    "21": "31",
+    "22": "32",
+    "24": "35",
+    "11": "35"
+  },
+  "seniority_rules": {
+    "trainee": "associate",
+    "support": "associate",
+    "professional": "base",
+    "specialist": "base",
+    "senior": "base",
+    "manager": "management",
+    "lead": "management",
+    "consultant": "base",
+    "executive": "management",
+    "management_group": "11",
+    "note": "A trainee or support-grade post sits with the associate professionals; a manager, lead or executive post sits with corporate managers and directors. Consultant and specialist grades stay in the professional group, because in health and science those words denote depth rather than line management."
+  },
+  "families": {
+    "Pharma, Biotech R&D & Manufacturing": {
+      "group": "21",
+      "reason": "Industrial R&D and manufacturing science roles are natural-science professional occupations."
+    },
+    "Healthcare Science & Diagnostics": {
+      "group": "21",
+      "reason": "SOC 2020 places biochemists and biomedical scientists in the science professional group rather than with health professionals, and this family is dominated by laboratory healthcare science."
+    },
+    "Allied Health & Clinical Practice": {
+      "group": "22",
+      "reason": "Physiotherapy, radiography, occupational therapy and related registered professions are health professionals."
+    },
+    "Leadership, Education, Operations & Consulting": {
+      "group": "11",
+      "reason": "The family is defined by management and directorial responsibility."
+    },
+    "Medicine & Dentistry": {
+      "group": "22",
+      "reason": "Medical and dental practitioners are health professionals."
+    },
+    "Medical Affairs, Commercial, Market Access & Communications": {
+      "group": "24",
+      "reason": "Commercial, market access and communications roles are business and public service professional occupations, not science or clinical ones."
+    },
+    "Research & Academia": {
+      "group": "21",
+      "reason": "Research posts across the life sciences are science and research professional occupations."
+    },
+    "Quality, Regulatory, Safety & Compliance": {
+      "group": "24",
+      "reason": "Regulatory affairs, quality assurance and pharmacovigilance are business and public service professional occupations, closer to compliance than to bench science."
+    },
+    "Digital Health, Data, Informatics & AI": {
+      "group": "21",
+      "reason": "Information technology professionals sit inside the science, research, engineering and technology professional group."
+    },
+    "Nursing, Midwifery & Pharmacy": {
+      "group": "22",
+      "reason": "Nurses, midwives and pharmacists are health professionals."
+    },
+    "Clinical Research & Trials": {
+      "group": "21",
+      "reason": "Trial design, monitoring and management are research professional occupations."
+    },
+    "Medical Devices, MedTech & Engineering": {
+      "group": "21",
+      "reason": "Device and biomedical engineering are engineering and technology professional occupations."
+    },
+    "Public Health, Epidemiology & Health Policy": {
+      "group": "22",
+      "reason": "Public health specialists and consultants in public health are health professionals; the epidemiology and policy roles in this family sit close enough that the regional pattern is not materially different."
+    },
+    "Laboratory, Pathology & Technical Operations": {
+      "group": "31",
+      "reason": "Technical and operational laboratory posts are science and technology associate professional occupations. Senior and specialist grades within the family are lifted back to the professional group by the seniority rules."
+    },
+    "Environmental & One Health": {
+      "group": "21",
+      "reason": "Environmental and veterinary public health science are natural-science professional occupations."
+    },
+    "Cell & Gene Therapy, Omics & Advanced Biology": {
+      "group": "21",
+      "reason": "Advanced biology and omics roles are natural-science professional occupations."
+    }
+  }
+}

@@ -169,7 +169,7 @@ median across several careers, not the highest or the nearest single one.
 Result: **Indicative estimate**.
 
 **Step 5 — Family and seniority median.**
-The last resort, and the reason all 677 careers have a figure: a robust median
+The last resort, and the reason all 716 careers have a figure: a robust median
 across careers in the same family at a comparable level.
 Result: **Limited-data estimate**.
 
@@ -270,7 +270,7 @@ shows "Not yet available" rather than estimating them.
 
 **Inferred from the taxonomy.** Patient contact, laboratory intensity, research
 intensity, commercial intensity, remote potential and travel are worked out from
-what each career's own subject tags say it involves. They exist for all 677.
+what each career's own subject tags say it involves. They exist for all 716.
 
 The second kind is genuinely useful for narrowing a list of careers, and it is
 not survey data. Every screen that shows these values says so.
@@ -380,7 +380,7 @@ The refresh runs automatically on the third of each month and can also be
 triggered by hand. It never writes to the live site directly: it opens a pull
 request for a person to review, because a salary figure moving is a content
 decision. Before a pull request can be opened at all, the run must show that all
-677 careers still have a publishable salary, that the data still matches its
+every career still has a publishable salary, that the data still matches its
 schema, that the careers file is untouched, and that no API key appears anywhere
 in the generated output.
 

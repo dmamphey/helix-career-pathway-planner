@@ -1,0 +1,71 @@
+{
+  "source": "Office for National Statistics, Annual Survey of Hours and Earnings, Table 25 (UK region by public and private sector)",
+  "source_url": "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/datasets/publicandprivatesectorbyregionashetable25",
+  "dataset_id": "ashe-tables-25",
+  "edition": "time-series",
+  "version": 7,
+  "released": "2024-01-15",
+  "year": "2023",
+  "measure": "Median gross annual pay, full-time employees, all sexes",
+  "note": "Whole-economy figures. These describe all employees in a sector, not the pay of any particular occupation within it, and Helix presents them only as economy-wide context.",
+  "licence": "Open Government Licence v3.0",
+  "attribution": "Source: Office for National Statistics, Annual Survey of Hours and Earnings. Contains public sector information licensed under the Open Government Licence v3.0.",
+  "retrieved": "2026-08-14",
+  "medians": {
+    "private sector": {
+      "uk": 34217,
+      "north_east": 30000,
+      "north_west": 32149,
+      "yorkshire_and_the_humber": 31274,
+      "east_midlands": 30922,
+      "west_midlands": 32374,
+      "east_of_england": 34492,
+      "london": 45218,
+      "south_east": 36518,
+      "south_west": 32510,
+      "wales": 30797,
+      "scotland": 33227
+    },
+    "all": {
+      "uk": 34963,
+      "north_east": 31200,
+      "north_west": 33036,
+      "yorkshire_and_the_humber": 31920,
+      "east_midlands": 31634,
+      "west_midlands": 33003,
+      "east_of_england": 34833,
+      "london": 44370,
+      "south_east": 36560,
+      "south_west": 33450,
+      "wales": 32371,
+      "scotland": 35518
+    },
+    "non-profit body or mutual association": {
+      "uk": 34183,
+      "north_east": 30967,
+      "north_west": 31313,
+      "yorkshire_and_the_humber": 31362,
+      "east_midlands": 30956,
+      "west_midlands": 33039,
+      "london": 40824,
+      "south_east": 36693,
+      "south_west": 32195,
+      "wales": 33835,
+      "scotland": 31699
+    },
+    "public sector": {
+      "uk": 36708,
+      "north_east": 33629,
+      "north_west": 35321,
+      "yorkshire_and_the_humber": 33945,
+      "east_midlands": 33731,
+      "west_midlands": 34858,
+      "east_of_england": 35616,
+      "london": 43365,
+      "south_east": 36667,
+      "south_west": 35796,
+      "wales": 35041,
+      "scotland": 39072
+    }
+  }
+}

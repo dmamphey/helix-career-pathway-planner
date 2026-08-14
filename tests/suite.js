@@ -73,10 +73,34 @@ test("the dataset loads", async () => {
   assert(catalogue, "no catalogue");
 });
 
-test("the dataset holds at least 677 careers", () => {
-  assert(catalogue.count >= 677, `only ${catalogue.count} careers`);
+/**
+ * The canonical count, as a regression test rather than a constant.
+ *
+ * Nothing in the application hard-codes how many careers there are — everything
+ * counts what it loaded. But a silent drop from 716 to 700 would look like a
+ * working application, so the expected figure is pinned here, in one place, where
+ * changing it is a deliberate act with a diff attached.
+ */
+const CANONICAL_CAREER_COUNT = 716;
+
+test(`the canonical dataset loads all ${CANONICAL_CAREER_COUNT} careers`, () => {
+  equal(catalogue.count, CANONICAL_CAREER_COUNT,
+        "the career count has moved — if this was intended, update "
+        + "CANONICAL_CAREER_COUNT and say why in the commit");
   equal(catalogue.count, catalogue.meta.declaredCount,
         "loaded count differs from the count the dataset declares");
+});
+
+test("every career has a unique id, a title and a family", () => {
+  const seen = new Set();
+  for (const career of catalogue.careers) {
+    assert(/^CP-\d{1,5}$/.test(career.id), `bad career id: ${career.id}`);
+    assert(!seen.has(career.id), `duplicate career id: ${career.id}`);
+    seen.add(career.id);
+    assert(career.title && career.title.trim(), `${career.id} has no title`);
+    assert(career.family && career.family.trim(), `${career.id} has no family`);
+  }
+  equal(seen.size, catalogue.count);
 });
 
 test("careers added after launch are merged into the catalogue", () => {

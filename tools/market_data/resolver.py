@@ -10,7 +10,7 @@ Tier order, highest evidence first:
 
 Tiers D and E need tiers A to C to have produced anchors first, so resolution runs
 in two passes: direct evidence for every career, then derivation for whatever is
-left. That ordering is what makes 677/677 coverage possible without inventing
+left. That ordering is what makes 716/716 coverage possible without inventing
 figures — every derived number is a statistic over official ones.
 
 Nothing here writes a salary without `estimate_method`, `evidence_quality` and
@@ -24,7 +24,7 @@ import datetime as dt
 import json
 from pathlib import Path
 
-from . import derive, describe
+from . import derive, describe, regional
 from .providers import nhs, nhs_careers, ons
 from .providers.ncs import LICENCE, ApiProvider, PublicProvider
 from .title_matcher import match_career
@@ -113,6 +113,7 @@ class Resolver:
         self.nhs_careers = nhs_careers.Provider(
             offline=offline, refresh=refresh,
             aliases=load_aliases("nhs_careers_aliases.json"))
+        self.regional = regional.RegionalContext()
         self.notes: list[str] = []
         self.match_log: list[dict] = []
 
@@ -357,6 +358,12 @@ class Resolver:
             ],
             "pipeline_notes": self.notes,
             "direct_evidence_count": direct_count,
+            # Published once, not multiplied out. Thirteen regions across eight
+            # occupation groups is a hundred-odd numbers; pre-computing a range
+            # per career per region would be nine thousand, and the browser can
+            # do the multiplication as the user switches region.
+            "regional_context": self.regional.index_table(),
+            "sector_context": self.regional.sector_context(),
             "records": records,
         }
 
@@ -432,11 +439,20 @@ class Resolver:
             mapping.setdefault(key, None)
         mapping.setdefault("review_status", "pending")
 
+        # Which ONS occupation group's regional pay pattern applies. This selects
+        # a ratio, never a level — see regional.py for why a coarse mapping is
+        # sound for one and not the other. A career whose family is unmapped, or
+        # whose group ONS suppressed, simply gets no regional figures.
+        seniority = derive.seniority_class(career["title"])
+        soc_group, soc_reason = self.regional.soc_group(career, seniority)
+        salary["regional_soc_group"] = soc_group
+        salary["regional_basis"] = soc_reason
+
         record = {
             "career_id": career["id"],
             "title": career["title"],
             "family": career["family"],
-            "seniority_class": derive.seniority_class(career["title"]),
+            "seniority_class": seniority,
             "regulatory_status": career["regulatory_status"],
             "core_tags": career.get("core_tags", []),
             "salary": salary,

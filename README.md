@@ -162,8 +162,13 @@ should not have to contact a third party in order to read a CV.
 
 ```text
 Helix UK Life Sciences & Healthcare Career Dataset
-Version 1.0, generated 2026-08-12, 677 careers, United Kingdom
+Version 1.0 Beta, United Kingdom
+716 careers — 677 supplied at launch (2026-08-12) plus 39 added since
 ```
+
+The canonical count is whatever the catalogue loads. Nothing in the application
+hard-codes it; `tests/suite.js` carries a regression test that currently expects
+716 so that accidental data loss is caught rather than absorbed.
 
 `data/careerpath_uk_careers_v1.json` is the supplied file, byte for byte. Nothing
 in the codebase edits, reorders or filters out a supplied record.
@@ -182,7 +187,7 @@ load time from fields the dataset already contains, under a `derived` key so it 
 always clear which is which.
 
 `pathway_depth` (Deep 66, Standard 438, Explorer 173) controls how much structure
-is built, never how trustworthy the content is. All 677 careers are searchable,
+is built, never how trustworthy the content is. All 716 careers are searchable,
 matchable, selectable as a target, and able to produce a pathway.
 
 ## How matching works
@@ -318,7 +323,7 @@ and the storage guarantees need a real `localStorage`. They cover dataset
 integrity, ontology coverage, PDF/DOCX/TXT extraction, the scanned-PDF fallback,
 determinism, grouping, the requirement separation, pathway generation for a sample
 spanning every family and depth, exactly-three actions, adjacency, storage
-including hostile input, market-data completeness for all 677 careers, comparison
+including hostile input, market-data completeness for every career, comparison
 selection and its shareable route, preference determinism and its separation from
 alignment, and the deployment path rules.
 
@@ -431,7 +436,7 @@ records stay in the launch taxonomy and are documented for a human decision.
 - Only 143 of 716 descriptions are an official job profile's own wording. The
   rest are composed from recorded attributes and say so; they state what the
   dataset holds and do not describe duties, employers or prospects.
-- Requirements are unverified for all 677 careers at launch. Two structural rule
+- Requirements are unverified for all 716 careers. Two structural rule
   packs exist (CP-003, CP-272), neither carrying verified requirements.
 - The parser is rule-based and conservative. It will miss things, which is why
   review is mandatory and every field is editable.

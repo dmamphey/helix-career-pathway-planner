@@ -13,6 +13,7 @@
 
 import { normaliseProfile } from "./profile.js";
 import { normaliseIds } from "./comparison.js";
+import { normaliseRegion } from "./regions.js";
 
 /*
  * The key keeps its original name through the rename to Helix Career Pathway
@@ -33,8 +34,30 @@ export function emptyState() {
     targetCareerId: null,
     savedCareerIds: [],
     compareCareerIds: [],
+    // The career a comparison is measured against. Separate from the target
+    // career, which is where somebody is going; a baseline is where they are.
+    baselineCareerId: null,
     progress: {},
-    settings: { jurisdictionAcknowledged: false, onboarded: false },
+    /*
+     * The development timeline, per career.
+     *
+     * Kept apart from `progress` rather than folded into it. `progress` records
+     * whether a pathway milestone is done; a plan entry also carries a date the
+     * person chose and a note they wrote, and those are edits to Helix's
+     * suggestion rather than progress through it. Merging them would make a
+     * regenerated plan overwrite somebody's own dates.
+     *
+     * Shape: { [careerId]: { [milestoneId]: { status, due, note, horizon } } }
+     */
+    plans: {},
+    settings: {
+      jurisdictionAcknowledged: false,
+      onboarded: false,
+      // Where the person wants to work. It changes which salary figures are
+      // shown, and nothing else: a region is not a qualification, so it must
+      // never touch alignment, eligibility or what a regulator requires.
+      region: "uk",
+    },
   };
 }
 
@@ -142,11 +165,50 @@ function coerce(input) {
     if (Object.keys(kept).length) base.progress[careerId] = kept;
   }
 
+  /*
+   * Plans, forced through the same known shape as everything else.
+   *
+   * A note is the only free text Helix stores. It is the user's own words about
+   * their own plan, capped at a length that cannot hold a pasted CV, and it is
+   * never sent anywhere — but it is the one field where "drop everything
+   * unrecognised" has to be replaced by "keep, and bound".
+   */
+  const plans = (input.plans && typeof input.plans === "object") ? input.plans : {};
+  for (const [careerId, milestones] of Object.entries(plans)) {
+    if (!isCareerId(careerId) || !milestones || typeof milestones !== "object") {
+      continue;
+    }
+    const kept = {};
+    for (const [milestoneId, entry] of Object.entries(milestones)) {
+      if (!/^[\w.-]{1,60}$/.test(milestoneId) || !entry || typeof entry !== "object") {
+        continue;
+      }
+      const clean = {};
+      if (entry.status === "completed" || entry.status === "in_progress") {
+        clean.status = entry.status;
+      }
+      if (typeof entry.due === "string" && /^\d{4}-\d{2}-\d{2}$/.test(entry.due)) {
+        clean.due = entry.due;
+      }
+      if (typeof entry.note === "string" && entry.note.trim()) {
+        clean.note = entry.note.trim().slice(0, 500);
+      }
+      if (typeof entry.horizon === "string" && /^[\w-]{1,20}$/.test(entry.horizon)) {
+        clean.horizon = entry.horizon;
+      }
+      if (Object.keys(clean).length) kept[milestoneId] = clean;
+    }
+    if (Object.keys(kept).length) base.plans[careerId] = kept;
+  }
+
   const settings = (input.settings && typeof input.settings === "object")
     ? input.settings : {};
   base.settings.jurisdictionAcknowledged =
     settings.jurisdictionAcknowledged === true;
   base.settings.onboarded = settings.onboarded === true;
+  base.settings.region = normaliseRegion(settings.region);
+  base.baselineCareerId = isCareerId(input.baselineCareerId)
+    ? input.baselineCareerId : null;
   return base;
 }
 

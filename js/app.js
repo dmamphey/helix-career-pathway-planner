@@ -12,6 +12,7 @@ import * as storage from "./storage.js";
 import { loadCareers, sourcesFor } from "./career-data.js";
 import * as market from "./market-data.js";
 import * as comparison from "./comparison.js";
+import { normaliseRegion } from "./regions.js";
 import { normaliseProfile, hasPreferences } from "./profile.js";
 import { preferenceFit } from "./preference-fit.js";
 import { rankCareers, scoreCareer } from "./matcher.js";
@@ -19,6 +20,7 @@ import { analyseGaps } from "./gap-engine.js";
 import { buildPathway } from "./pathway-engine.js";
 import { nextActions } from "./action-engine.js";
 import { transitionEffort, whyThisCareer } from "./transition-effort.js";
+import { bridgeRoles } from "./bridge-engine.js";
 import { loadRulePack } from "./rules.js";
 import {
   clear, errorPanel, clearNotice, notice, button, h, link, datasetLabel,
@@ -78,7 +80,7 @@ export const app = {
    * Preference fit for a career.
    *
    * Cached per career because the explorer asks for it while filtering and
-   * sorting all 677. The cache is cleared whenever the profile changes, which is
+   * sorting all 716. The cache is cleared whenever the profile changes, which is
    * the only thing that can alter the answer — the career data is static.
    *
    * `effort` is optional and deliberately bypasses the cache: it comes from an
@@ -140,7 +142,17 @@ export const app = {
     // Preference fit is computed with the effort in hand, so retraining
     // tolerance can be one of its dimensions.
     const fit = this.fitFor(career, effort);
-    return { career, pack, match, gaps, pathway, actions, effort, why, fit };
+    // Bridge roles need the target's gaps, so they are built here rather than in
+    // the view: the same gap objects that produced the actions produce the
+    // bridges, and the two cannot describe different gaps.
+    const bridge = bridgeRoles({
+      target: career,
+      targetGaps: gaps,
+      careers: this.catalogue.careers,
+      matchFor: (item) => this.matchFor(item),
+      profile: this.state.profile,
+    });
+    return { career, pack, match, gaps, pathway, actions, effort, why, fit, bridge };
   },
 
   /**
@@ -148,7 +160,7 @@ export const app = {
    * filter by.
    *
    * `analysisFor` builds a pathway and three actions as well, which the explorer
-   * never uses and cannot afford 677 times. This is the same effort object built
+   * never uses and cannot afford 716 times. This is the same effort object built
    * from the same match and gap analysis, so the value here and the badge on the
    * career page can never disagree.
    */
@@ -207,6 +219,81 @@ export const app = {
     this.state.compareCareerIds = [];
     this.persist();
     renderTray(this);
+  },
+
+  /* --- the baseline: where somebody is, not where they are going ---------- */
+
+  baselineId() {
+    return this.state.baselineCareerId || null;
+  },
+
+  baselineCareer() {
+    const id = this.baselineId();
+    return id && this.catalogue ? this.catalogue.get(id) : null;
+  },
+
+  isBaseline(careerId) {
+    return this.baselineId() === careerId;
+  },
+
+  /**
+   * Pin, repin or unpin the baseline.
+   *
+   * Pinning the career that is already pinned clears it, so the same control
+   * both sets and removes — there is no state where somebody is stuck with a
+   * baseline they cannot get rid of.
+   */
+  setBaseline(careerId) {
+    const next = this.baselineId() === careerId ? null : careerId;
+    this.state.baselineCareerId = next;
+    this.persist();
+    renderTray(this);
+    return next;
+  },
+
+  /* --- the development plan, which the user may edit ---------------------- */
+
+  planFor(careerId) {
+    return this.state.plans[careerId] || {};
+  },
+
+  /**
+   * Record one edit to one milestone.
+   *
+   * Fields are merged rather than replaced, so setting a date does not wipe a
+   * note. Passing null for a field clears just that field; an entry with
+   * nothing left in it is removed entirely rather than left as an empty object.
+   */
+  setPlanEntry(careerId, milestoneId, changes) {
+    const plan = { ...(this.state.plans[careerId] || {}) };
+    const entry = { ...(plan[milestoneId] || {}), ...changes };
+    for (const [key, value] of Object.entries(entry)) {
+      if (value === null || value === undefined || value === "") delete entry[key];
+    }
+    if (Object.keys(entry).length) plan[milestoneId] = entry;
+    else delete plan[milestoneId];
+    if (Object.keys(plan).length) this.state.plans[careerId] = plan;
+    else delete this.state.plans[careerId];
+    this.persist();
+    return entry;
+  },
+
+  /** Throw away Helix's suggestions *and* the user's edits for one career. */
+  resetPlan(careerId) {
+    delete this.state.plans[careerId];
+    this.persist();
+  },
+
+  /* --- where the user wants to work -------------------------------------- */
+
+  region() {
+    return this.state.settings.region || "uk";
+  },
+
+  setRegion(key) {
+    this.state.settings.region = normaliseRegion(key);
+    this.persist();
+    return this.state.settings.region;
   },
 
   market,

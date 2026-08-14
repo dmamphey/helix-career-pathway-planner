@@ -147,7 +147,7 @@ export function regulationBadge(career) {
  * Preference fit for a card, or null when there was nothing to compare.
  *
  * Shared by every list that draws career cards. A badge reading "Not enough
- * preference data" on all 677 cards would be noise rather than honesty — the
+ * preference data" on all 716 cards would be noise rather than honesty — the
  * priorities screen and the career page are where that gets explained properly.
  */
 export function scoredFit(app, career) {

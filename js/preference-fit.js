@@ -13,7 +13,7 @@
  * punishing Helix's own ignorance:
  *
  * 1. A dimension is scored only when *both* sides exist — a stated preference and
- *    a career value. Typical weekly hours are recorded for 54 of 677 careers, so
+ *    a career value. Typical weekly hours are recorded for 148 of 716 careers, so
  *    the hours dimension is simply absent for the other 623.
  * 2. The result is normalised over the dimensions actually scored, never over the
  *    full list. Four strong matches out of four available is a very strong fit,
