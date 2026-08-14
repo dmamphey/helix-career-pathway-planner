@@ -210,18 +210,6 @@ main:focus { outline: none; }
 .hero .lede { font-size: 1.06rem; color: var(--muted); max-width: 70ch; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1.2rem 0; }
 
-.trust {
-  list-style: none;
-  padding: 0;
-  margin: 1.2rem 0 0;
-  display: grid;
-  gap: .5rem 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
-  font-size: .92rem;
-  color: var(--muted);
-}
-.trust strong { color: var(--brand-navy); display: block; }
-
 .eyebrow {
   text-transform: uppercase;
   letter-spacing: .08em;

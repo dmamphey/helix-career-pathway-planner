@@ -41,14 +41,6 @@ function hero(app, hasProfile) {
         ? link("Continue where I left off", "#/matches", { class: "btn btn-lg" })
         : null,
     ]),
-    h("ul", { class: "trust" }, [
-      h("li", {}, [h("strong", { text: "Expert-led" }),
-        " built from a curated UK career taxonomy"]),
-      h("li", {}, [h("strong", { text: "UK-focused" }),
-        " requirements differ substantially between countries"]),
-      h("li", {}, [h("strong", { text: "Privacy-conscious" }),
-        " your CV is read in this browser and is not uploaded"]),
-    ]),
     h("div", { class: "callout callout-good" }, [
       h("p", {}, [
         h("strong", { text: "Your CV stays on your device. " }),
