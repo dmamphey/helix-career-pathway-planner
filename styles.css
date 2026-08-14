@@ -603,15 +603,27 @@ ul.plain, ol.plain { list-style: none; padding: 0; margin: 0; }
   :root { --panel: #fff; --bg: #fff; }
   @page { size: A4; margin: 14mm 13mm 16mm; }
   body { background: #fff; font-size: 10.5pt; }
-  .site-head, .site-foot, #notice, .no-print, #nav, .skip { display: none !important; }
+  /* The comparison tray lives outside #view so a selection survives navigation,
+     which also means it is not covered by .no-print and was printing a
+     "2 careers selected · Compare now" bar into the middle of the career plan. */
+  .site-head, .site-foot, #notice, .no-print, #nav, .skip,
+  #compare-tray { display: none !important; }
   main { padding: 0; max-width: none; }
   .plan { border: 0; border-radius: 0; padding: 0; }
   .plan-section { break-inside: avoid; }
   .plan-head { break-after: avoid; }
   h1 { font-size: 20pt; }
   h2 { font-size: 12pt; }
+  /* The plan gained sub-headings — the three measures, the salary source, the
+     reasons behind each one — which otherwise printed larger than the section
+     headings above them. */
+  h3 { font-size: 10.5pt; margin: .6em 0 .2em; }
+  h3 + ul, h3 + p { margin-top: .2em; }
   a { color: #000; text-decoration: none; }
   .plan-foot { break-inside: avoid; }
+  /* Long source URLs are printed in full, since a printed link cannot be
+     clicked, but they must not push the page wider than A4. */
+  .url { word-break: break-all; font-size: 8.5pt; }
 }
 
 /* ------------------------------------------------------------ small screens */
