@@ -333,7 +333,7 @@ The enrichment pipeline has its own suite, which needs no browser and no network
 python tools/market_data/tests.py
 ```
 
-62 checks covering title matching (including the rule that a seniority variant is
+65 checks covering title matching (including the rule that a seniority variant is
 never a direct match), salary derivation, range rounding, profile-page parsing,
 record freshness, the alias worklist, the published file's completeness, and the
 validator's ability to reject data the resolver would never produce.
@@ -375,6 +375,12 @@ Live deployment:
 The path comes from the repository name: the custom domain is attached to the
 `dmamphey.github.io` user site, and project repositories are served beneath it. So
 renaming the repository renames the public URL, and the two cannot drift apart.
+
+> **If you are working from the v1 upgrade pack, ignore its §4.** That document
+> names `/career-pathway/` as production and calls `/helix-career-pathway-planner/`
+> a stale reference to be cleaned up. It is the wrong way round: the pack predates
+> the repository rename, the short path now 404s, and the long one is live. This
+> has been confirmed and the URLs above are correct. Do not "fix" them.
 
 ## Extending it
 

@@ -5,45 +5,128 @@
     "",
     "WHY THIS FILE EXISTS. The matcher accepts only an exact normalised title",
     "match. 737 public NCS profiles exist and only 54 matched that way, so most",
-    "careers fall back to a derived estimate. Every entry added here promotes one",
-    "career from a derived estimate to career-specific evidence on the next run.",
-    "It is the single highest-value piece of data work available in this project.",
+    "careers fall back to a derived estimate. Every entry here promotes one career",
+    "from a derived estimate to career-specific evidence on the next run.",
     "",
-    "HOW TO ADD ONE. Open docs/MARKET-DATA-AUDIT.md and find the section",
-    "'Alias candidates for human review'. Each row gives a Helix career, the",
-    "external profile it nearly matched, and the score. If the two really are the",
-    "same job, add an entry below:",
+    "THE TEST APPLIED TO EACH ENTRY. Not 'are these titles similar' but 'is the",
+    "range this profile publishes an honest answer for this career'. A qualifier",
+    "that only names a sector or setting (healthcare, clinical, scientific) is",
+    "usually safe: a marketing manager in healthcare is a marketing manager. A",
+    "qualifier that marks a different profession, a different registration or a",
+    "materially different pay market is not, however similar the words look.",
     "",
-    "    \"<normalised helix title>\": \"<ncs profile slug>\"",
-    "",
-    "The key must be the title as title_matcher.normalise() produces it:",
-    "lowercased, punctuation stripped, curated abbreviations expanded. Check it",
-    "with:",
+    "HOW TO ADD ONE. docs/MARKET-DATA-AUDIT.md lists the current candidates with",
+    "the profile each nearly matched. Key = the career title as",
+    "title_matcher.normalise() produces it; value = the slug from",
+    "https://nationalcareers.service.gov.uk/job-profiles/<slug>. Check a key with:",
     "",
     "    python -c \"import sys; sys.path.insert(0,'tools'); \\",
     "      from market_data.title_matcher import normalise; \\",
     "      print(normalise('Andrology Scientist'))\"",
     "",
-    "The value is the slug from the profile URL:",
-    "https://nationalcareers.service.gov.uk/job-profiles/<slug>",
-    "",
     "WHAT NOT TO ADD. Never alias a seniority variant to its base profile.",
     "'Senior Biomedical Scientist' is not the same job as 'Biomedical scientist',",
-    "and mapping it would publish an entry-grade salary range as a career-specific",
-    "fact about a senior post. The matcher rejects these deliberately and the",
-    "audit does not list them as candidates. Adding one by hand defeats the check.",
+    "and mapping it would publish an entry-grade range as career-specific fact",
+    "about a senior post. The matcher rejects these deliberately and the audit does",
+    "not list them. Adding one by hand defeats the check.",
     "",
     "Never add an alias to make coverage look better. A transparent derived",
-    "estimate is better than a confident wrong one, and doing nothing here is",
-    "always a safe choice.",
+    "estimate is better than a confident wrong one, and doing nothing is always a",
+    "safe choice. Removing an alias is equally safe: the career simply returns to a",
+    "derived estimate.",
     "",
-    "AFTER EDITING. Re-run the pipeline and check what changed:",
-    "",
-    "    python tools/market_data/enrich.py --all --offline --dry-run",
-    "    python tools/market_data/validate.py",
-    "",
-    "The offline dry run costs no API quota. Removing an alias is equally safe:",
-    "the career simply returns to a derived estimate."
+    "AFTER EDITING:",
+    "    python tools/market_data/enrich.py --all",
+    "    python tools/market_data/validate.py --previous <the file before>"
   ],
-  "aliases": {}
+
+  "aliases": {
+    "clinical pharmacist": "pharmacist",
+
+    "biochemistry laboratory technician": "laboratory-technician",
+    "genomics laboratory technician": "laboratory-technician",
+    "haematology laboratory technician": "laboratory-technician",
+    "immunology laboratory technician": "laboratory-technician",
+    "microbiology laboratory technician": "laboratory-technician",
+    "molecular laboratory technician": "laboratory-technician",
+    "transfusion laboratory technician": "laboratory-technician",
+    "laboratory robotics technician": "laboratory-technician",
+    "laboratory training officer": "training-officer",
+
+    "animal research scientist": "research-scientist",
+    "cancer research scientist": "research-scientist",
+    "preclinical research scientist": "research-scientist",
+
+    "clinical data scientist": "data-scientist",
+    "healthcare data scientist": "data-scientist",
+    "epidemiological data scientist": "data-scientist",
+    "genomics data scientist": "data-scientist",
+    "omics data scientist": "data-scientist",
+    "health data analyst": "data-analyst-statistician",
+    "clinical systems analyst": "systems-analyst",
+    "data protection officer healthcare": "data-protection-officer",
+
+    "clinical project manager": "business-project-manager",
+    "project manager healthcare": "business-project-manager",
+    "production manager pharmaceuticals": "production-manager-manufacturing-",
+    "clinical service manager": "health-service-manager",
+    "management consultant healthcare": "management-consultant",
+
+    "marketing manager healthcare": "marketing-manager",
+    "business development manager life sciences": "business-development-manager",
+    "scientific events manager": "events-manager",
+
+    "healthcare careers adviser": "careers-adviser",
+    "scientific careers adviser": "careers-adviser",
+
+    "food safety scientist": "food-scientist"
+  },
+
+  "_reviewed_and_rejected": {
+    "_note": [
+      "Candidates looked at and deliberately left as derived estimates, so the",
+      "same ten are not re-litigated at every review. Each names the reason.",
+      "Nothing here is read by the pipeline."
+    ],
+    "clinical geneticist": {
+      "candidate": "geneticist",
+      "reason": "A clinical geneticist is a medical consultant on the medical pay scale. The geneticist profile publishes 35k-58k for a laboratory science role; this career currently derives 40k-145k, which is the right shape. The alias would cut the top of the range by nearly two thirds and label the result career-specific fact."
+    },
+    "clinical biochemist": {
+      "candidate": "biochemist",
+      "reason": "Clinical biochemistry is a healthcare science specialism entered as a Clinical Scientist, with HCPC registration and Agenda for Change pay. The biochemist profile describes research and industry roles at 28k-53k and understates it."
+    },
+    "clinical photographer": {
+      "candidate": "photographer",
+      "reason": "Clinical photography is a healthcare science role in medical illustration. The photographer profile's 17k-45k is dominated by commercial and freelance work with a quite different pay structure."
+    },
+    "health psychologist": {
+      "candidate": "clinical-psychologist",
+      "reason": "Both are HCPC-protected practitioner psychologist titles, but they are different professions with different training routes. Registration as one is not a licence to practise as the other, which is the same reason transition effort refuses to treat two HCPC professions as interchangeable."
+    },
+    "clinical dental technician": {
+      "candidate": "dental-technician",
+      "reason": "A clinical dental technician holds a separate GDC registration and can treat patients directly; a dental technician works in a laboratory and does not. Different scope, different registration, different pay."
+    },
+    "clinical pharmacologist": {
+      "candidate": "pharmacologist",
+      "reason": "The title covers both a medical specialty and a non-medical pharma role, with very different pay. Genuinely ambiguous, so it stays derived."
+    },
+    "health economist": {
+      "candidate": "economist",
+      "reason": "Health economics and outcomes research is a distinct and better-paid niche in pharma and consultancy. The economist profile's 28k-60k describes government and financial economists and would understate it."
+    },
+    "pharmaceutical sales representative": {
+      "candidate": "sales-representative",
+      "reason": "Pharmaceutical sales pay is structurally different from general sales — higher base plus a commission structure. The 23k-50k general range would understate it while claiming to be career-specific."
+    },
+    "healthcare business intelligence analyst": {
+      "candidate": "business-analyst",
+      "reason": "Business intelligence analysis and business analysis are different jobs: one builds reporting and data models, the other elicits requirements and improves processes. The word overlap is coincidental."
+    },
+    "public health intelligence analyst": {
+      "candidate": "criminal-intelligence-analyst",
+      "reason": "The profile displays as 'Intelligence analyst' but is the criminal intelligence analyst profile — policing and national security. Nothing to do with public health surveillance. A false friend created by dropping 'health' as a setting word."
+    }
+  }
 }

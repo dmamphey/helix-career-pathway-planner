@@ -197,6 +197,48 @@ class Derivation(unittest.TestCase):
         self.assertAlmostEqual(derive.similarity(first, second),
                                derive.similarity(second, first), places=9)
 
+    def test_derivation_never_extrapolates_past_its_contributors(self):
+        """The seniority uplift may move a figure, not invent a new ceiling.
+
+        "Information Governance Specialist" derived from data roles topping out at
+        83k came out at 102.9k, because "Specialist" reads as two rungs more
+        senior. No source in that chain supported six figures.
+        """
+        senior = career("CP-Z", "Specialist Andrology Scientist")
+        result = derive.from_related(senior, self.anchors)
+        self.assertIsNotNone(result)
+        contributor_highs = [record["salary"]["typical_high"]
+                             for subject, record in self.anchors
+                             if subject["id"] in result.contributors]
+        contributor_lows = [record["salary"]["typical_low"]
+                            for subject, record in self.anchors
+                            if subject["id"] in result.contributors]
+        self.assertLessEqual(result.high, max(contributor_highs))
+        self.assertGreaterEqual(result.low, min(contributor_lows))
+
+    def test_a_junior_variant_is_not_pushed_below_its_contributors(self):
+        junior = career("CP-Z", "Trainee Andrology Scientist")
+        result = derive.from_related(junior, self.anchors)
+        contributor_lows = [record["salary"]["typical_low"]
+                            for subject, record in self.anchors
+                            if subject["id"] in result.contributors]
+        self.assertGreaterEqual(result.low, min(contributor_lows))
+        self.assertLessEqual(result.low, result.high)
+
+    def test_no_published_estimate_exceeds_what_it_was_derived_from(self):
+        by_id = {r["career_id"]: r for r in PUBLISHED["records"]}
+        for record in PUBLISHED["records"]:
+            salary = record["salary"]
+            sources = salary.get("derived_from_career_ids") or []
+            if salary["estimate_method"] != "related_career_derived" or not sources:
+                continue
+            highs = [by_id[cid]["salary"]["typical_high"]
+                     for cid in sources if cid in by_id]
+            with self.subTest(career=record["career_id"]):
+                self.assertLessEqual(salary["typical_high"], max(highs),
+                                     "a derived range claims more than any career "
+                                     "it was derived from")
+
     def test_similarity_prefers_the_same_family(self):
         target = career("CP-Z", "Andrology Scientist")
         near = derive.similarity(target, self.anchors[0][0])

@@ -6,8 +6,8 @@ read by anyone assessing whether the numbers can be trusted — no programming
 knowledge is needed.
 
 The short version: Helix publishes a salary range for all 677 careers, but it
-does not pretend they are all equally well evidenced. **54 come from an official
-careers guide written for that exact job. The other 623 are estimates, and every
+does not pretend they are all equally well evidenced. **86 come from an official
+careers guide written for that exact job. The other 591 are estimates, and every
 one of them is labelled as an estimate wherever it appears.**
 
 ---
@@ -29,6 +29,11 @@ and both be normal.
 
 Helix rounds figures to sensible whole amounts. You will see "£30k to £53k", not
 "£43,281". False precision is a way of implying research that was never done.
+
+A figure taken directly from an official source is republished exactly as it was
+issued. A derived figure is rounded to the nearest thousand, because it is the
+output of an average rather than a published number, and its digits should not
+claim a precision the arithmetic cannot support.
 
 ---
 
@@ -157,10 +162,10 @@ rather than hidden in a footnote.
 
 | Label | What it means | Count |
 |---|---|---|
-| **Career-specific guide** | An official careers source published this range for this exact job | 54 |
+| **Career-specific guide** | An official careers source published this range for this exact job | 86 |
 | **Strong estimate** | A high-quality occupation or pay-framework mapping, but not published for this exact title | 0 |
-| **Indicative estimate** | Derived from closely related careers with stronger evidence | 202 |
-| **Limited-data estimate** | A median across the career's family and seniority level. A broad indication only | 421 |
+| **Indicative estimate** | Derived from closely related careers with stronger evidence | 352 |
+| **Limited-data estimate** | A median across the career's family and seniority level. A broad indication only | 239 |
 
 There are currently no Strong estimates. That is because the ONS occupation step
 requires a defensible SOC mapping, and Helix does not yet have human-verified SOC
@@ -168,21 +173,38 @@ codes for these careers. Curating them is the single change that would move the
 largest number of careers up a grade, and it is the honest reason the figure is
 zero rather than an oversight.
 
-The other route to better coverage is a curated list of alternative titles for
-the National Careers Service profiles. 737 public profiles exist and only 54
-matched by exact title, so a set of human-checked aliases would convert a
-substantial share of today's Limited-data estimates into career-specific
-evidence. Each alias is a judgement a person has to make, which is why they are
-not generated automatically.
+The other route is a curated list of alternative titles for the National Careers
+Service profiles, in `data/reference/ncs_career_aliases.json`. 737 public
+profiles exist and only 54 matched by exact title, so human-checked aliases
+convert derived estimates into career-specific evidence without waiting for
+anybody.
 
-`docs/MARKET-DATA-AUDIT.md` lists the 42 careers currently one decision away,
-each with the profile it nearly matched. Two warnings apply to that list. A high
-score is not agreement: matching ignores setting words like *clinical* and
-*healthcare*, so *Clinical Photographer* and *Photographer* both reduce to the
-same tokens and score 1.00 while plainly being different jobs — those rows are
-flagged. And seniority variants are excluded entirely, because aliasing *Senior
-Biomedical Scientist* to the entry-grade profile would publish a starter salary
-as fact about a senior post.
+**32 have been curated so far**, taking career-specific coverage from 54 to 86.
+The effect was larger than those 32 careers: giving derivation better anchors
+moved a further 182 careers off the family-median fallback, so Limited-data
+estimates fell from 421 to 239.
+
+Each alias is a judgement, made against one test: not "are these titles similar"
+but "is the range this profile publishes an honest answer for this career". A
+qualifier naming only a sector or setting is usually safe — a marketing manager
+in healthcare is a marketing manager. A qualifier marking a different profession,
+a different registration or a materially different pay market is not.
+
+**Ten candidates were examined and deliberately rejected**, with the reason
+recorded beside each in the alias file so they are not re-litigated. Some
+examples: a Clinical Geneticist is a medical consultant, not the laboratory
+scientist the *Geneticist* profile describes; a Health Psychologist and a
+Clinical Psychologist are different HCPC-protected professions; and *Public
+Health Intelligence Analyst* nearly matched the criminal intelligence analyst
+profile, which is policing work.
+
+`docs/MARKET-DATA-AUDIT.md` lists whatever candidates remain. Two warnings apply
+to that list. A high score is not agreement: matching ignores setting words like
+*clinical* and *healthcare*, so *Clinical Photographer* and *Photographer* both
+reduce to the same tokens and score 1.00 while plainly being different jobs —
+those rows are flagged. And seniority variants are excluded entirely, because
+aliasing *Senior Biomedical Scientist* to the entry-grade profile would publish a
+starter salary as fact about a senior post.
 
 ---
 
@@ -193,7 +215,7 @@ distinguishes them everywhere they appear.
 
 **Recorded by a source.** Typical weekly hours and working patterns — shifts,
 evenings and weekends, on-call, bank holidays — come from official job profiles.
-They exist for the 54 careers with a matched profile. For the other 623 Helix
+They exist for the 86 careers with a matched profile. For the other 591 Helix
 shows "Not yet available" rather than estimating them.
 
 **Inferred from the taxonomy.** Patient contact, laboratory intensity, research

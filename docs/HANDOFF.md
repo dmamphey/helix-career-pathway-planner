@@ -24,9 +24,12 @@ The four JSON files beside it are already copied into `data/reference/`.
 ## Two known conflicts in the spec — do not silently "fix" these
 
 1. **§4 and §74 name `/career-pathway/` as production and call
-   `/helix-career-pathway-planner/` stale. That is inverted.** The pack predates a
-   repository rename. `/career-pathway/` now 404s; the long path is live. Keep the
-   live URL. Do not revert the references. Ask the user before changing either.
+   `/helix-career-pathway-planner/` stale. That is inverted — and this is now
+   settled.** The pack predates a repository rename. `/career-pathway/` 404s; the
+   long path is live. **Confirmed by the repository owner: the live URL is
+   `https://tools.optymumss.com/helix-career-pathway-planner/`.** Every reference
+   in the repository already says so. Do not apply §4. The README carries the same
+   warning beside the deployment table.
 2. **§75 NCS API.** A Starter subscription exists and `NCS_API_KEY` is available,
    but there is nothing to call: the developer portal publishes **0 APIs**, every
    candidate route 404s, and the gateway answers identically with no key, a bad key
@@ -53,10 +56,12 @@ All phases of the specification are implemented and verified in a browser.
 
 - `tools/market_data/` — cache, four providers (NCS API + NCS public, ONS, NHS,
   Skills England), title matcher, derive, resolver, validate, report, CLI.
-- `data/helix_market_data_uk_v1.json` — 677/677 salary: **54 VERIFIED_GUIDE**
-  (career-specific National Careers Service profiles), **202 INDICATIVE**,
-  **421 LIMITED_DATA**. Validation passes. 54 attributed role summaries,
-  23 with alternative titles.
+- `data/helix_market_data_uk_v1.json` — 677/677 salary: **86 VERIFIED_GUIDE**
+  (career-specific National Careers Service profiles), **352 INDICATIVE**,
+  **239 LIMITED_DATA**. Validation passes. 83 attributed role summaries.
+  32 curated aliases in `data/reference/ncs_career_aliases.json` took
+  career-specific coverage from 54 to 86, and better anchors moved a further
+  182 careers off the family-median fallback.
 - `js/market-data.js`, `js/comparison.js`, `js/transition-effort.js`,
   `js/preference-fit.js`, `js/views/compare.js`, `js/views/preferences.js`.
 - Career cards: salary, evidence badge, hours, fit, effort, Compare toggle.
@@ -81,7 +86,7 @@ All phases of the specification are implemented and verified in a browser.
   their reasons, "other options considered" from the shortlist, salary source.
 - `.github/workflows/refresh-market-data.yml` (§47) and
   `docs/MARKET-DATA-METHODOLOGY.md` (§66).
-- **Tests: 90 browser checks and 62 Python checks, all passing.**
+- **Tests: 90 browser checks and 65 Python checks, all passing.**
 
 ### Two behaviour changes worth knowing about
 
@@ -130,14 +135,14 @@ All phases of the specification are implemented and verified in a browser.
 Nothing in the specification is outstanding. What is left is data quality, and
 all of it needs either a decision or an external unblock.
 
-1. **Curate `data/reference/ncs_career_aliases.json`.** The single highest-value
-   piece of work available. 737 public NCS profiles exist and only 54 matched by
-   exact title, so curated aliases would convert a large share of the 421
-   LIMITED_DATA estimates into career-specific evidence without waiting for
-   anybody. The resolver already reads the file; each entry is a human judgement.
-2. **Human-verified SOC 2020 codes.** There are currently zero STRONG_ESTIMATE
+1. **More aliases.** 32 are curated and 10 candidates were examined and
+   deliberately rejected, with the reason recorded in the alias file so they are
+   not re-litigated. The remaining opportunity is careers that produced no
+   candidate at all because their titles share too few words with any profile —
+   finding those needs a different search than the audit currently runs.
+2. **Human-verified SOC 2020 codes.** There are still zero STRONG_ESTIMATE
    records, because the ONS tier needs a defensible SOC mapping and none is
-   verified. This is the second-largest lever.
+   verified. This is now the largest single lever.
 3. **The NCS API**, once it exists — see the conflict note above.
 4. **Regional salary contexts.** The schema holds them; no data is loaded, and a
    blanket London multiplier would be worse than nothing.
@@ -155,7 +160,7 @@ fixtures:
 ```bash
 python tests/make_fixtures.py
 ```
-Pipeline tests — no browser, no network, no API quota. **62 should pass**:
+Pipeline tests — no browser, no network, no API quota. **65 should pass**:
 ```bash
 python tools/market_data/tests.py
 ```
