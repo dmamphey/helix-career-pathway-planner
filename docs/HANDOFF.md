@@ -57,14 +57,17 @@ All phases of the specification are implemented and verified in a browser.
 - `tools/market_data/` — cache, five providers (NCS API and NCS public, ONS,
   NHS pay frameworks, NHS Health Careers links, Skills England), title matcher,
   derive, resolver, validate, report, CLI.
-- `data/helix_market_data_uk_v1.json` — 677/677 salary: **110 VERIFIED_GUIDE**
-  (career-specific National Careers Service profiles), **330 INDICATIVE**,
-  **237 LIMITED_DATA**. Validation passes. 107 attributed role summaries,
-  110 careers with typical hours, and 43 careers carrying a link to an
+- **The catalogue is 716 careers**: the 677 supplied, plus 39 in
+  `data/helix_additional_careers_v1.json` (ids from CP-701). The supplied file
+  is still byte-for-byte untouched — additions live in their own file precisely
+  so the hash guarantee survives, and everything counts careers rather than
+  assuming 677.
+- `data/helix_market_data_uk_v1.json` — 716/716 salary: **148 VERIFIED_GUIDE**
+  (career-specific National Careers Service profiles), **378 INDICATIVE**,
+  **190 LIMITED_DATA**. Validation passes. 143 attributed role summaries,
+  148 careers with typical hours, and 50 careers carrying a link to an
   NHS Health Careers profile — a link only, never its text.
-  55 curated aliases in `data/reference/ncs_career_aliases.json` took
-  career-specific coverage from 54 to 110, and better anchors moved a further
-  182 careers off the family-median fallback.
+  56 curated aliases in `data/reference/ncs_career_aliases.json`.
 - `js/market-data.js`, `js/comparison.js`, `js/transition-effort.js`,
   `js/preference-fit.js`, `js/views/compare.js`, `js/views/preferences.js`.
 - Career cards: salary, evidence badge, hours, fit, effort, Compare toggle.
@@ -89,7 +92,7 @@ All phases of the specification are implemented and verified in a browser.
   their reasons, "other options considered" from the shortlist, salary source.
 - `.github/workflows/refresh-market-data.yml` (§47) and
   `docs/MARKET-DATA-METHODOLOGY.md` (§66).
-- **Tests: 97 browser checks and 75 Python checks, all passing.**
+- **Tests: 100 browser checks and 75 Python checks, all passing.**
 
 ### Two behaviour changes worth knowing about
 
@@ -158,7 +161,7 @@ all of it needs either a decision or an external unblock.
 ```bash
 python tools/serve.py                 # http://localhost:8766 (threaded, no-cache)
 ```
-Browser tests: open `http://localhost:8766/tests/` — **97 should pass**. They need
+Browser tests: open `http://localhost:8766/tests/` — **100 should pass**. They need
 fixtures:
 ```bash
 python tests/make_fixtures.py

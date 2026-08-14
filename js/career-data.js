@@ -14,6 +14,8 @@ import {
 
 const DATASET_URL = new URL("../data/careerpath_uk_careers_v1.json",
                             import.meta.url);
+const ADDITIONS_URL = new URL("../data/helix_additional_careers_v1.json",
+                              import.meta.url);
 
 /** Regulatory statuses that mean "a register or protected title is involved". */
 const REGULATED_STATUSES = new Set([
@@ -54,8 +56,33 @@ export async function loadCareers() {
       + "from a local folder, serve it over http rather than opening the file "
       + `directly. (${cause.message})`);
   }
-  dataset = buildCatalogue(payload);
+
+  /*
+   * Careers added after launch live in their own file.
+   *
+   * The supplied taxonomy is treated as immutable and its hash is checked on
+   * every pipeline run, so growing the catalogue in place would break the one
+   * guarantee that says nothing has quietly rewritten it. Additions are merged
+   * here instead, from ids starting at CP-701 so an addition is recognisable
+   * and can never collide with the supplied range.
+   *
+   * A missing or broken additions file is not fatal: the catalogue is simply
+   * the supplied one, which is exactly how Helix behaved before.
+   */
+  const additions = await loadAdditions();
+  dataset = buildCatalogue(payload, additions);
   return dataset;
+}
+
+async function loadAdditions() {
+  try {
+    const response = await fetch(ADDITIONS_URL, { cache: "no-cache" });
+    if (!response.ok) return [];
+    const payload = await response.json();
+    return Array.isArray(payload.careers) ? payload.careers : [];
+  } catch (ignored) {
+    return [];
+  }
 }
 
 /** The catalogue, or null before loadCareers() has resolved. */
@@ -68,8 +95,13 @@ export function catalogue() {
  *
  * Exported so tests can build a catalogue from a fixture without a network call.
  */
-export function buildCatalogue(payload) {
-  const raw = Array.isArray(payload.careers) ? payload.careers : [];
+export function buildCatalogue(payload, additions = []) {
+  const supplied = Array.isArray(payload.careers) ? payload.careers : [];
+  // An addition that reuses a supplied id is dropped rather than allowed to
+  // shadow it: the supplied record is the one everything else is keyed to.
+  const suppliedIds = new Set(supplied.map((career) => career.id));
+  const extra = additions.filter((career) => career && !suppliedIds.has(career.id));
+  const raw = [...supplied, ...extra];
   const careers = raw.map(decorate);
   const byId = new Map(careers.map((career) => [career.id, career]));
   const families = [...new Set(careers.map((c) => c.family))].sort();
@@ -83,7 +115,11 @@ export function buildCatalogue(payload) {
       version: payload.version || "unknown",
       generated: payload.generated || "",
       jurisdiction: payload.jurisdiction || "United Kingdom",
-      declaredCount: payload.career_count ?? raw.length,
+      // The supplied file still declares its own 677; the catalogue is that
+      // plus whatever has been added since.
+      declaredCount: (payload.career_count ?? supplied.length) + extra.length,
+      suppliedCount: payload.career_count ?? supplied.length,
+      addedCount: extra.length,
       designIntent: payload.design_intent || "",
     },
     sources: payload.source_registry || {},

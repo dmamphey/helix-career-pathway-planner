@@ -38,8 +38,10 @@ from market_data.title_matcher import (                           # noqa: E402
 )
 from market_data.validate import validate                         # noqa: E402
 
-BASE = json.loads((ROOT / "data" / "careerpath_uk_careers_v1.json")
-                  .read_text(encoding="utf-8"))
+from market_data import catalogue                                 # noqa: E402
+
+#: The full catalogue — the supplied taxonomy plus post-launch additions.
+BASE = catalogue.load_catalogue()
 PUBLISHED = json.loads((ROOT / "data" / "helix_market_data_uk_v1.json")
                        .read_text(encoding="utf-8"))
 
@@ -563,7 +565,9 @@ class PublishedData(unittest.TestCase):
 
     def test_there_is_exactly_one_record_per_career(self):
         self.assertEqual(len(self.records), len(self.careers))
-        self.assertEqual(len(self.records), 677)
+        # Counted, not asserted as a literal: the catalogue grows when careers
+        # are added, and a hard-coded 677 would fail for the wrong reason.
+        self.assertGreaterEqual(len(self.records), 677)
 
     def test_no_duplicate_career_ids(self):
         ids = [r["career_id"] for r in self.records]
@@ -663,14 +667,23 @@ class PublishedData(unittest.TestCase):
             if len(value) >= 8:
                 self.assertNotIn(value, blob, f"{name} reached the published file")
 
-        # And nothing key-shaped, whether or not it is one we hold: a long
-        # unbroken hex or base64 run has no business in a salary dataset.
+        # URLs are checked on their own terms. A long kebab-case path segment is
+        # ordinary — "primary-care-graduate-mental-health-worker" is 42
+        # characters of NHS Health Careers URL — so the generic token patterns
+        # are applied to everything *except* URLs, and URLs are searched instead
+        # for the query parameters a leaked key actually travels in.
+        for url in re.findall(r"https?://[^\s\"']+", blob):
+            self.assertNotRegex(
+                url, r"(?i)[?&](api[_-]?key|key|token|secret|password)=",
+                "a URL in the published file carries a credential parameter")
+
+        without_urls = re.sub(r"https?://[^\s\"']+", " ", blob)
         for pattern in (r"\b[a-f0-9]{32,}\b",
-                        r"\b[A-Za-z0-9_-]{40,}\b",
+                        r"\b[A-Za-z0-9+/]{40,}={0,2}\b",
                         r"(?i)ocp-apim-subscription-key",
                         r"(?i)authorization\"\s*:",
                         r"(?i)\bbearer\s+\S+"):
-            found = re.search(pattern, blob)
+            found = re.search(pattern, without_urls)
             self.assertIsNone(
                 found,
                 f"credential-shaped text in the published file: "

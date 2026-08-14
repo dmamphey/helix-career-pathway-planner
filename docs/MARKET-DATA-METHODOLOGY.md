@@ -5,9 +5,9 @@ each one is grounded, and what it does and does not mean. It is written to be
 read by anyone assessing whether the numbers can be trusted — no programming
 knowledge is needed.
 
-The short version: Helix publishes a salary range for all 677 careers, but it
-does not pretend they are all equally well evidenced. **110 come from an official
-careers guide written for that exact job. The other 567 are estimates, and every
+The short version: Helix publishes a salary range for all 716 careers, but it
+does not pretend they are all equally well evidenced. **148 come from an official
+careers guide written for that exact job. The other 568 are estimates, and every
 one of them is labelled as an estimate wherever it appears.**
 
 ---
@@ -59,22 +59,30 @@ mapping recorded by a person with its source — see the limitations.
 
 ---
 
-## 2. The two datasets, and why they are separate
-
-Helix keeps two files, deliberately apart:
+## 2. The three data files, and why they are separate
 
 | File | What it holds | How often it changes |
 |---|---|---|
-| `data/careerpath_uk_careers_v1.json` | The 677 UK careers themselves: titles, families, tags, regulation status, official sources | Rarely. Treated as supplied and never edited by the pipeline |
+| `data/careerpath_uk_careers_v1.json` | The 677 supplied UK careers: titles, families, tags, regulation status, official sources | Never. Treated as supplied and verified by hash |
+| `data/helix_additional_careers_v1.json` | Careers added since launch, ids from CP-701 | When a career is added |
 | `data/helix_market_data_uk_v1.json` | Salary, hours, working patterns and role descriptions, one record per career | Monthly, or whenever a source updates |
 
-Salary is volatile; a career taxonomy is not. Mixing them would mean rewriting
-the careers file every time a pay figure moved, and every rewrite of a hand-built
-reference file is a chance to corrupt it. The two are joined in memory by career
-id when the application loads.
+**Market data is separate from the career list** because salary is volatile and a
+career taxonomy is not. Mixing them would mean rewriting the careers file every
+time a pay figure moved, and every rewrite of a hand-built reference file is a
+chance to corrupt it. They are joined in memory by career id when the application
+loads.
 
-The refresh process checks that the careers file has not changed at all, and
-fails if it has.
+**Added careers are separate from supplied ones** because the supplied file is
+treated as immutable: the refresh checks its hash on every run and fails if it
+has moved. That is the guarantee that nothing has quietly rewritten the launch
+taxonomy, and it is worth more than the tidiness of a single file. Ids from
+CP-701 leave a clear gap after the supplied CP-001 to CP-677, so an id says at a
+glance where a career came from and an addition can never shadow a supplied
+record.
+
+Every tool counts the careers it finds rather than assuming a fixed number, so
+the catalogue can grow without anything failing for the wrong reason.
 
 ---
 
@@ -204,10 +212,10 @@ rather than hidden in a footnote.
 
 | Label | What it means | Count |
 |---|---|---|
-| **Career-specific guide** | An official careers source published this range for this exact job | 110 |
+| **Career-specific guide** | An official careers source published this range for this exact job | 148 |
 | **Strong estimate** | A high-quality occupation or pay-framework mapping, but not published for this exact title | 0 |
-| **Indicative estimate** | Derived from closely related careers with stronger evidence | 330 |
-| **Limited-data estimate** | A median across the career's family and seniority level. A broad indication only | 237 |
+| **Indicative estimate** | Derived from closely related careers with stronger evidence | 378 |
+| **Limited-data estimate** | A median across the career's family and seniority level. A broad indication only | 190 |
 
 There are currently no Strong estimates. That is because the ONS occupation step
 requires a defensible SOC mapping, and Helix does not yet have human-verified SOC
@@ -257,7 +265,7 @@ distinguishes them everywhere they appear.
 
 **Recorded by a source.** Typical weekly hours and working patterns — shifts,
 evenings and weekends, on-call, bank holidays — come from official job profiles.
-They exist for the 110 careers with a matched profile. For the other 567 Helix
+They exist for the 148 careers with a matched profile. For the other 568 Helix
 shows "Not yet available" rather than estimating them.
 
 **Inferred from the taxonomy.** Patient contact, laboratory intensity, research

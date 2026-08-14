@@ -79,6 +79,48 @@ test("the dataset holds at least 677 careers", () => {
         "loaded count differs from the count the dataset declares");
 });
 
+test("careers added after launch are merged into the catalogue", () => {
+  /*
+   * The supplied taxonomy is immutable and hash-checked, so the catalogue grows
+   * through a second file rather than by editing the first. Additions start at
+   * CP-701, clear of the supplied CP-001..CP-677.
+   */
+  const added = catalogue.careers.filter((career) => career.id >= "CP-701");
+  assert(added.length > 0, "no post-launch careers were merged in");
+  equal(catalogue.count, catalogue.meta.suppliedCount + catalogue.meta.addedCount,
+        "the merged count does not add up");
+  for (const career of added) {
+    assert(/^CP-7\d\d$/.test(career.id),
+           `${career.id} is outside the additions range`);
+    assert(career.family && catalogue.families.includes(career.family),
+           `${career.id} has an unknown family`);
+  }
+});
+
+test("an addition cannot shadow a supplied career", () => {
+  // Ids are unique across the merge, so a supplied record can never be replaced.
+  const supplied = catalogue.careers.filter((c) => c.id <= "CP-677");
+  equal(supplied.length, catalogue.meta.suppliedCount,
+        "the supplied records were altered by the merge");
+});
+
+test("the careers people asked for are present, with real evidence", async () => {
+  // Biotechnologist and Forensic Scientist were both missing at launch. Loading
+  // the market data here rather than relying on a later test keeps this check
+  // independent of the order the suite happens to run in.
+  await market.loadMarketData();
+  for (const title of ["Biotechnologist", "Forensic Scientist"]) {
+    const found = catalogue.careers.find((career) => career.title === title);
+    assert(found, `${title} is not in the catalogue`);
+    const pay = market.salary(found.id);
+    assert(pay, `${title} has no salary`);
+    equal(pay.evidenceKey, "VERIFIED_GUIDE",
+          `${title} has only a ${pay.evidenceLabel}`);
+    assert(market.role(found.id).summary,
+           `${title} has no attributed description`);
+  }
+});
+
 test("all career ids are unique", () => {
   const ids = new Set(catalogue.careers.map((c) => c.id));
   equal(ids.size, catalogue.count, "duplicate career id");

@@ -37,13 +37,19 @@ else:
     from .cache import cached_count
     from .resolver import Resolver
 
+try:
+    from . import catalogue
+except ImportError:
+    import catalogue
+
 ROOT = Path(__file__).resolve().parent.parent.parent
 BASE = ROOT / "data" / "careerpath_uk_careers_v1.json"
 PUBLISHED = ROOT / "data" / "helix_market_data_uk_v1.json"
 
 
 def load_base() -> dict:
-    return json.loads(BASE.read_text(encoding="utf-8"))
+    """The full catalogue: the supplied taxonomy plus post-launch additions."""
+    return catalogue.load_catalogue()
 
 
 def main(argv=None) -> int:

@@ -14,7 +14,7 @@ sciences and healthcare:
 4. What should I do next?
 
 It turns a CV — or a manually built profile — into a structured career profile,
-compares that profile against 677 UK career destinations, and produces a pathway,
+compares that profile against 716 UK career destinations, and produces a pathway,
 a gap analysis and exactly three next actions.
 
 It is a static browser application. No backend, no accounts, no AI service.
@@ -95,6 +95,7 @@ helix-career-pathway-planner/
 │   └── views/                  one module per screen
 ├── data/
 │   ├── careerpath_uk_careers_v1.json    the supplied dataset, unmodified
+│   ├── helix_additional_careers_v1.json careers added since launch
 │   ├── helix_market_data_uk_v1.json     generated: salary and working life
 │   ├── career_rules/                    optional researched packs
 │   └── reference/                       schema, seed and source registry
@@ -309,7 +310,7 @@ edits appear to do nothing.
 http://localhost:8766/tests/
 ```
 
-97 checks run in the browser — that is where the parsers need real `File` objects
+100 checks run in the browser — that is where the parsers need real `File` objects
 and the storage guarantees need a real `localStorage`. They cover dataset
 integrity, ontology coverage, PDF/DOCX/TXT extraction, the scanned-PDF fallback,
 determinism, grouping, the requirement separation, pathway generation for a sample

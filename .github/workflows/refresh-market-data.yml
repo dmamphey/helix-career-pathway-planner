@@ -2,13 +2,13 @@
 #
 # The workflow never writes to `main`. It opens a pull request, because a salary
 # figure changing is a content decision that somebody should look at — an
-# automated push would let an upstream change alter what 677 careers say about
+# automated push would let an upstream change alter what every career says about
 # pay with nobody in the loop.
 #
 # Three gates have to pass before a pull request is opened at all: coverage must
-# still be 677 of 677, the schema validation must pass, and no API key may appear
-# anywhere in the generated files. Any of them failing fails the run and produces
-# nothing.
+# still cover every career in the catalogue, the schema validation must pass, and
+# no API key may appear anywhere in the generated files. Any of them failing
+# fails the run and produces nothing.
 #
 # Only official, GitHub-owned actions are used, plus the `gh` CLI for the pull
 # request. That is deliberate: it removes the supply-chain question that a
@@ -101,15 +101,21 @@ jobs:
           python tools/market_data/validate.py \
             --previous /tmp/previous-market-data.json
 
-      - name: Require 677 of 677 salary coverage
+      - name: Require full salary coverage
         run: |
           python - <<'PY'
           import json, pathlib
-          base = json.loads(
-              pathlib.Path("data/careerpath_uk_careers_v1.json")
-              .read_text(encoding="utf-8"))
-          careers = base.get("careers", base if isinstance(base, list) else [])
-          expected = len(careers)
+          # The catalogue is the supplied taxonomy plus any post-launch
+          # additions, counted rather than hard-coded — a literal 677 would fail
+          # for the wrong reason the moment a career is added.
+          def careers_in(path):
+              if not pathlib.Path(path).exists():
+                  return []
+              data = json.loads(pathlib.Path(path).read_text(encoding="utf-8"))
+              return data.get("careers", [])
+          careers = (careers_in("data/careerpath_uk_careers_v1.json")
+                     + careers_in("data/helix_additional_careers_v1.json"))
+          expected = len({c["id"] for c in careers})
           data = json.loads(
               pathlib.Path("data/helix_market_data_uk_v1.json")
               .read_text(encoding="utf-8"))
@@ -135,7 +141,7 @@ jobs:
       - name: Confirm the base taxonomy was not modified
         run: |
           if ! git diff --quiet -- data/careerpath_uk_careers_v1.json; then
-            echo "The supplied 677-career taxonomy was modified. Refusing."
+            echo "The supplied launch taxonomy was modified. Refusing."
             git diff --stat -- data/careerpath_uk_careers_v1.json
             exit 1
           fi
@@ -217,7 +223,7 @@ jobs:
             echo
             echo "**Checks that already passed on this branch**"
             echo
-            echo "- 677 of 677 careers carry a publishable salary"
+            echo "- every career in the catalogue carries a publishable salary"
             echo "- schema validation, including large-change detection"
             echo "- the supplied base taxonomy is byte-for-byte unchanged"
             echo "- no configured secret appears in any generated file"

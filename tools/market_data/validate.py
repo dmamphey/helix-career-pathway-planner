@@ -23,6 +23,12 @@ import re
 import sys
 from pathlib import Path
 
+try:
+    from . import catalogue
+except ImportError:  # run directly as a script rather than as a module
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import catalogue
+
 ROOT = Path(__file__).resolve().parent.parent.parent
 BASE = ROOT / "data" / "careerpath_uk_careers_v1.json"
 PUBLISHED = ROOT / "data" / "helix_market_data_uk_v1.json"
@@ -191,7 +197,7 @@ def main(argv=None) -> int:
         return 1
 
     published = json.loads(path.read_text(encoding="utf-8"))
-    base = json.loads(BASE.read_text(encoding="utf-8"))
+    base = catalogue.load_catalogue()
     previous = (json.loads(Path(args.previous).read_text(encoding="utf-8"))
                 if args.previous and Path(args.previous).exists() else None)
 

@@ -8,11 +8,11 @@ This report is produced by `tools/market_data/report.py` as part of every enrich
 
 | | |
 |---|---|
-| Careers in the base taxonomy | 677 |
-| Market-data records | 677 |
-| Careers with a published salary range | **677** |
-| Careers with typical weekly hours | 110 |
-| Careers with an authoritative role description | 107 |
+| Careers in the base taxonomy | 716 |
+| Market-data records | 716 |
+| Careers with a published salary range | **716** |
+| Careers with typical weekly hours | 148 |
+| Careers with an authoritative role description | 143 |
 | Records past their review date | 0 |
 | Records flagged for manual review | 0 |
 
@@ -20,26 +20,26 @@ This report is produced by `tools/market_data/report.py` as part of every enrich
 
 | Evidence class | Careers | What it means |
 |---|---|---|
-| Career-specific guide (`VERIFIED_GUIDE`) | 110 | A career-specific salary range published by an official careers source for this job. |
+| Career-specific guide (`VERIFIED_GUIDE`) | 148 | A career-specific salary range published by an official careers source for this job. |
 | Strong estimate (`STRONG_ESTIMATE`) | 0 | A high-quality occupation or pay-framework mapping, but not a range published for this exact job title. |
-| Indicative estimate (`INDICATIVE`) | 330 | Derived from closely related careers that do have stronger evidence, with any seniority difference priced in. |
-| Limited-data estimate (`LIMITED_DATA`) | 237 | A median across the career's family and seniority level. A broad indication only. |
+| Indicative estimate (`INDICATIVE`) | 378 | Derived from closely related careers that do have stronger evidence, with any seniority difference priced in. |
+| Limited-data estimate (`LIMITED_DATA`) | 190 | A median across the career's family and seniority level. A broad indication only. |
 
 ## Salary method
 
 | Method | Careers |
 |---|---|
-| Derived from related careers | 330 |
-| Family and seniority median | 237 |
-| National Careers Service career profile | 110 |
+| Derived from related careers | 378 |
+| Family and seniority median | 190 |
+| National Careers Service career profile | 148 |
 
 ## Title matching against external profiles
 
 | Outcome | Careers |
 |---|---|
 | `no_match` | 553 |
-| `curated_alias` | 56 |
-| `exact_title` | 54 |
+| `exact_title` | 92 |
+| `curated_alias` | 57 |
 | `review_candidate` | 9 |
 | `seniority_variant_rejected` | 5 |
 
@@ -54,7 +54,7 @@ This report is produced by `tools/market_data/report.py` as part of every enrich
 
 | Provider | Salary records |
 |---|---|
-| National Careers Service (public job profile) | 110 |
+| National Careers Service (public job profile) | 148 |
 
 ## Attribution
 
@@ -78,11 +78,16 @@ A score of 1.00 does **not** mean the two are the same job. Matching drops setti
 | CP-018 | Clinical Photographer | Photographer (`photographer`) | 1.00 | Indicative estimate | Scores high only because *clinical* was dropped — check these are really one occupation |
 | CP-135 | Clinical Dental Technician | Dental technician (`dental-technician`) | 1.00 | Indicative estimate | Scores high only because *clinical* was dropped — check these are really one occupation |
 | CP-136 | Clinical Geneticist | Geneticist (`geneticist`) | 1.00 | Indicative estimate | Scores high only because *clinical* was dropped — check these are really one occupation |
-| CP-312 | Clinical Pharmacologist | Pharmacologist (`pharmacologist`) | 1.00 | Limited-data estimate | Scores high only because *clinical* was dropped — check these are really one occupation |
+| CP-312 | Clinical Pharmacologist | Pharmacologist (`pharmacologist`) | 1.00 | Indicative estimate | Scores high only because *clinical* was dropped — check these are really one occupation |
 | CP-492 | Health Economist | Economist (`economist`) | 1.00 | Indicative estimate | Scores high only because *health* was dropped — check these are really one occupation |
 | CP-427 | Healthcare Business Intelligence Analyst | Business analyst (`business-analyst`) | 0.67 | Indicative estimate | Scores high only because *healthcare* was dropped — check these are really one occupation |
 | CP-515 | Pharmaceutical Sales Representative | Sales representative (`sales-representative`) | 0.67 | Indicative estimate |  |
 | CP-560 | Public Health Intelligence Analyst | Intelligence analyst (`criminal-intelligence-analyst`) | 0.67 | Limited-data estimate | Scores high only because *health* was dropped — check these are really one occupation |
+
+## Warnings
+
+- 44 careers share the range (32000.0, 57000.0) outside the family fallback — check the resolver
+- 47 careers share the range (27000.0, 57000.0) outside the family fallback — check the resolver
 
 ## Limitations
 

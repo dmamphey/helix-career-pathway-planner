@@ -1,0 +1,859 @@
+{
+ "dataset_name": "Helix UK Life Sciences & Healthcare Career Dataset - additions",
+ "version": "1.0",
+ "generated": "2026-08-14",
+ "jurisdiction": "United Kingdom",
+ "career_count": 39,
+ "extends": "careerpath_uk_careers_v1.json",
+ "design_intent": "Careers added after the supplied launch taxonomy. They live in their own file because the supplied dataset is treated as immutable and is verified by hash on every pipeline run, so extending it in place would break that guarantee. Ids start at CP-701 so an addition is recognisable at a glance and can never collide with the supplied range.",
+ "selection_note": "Every title here is one the National Careers Service publishes a job profile for, so each arrives with a career-specific salary range, typical hours and an attributed description rather than a derived estimate.",
+ "careers": [
+  {
+   "id": "CP-701",
+   "title": "Biotechnologist",
+   "family": "Pharma, Biotech R&D & Manufacturing",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "biotech",
+    "biotechnology",
+    "R&D",
+    "science"
+   ],
+   "typical_entry_signal": "relevant life science, chemistry, engineering or pharmaceutical background",
+   "official_source_codes": [
+    "GOV-LS",
+    "UKRI"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-702",
+   "title": "Forensic Scientist",
+   "family": "Laboratory, Pathology & Technical Operations",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Professional / voluntary register",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "laboratory",
+    "science",
+    "technical",
+    "diagnostics"
+   ],
+   "typical_entry_signal": "laboratory, healthcare science, technical or vocational background depending on level",
+   "official_source_codes": [
+    "GOV-LS"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-703",
+   "title": "Biologist",
+   "family": "Research & Academia",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "research",
+    "science",
+    "academia",
+    "bioscience"
+   ],
+   "typical_entry_signal": "relevant science degree; postgraduate research training often advantageous or required for advanced roles",
+   "official_source_codes": [
+    "UKRI"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-704",
+   "title": "Chemist",
+   "family": "Research & Academia",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "research",
+    "science",
+    "academia",
+    "laboratory"
+   ],
+   "typical_entry_signal": "relevant science degree; postgraduate research training often advantageous or required for advanced roles",
+   "official_source_codes": [
+    "UKRI"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-705",
+   "title": "Information Scientist",
+   "family": "Pharma, Biotech R&D & Manufacturing",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "pharma",
+    "data",
+    "informatics",
+    "research"
+   ],
+   "typical_entry_signal": "relevant life science, chemistry, engineering or pharmaceutical background",
+   "official_source_codes": [
+    "ABPI"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-706",
+   "title": "Climate Scientist",
+   "family": "Environmental & One Health",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "environmental health",
+    "one health",
+    "science",
+    "research"
+   ],
+   "typical_entry_signal": "relevant environmental, veterinary, food, biological or public health background depending on role",
+   "official_source_codes": [
+    "UKRI"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-707",
+   "title": "Geoscientist",
+   "family": "Environmental & One Health",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "environmental health",
+    "one health",
+    "science",
+    "research"
+   ],
+   "typical_entry_signal": "relevant environmental, veterinary, food, biological or public health background depending on role",
+   "official_source_codes": [
+    "UKRI"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-708",
+   "title": "Consumer Scientist",
+   "family": "Environmental & One Health",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "bioscience",
+    "science",
+    "safety",
+    "environmental health"
+   ],
+   "typical_entry_signal": "relevant environmental, veterinary, food, biological or public health background depending on role",
+   "official_source_codes": [
+    "GOV-LS"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-709",
+   "title": "Performance Sports Scientist",
+   "family": "Allied Health & Clinical Practice",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Professional / voluntary register",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "patient care",
+    "rehabilitation",
+    "science",
+    "clinical practice"
+   ],
+   "typical_entry_signal": "approved professional education or recognised clinical training route; registration may be required",
+   "official_source_codes": [
+    "GOV-LS"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-710",
+   "title": "Operational Researcher",
+   "family": "Digital Health, Data, Informatics & AI",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "data",
+    "informatics",
+    "technology",
+    "research"
+   ],
+   "typical_entry_signal": "data, computing, informatics, mathematics, science or clinical background depending on role",
+   "official_source_codes": [
+    "GOV-LS"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-711",
+   "title": "User Researcher - Digital Health",
+   "family": "Digital Health, Data, Informatics & AI",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "digital health",
+    "technology",
+    "research",
+    "product development"
+   ],
+   "typical_entry_signal": "data, computing, informatics, mathematics, science or clinical background depending on role",
+   "official_source_codes": [
+    "GOV-LS"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-712",
+   "title": "Anatomical Pathology Technician",
+   "family": "Laboratory, Pathology & Technical Operations",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Professional / voluntary register",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "laboratory",
+    "pathology",
+    "technical",
+    "operations"
+   ],
+   "typical_entry_signal": "laboratory, healthcare science, technical or vocational background depending on level",
+   "official_source_codes": [
+    "NSHCS"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-713",
+   "title": "Animal Technician",
+   "family": "Research & Academia",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Role-dependent",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "research",
+    "science",
+    "bioscience",
+    "laboratory"
+   ],
+   "typical_entry_signal": "relevant science degree; postgraduate research training often advantageous or required for advanced roles",
+   "official_source_codes": [
+    "UKRI",
+    "GOV-LS"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-714",
+   "title": "Quality Control Officer",
+   "family": "Quality, Regulatory, Safety & Compliance",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "quality",
+    "compliance",
+    "laboratory",
+    "manufacturing"
+   ],
+   "typical_entry_signal": "life science/healthcare/engineering background plus quality, regulatory or safety experience",
+   "official_source_codes": [
+    "ABPI"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-715",
+   "title": "Chemical Engineer",
+   "family": "Pharma, Biotech R&D & Manufacturing",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "engineering",
+    "manufacturing",
+    "process development",
+    "pharma"
+   ],
+   "typical_entry_signal": "relevant life science, chemistry, engineering or pharmaceutical background",
+   "official_source_codes": [
+    "GOV-LS"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-716",
+   "title": "Chemical Engineering Technician",
+   "family": "Pharma, Biotech R&D & Manufacturing",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "engineering",
+    "manufacturing",
+    "technical",
+    "process development"
+   ],
+   "typical_entry_signal": "relevant life science, chemistry, engineering or pharmaceutical background",
+   "official_source_codes": [
+    "GOV-LS"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-717",
+   "title": "Cognitive Behavioural Therapist",
+   "family": "Allied Health & Clinical Practice",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Professional / voluntary register",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "patient care",
+    "clinical practice",
+    "psychology",
+    "rehabilitation"
+   ],
+   "typical_entry_signal": "approved professional education or recognised clinical training route; registration may be required",
+   "official_source_codes": [
+    "HCPC"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-718",
+   "title": "Psychotherapist",
+   "family": "Allied Health & Clinical Practice",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Professional / voluntary register",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "patient care",
+    "clinical practice",
+    "psychology"
+   ],
+   "typical_entry_signal": "approved professional education or recognised clinical training route; registration may be required",
+   "official_source_codes": [
+    "HCPC"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-719",
+   "title": "Play Therapist",
+   "family": "Allied Health & Clinical Practice",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Professional / voluntary register",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "patient care",
+    "clinical practice",
+    "psychology",
+    "rehabilitation"
+   ],
+   "typical_entry_signal": "approved professional education or recognised clinical training route; registration may be required",
+   "official_source_codes": [
+    "HCPC"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-720",
+   "title": "Dance Movement Psychotherapist",
+   "family": "Allied Health & Clinical Practice",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Statutory / protected",
+   "regulator_or_body": "HCPC",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "patient care",
+    "clinical practice",
+    "psychology",
+    "rehabilitation"
+   ],
+   "typical_entry_signal": "approved professional education or recognised clinical training route; registration may be required",
+   "official_source_codes": [
+    "HCPC"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-721",
+   "title": "Psychological Wellbeing Practitioner",
+   "family": "Allied Health & Clinical Practice",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Professional / voluntary register",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "patient care",
+    "clinical practice",
+    "psychology"
+   ],
+   "typical_entry_signal": "approved professional education or recognised clinical training route; registration may be required",
+   "official_source_codes": [
+    "HCPC"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-722",
+   "title": "Nutritional Therapist",
+   "family": "Allied Health & Clinical Practice",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Professional / voluntary register",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "patient care",
+    "clinical practice",
+    "rehabilitation"
+   ],
+   "typical_entry_signal": "approved professional education or recognised clinical training route; registration may be required",
+   "official_source_codes": [
+    "GOV-LS"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-723",
+   "title": "Medical Illustrator",
+   "family": "Healthcare Science & Diagnostics",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Professional / voluntary register",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "healthcare science",
+    "imaging",
+    "diagnostics",
+    "technical"
+   ],
+   "typical_entry_signal": "science/healthcare degree or recognised training pathway; role-specific registration may apply",
+   "official_source_codes": [
+    "NSHCS"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-724",
+   "title": "Health Play Specialist",
+   "family": "Allied Health & Clinical Practice",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Professional / voluntary register",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "patient care",
+    "clinical practice",
+    "education"
+   ],
+   "typical_entry_signal": "approved professional education or recognised clinical training route; registration may be required",
+   "official_source_codes": [
+    "GOV-LS"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-725",
+   "title": "Healthcare Assistant",
+   "family": "Nursing, Midwifery & Pharmacy",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "patient care",
+    "clinical practice",
+    "nursing"
+   ],
+   "typical_entry_signal": "approved professional education/training and relevant registration where required",
+   "official_source_codes": [
+    "NMC"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-726",
+   "title": "Pharmacy Assistant",
+   "family": "Nursing, Midwifery & Pharmacy",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "medicines",
+    "pharmacy",
+    "patient care"
+   ],
+   "typical_entry_signal": "approved professional education/training and relevant registration where required",
+   "official_source_codes": [
+    "GPHC"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-727",
+   "title": "Physiotherapy Assistant",
+   "family": "Allied Health & Clinical Practice",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "patient care",
+    "rehabilitation",
+    "clinical practice"
+   ],
+   "typical_entry_signal": "approved professional education or recognised clinical training route; registration may be required",
+   "official_source_codes": [
+    "HCPC"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-728",
+   "title": "Radiography Assistant",
+   "family": "Healthcare Science & Diagnostics",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "imaging",
+    "patient care",
+    "healthcare science",
+    "diagnostics"
+   ],
+   "typical_entry_signal": "science/healthcare degree or recognised training pathway; role-specific registration may apply",
+   "official_source_codes": [
+    "HCPC"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-729",
+   "title": "Occupational Therapy Support Worker",
+   "family": "Allied Health & Clinical Practice",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "patient care",
+    "rehabilitation",
+    "clinical practice"
+   ],
+   "typical_entry_signal": "approved professional education or recognised clinical training route; registration may be required",
+   "official_source_codes": [
+    "HCPC"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-730",
+   "title": "Speech and Language Therapy Assistant",
+   "family": "Allied Health & Clinical Practice",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "patient care",
+    "rehabilitation",
+    "clinical practice"
+   ],
+   "typical_entry_signal": "approved professional education or recognised clinical training route; registration may be required",
+   "official_source_codes": [
+    "HCPC"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-731",
+   "title": "Emergency Medical Dispatcher",
+   "family": "Allied Health & Clinical Practice",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "patient care",
+    "clinical practice",
+    "operations"
+   ],
+   "typical_entry_signal": "approved professional education or recognised clinical training route; registration may be required",
+   "official_source_codes": [
+    "GOV-LS"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-732",
+   "title": "Medical Secretary",
+   "family": "Leadership, Education, Operations & Consulting",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "operations",
+    "education",
+    "leadership"
+   ],
+   "typical_entry_signal": "relevant professional experience plus leadership, education, operational or consulting capability",
+   "official_source_codes": [
+    "GOV-LS"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-733",
+   "title": "Health Records Clerk",
+   "family": "Digital Health, Data, Informatics & AI",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "informatics",
+    "data",
+    "digital health",
+    "operations"
+   ],
+   "typical_entry_signal": "data, computing, informatics, mathematics, science or clinical background depending on role",
+   "official_source_codes": [
+    "GOV-LS"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-734",
+   "title": "Health Promotion Specialist",
+   "family": "Public Health, Epidemiology & Health Policy",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "public health",
+    "population health",
+    "policy",
+    "education"
+   ],
+   "typical_entry_signal": "public health, epidemiology, statistics, medicine, science or policy background depending on role",
+   "official_source_codes": [
+    "UKHSA"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-735",
+   "title": "Health Trainer",
+   "family": "Public Health, Epidemiology & Health Policy",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "public health",
+    "population health",
+    "patient care"
+   ],
+   "typical_entry_signal": "public health, epidemiology, statistics, medicine, science or policy background depending on role",
+   "official_source_codes": [
+    "UKHSA"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-736",
+   "title": "Health and Safety Adviser",
+   "family": "Quality, Regulatory, Safety & Compliance",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "safety",
+    "compliance",
+    "quality",
+    "regulatory"
+   ],
+   "typical_entry_signal": "life science/healthcare/engineering background plus quality, regulatory or safety experience",
+   "official_source_codes": [
+    "GOV-LS"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-737",
+   "title": "Environmental Consultant",
+   "family": "Environmental & One Health",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "environmental health",
+    "one health",
+    "consulting",
+    "safety"
+   ],
+   "typical_entry_signal": "relevant environmental, veterinary, food, biological or public health background depending on role",
+   "official_source_codes": [
+    "GOV-LS"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-738",
+   "title": "Food Manufacturing Inspector",
+   "family": "Environmental & One Health",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Generally unregulated",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "environmental health",
+    "safety",
+    "quality",
+    "one health"
+   ],
+   "typical_entry_signal": "relevant environmental, veterinary, food, biological or public health background depending on role",
+   "official_source_codes": [
+    "GOV-LS"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  },
+  {
+   "id": "CP-739",
+   "title": "Veterinary Physiotherapist",
+   "family": "Environmental & One Health",
+   "jurisdiction": "United Kingdom",
+   "regulatory_status": "Professional / voluntary register",
+   "regulator_or_body": "",
+   "pathway_depth": "Explorer",
+   "core_tags": [
+    "one health",
+    "rehabilitation",
+    "bioscience"
+   ],
+   "typical_entry_signal": "relevant environmental, veterinary, food, biological or public health background depending on role",
+   "official_source_codes": [
+    "GOV-LS"
+   ],
+   "last_verified": "2026-08-14",
+   "production_note": "Career title and pathway metadata are a launch taxonomy. Mandatory eligibility, protected-title and registration rules must be verified against current official sources before being used as definitive eligibility logic.",
+   "catalogue": "helix_addition"
+  }
+ ]
+}
