@@ -40,6 +40,16 @@ SENIORITY_TOKENS = {
 #: Modest on purpose — a derived estimate should not manufacture a big claim.
 STEP_MULTIPLIER = 0.12
 
+#: Derived figures are published to the nearest thousand pounds.
+#:
+#: A direct source is republished exactly as it was issued, and every one of those
+#: happens to be round already. A derived figure is not a published number at all:
+#: it is a weighted median over several ranges with a seniority multiplier applied,
+#: and "£39,700" claims a precision that arithmetic cannot give it. Rounding is not
+#: about tidiness — the digits themselves are an assertion, and this is the
+#: assertion the evidence supports.
+DERIVED_PRECISION = -3
+
 
 def seniority_class(title: str) -> str:
     """A crude occupational seniority class from title conventions.
@@ -148,6 +158,27 @@ def from_related(target: dict, resolved: list[tuple[dict, dict]],
     adjustment = 1 + STEP_MULTIPLIER * steps
     low, high = low * adjustment, high * adjustment
 
+    # Never extrapolate past the evidence.
+    #
+    # A derived figure is a statistic over official ranges, so it has no business
+    # landing outside the ranges it was computed from. Without this clamp the
+    # seniority multiplier compounded on the ceiling of an already-wide market
+    # range: "Information Governance Specialist", derived from data and
+    # information roles topping out at 83k, came out at 102.9k — "Specialist"
+    # reads as two rungs more senior and 1.24 x 83k is 103k. No source anywhere
+    # in that chain supports six figures for the job.
+    #
+    # §15 warns that "Specialist" does not mean the same seniority in every
+    # sector, and the titles bear it out: a Clinical Nurse Specialist really is a
+    # senior grade, an Information Governance Specialist is not, and the title
+    # alone cannot separate them. Rather than guess at word meanings, the
+    # adjustment is kept and simply bounded — it may move a figure within the
+    # span its own contributors establish, never outside it.
+    floor = min(s["typical_low"] for _, _, s in neighbours)
+    ceiling = max(s["typical_high"] for _, _, s in neighbours)
+    low = max(floor, min(low, ceiling))
+    high = max(low, min(high, ceiling))
+
     notes = [
         f"Derived from {len(neighbours)} related careers with stronger salary "
         f"evidence, using a similarity-weighted median.",
@@ -159,7 +190,7 @@ def from_related(target: dict, resolved: list[tuple[dict, dict]],
             f"is {direction} senior than the careers it was derived from.")
 
     return Derived(
-        low=round(low, -2), high=round(high, -2),
+        low=round(low, DERIVED_PRECISION), high=round(high, DERIVED_PRECISION),
         method="related_career_derived", evidence="INDICATIVE",
         contributors=[career["id"] for _, career, _ in neighbours],
         notes=notes,
@@ -190,7 +221,7 @@ def from_family(target: dict, resolved: list[tuple[dict, dict]]) -> Derived:
             low = statistics.median([s["typical_low"] for s in candidates])
             high = statistics.median([s["typical_high"] for s in candidates])
             return Derived(
-                low=round(low, -2), high=round(high, -2),
+                low=round(low, DERIVED_PRECISION), high=round(high, DERIVED_PRECISION),
                 method="family_seniority_fallback", evidence="LIMITED_DATA",
                 contributors=[],
                 notes=[f"Median of {len(candidates)} careers in {scope}. This is "

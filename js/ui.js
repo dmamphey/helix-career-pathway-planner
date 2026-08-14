@@ -116,11 +116,17 @@ export function regulationBadge(career) {
   ]);
 }
 
-export function depthBadge(career) {
-  return h("span", { class: `depth depth-${career.pathway_depth.toLowerCase()}`,
-    title: `Pathway depth: ${career.pathway_depth}. This controls how much `
-         + `researched content exists, not how valuable the career is.` },
-    career.pathway_depth);
+/**
+ * Preference fit for a card, or null when there was nothing to compare.
+ *
+ * Shared by every list that draws career cards. A badge reading "Not enough
+ * preference data" on all 677 cards would be noise rather than honesty — the
+ * priorities screen and the career page are where that gets explained properly.
+ */
+export function scoredFit(app, career) {
+  if (!app.hasPreferences || !app.hasPreferences()) return null;
+  const fit = app.fitFor(career);
+  return fit && fit.scored ? fit : null;
 }
 
 /**

@@ -58,6 +58,139 @@ export const INTEREST_OPTIONS = [
     domains: ["public_health", "epidemiology", "policy"] },
 ];
 
+/**
+ * Career priorities: what somebody wants from working life, as opposed to what
+ * they have already done.
+ *
+ * These drive preference fit and nothing else. They are deliberately kept out of
+ * background alignment — see `preference-fit.js` for why the two must not be
+ * blended — and every one of them is optional. "No preference" is the default and
+ * is a real answer: an unstated preference is not scored at all rather than being
+ * treated as indifference.
+ *
+ * Each question is here only because the market data can actually answer it.
+ * There is no question whose answer Helix would quietly discard.
+ */
+export const PREFERENCE_GROUPS = [
+  { id: "pay", title: "Pay" },
+  { id: "hours", title: "Hours and working pattern" },
+  { id: "where", title: "Where and how you work" },
+  { id: "work", title: "The kind of work" },
+  { id: "change", title: "How much change you want" },
+];
+
+const SEEK_SOME_AVOID = [
+  ["seek", "I want a lot of this"],
+  ["some", "Some is fine"],
+  ["avoid", "I would rather avoid it"],
+];
+
+export const PREFERENCE_FIELDS = [
+  {
+    key: "salaryTarget", group: "pay", kind: "number",
+    question: "Is there a salary you are aiming for?",
+    hint: "Matched against each career's typical range. It is a target to compare "
+        + "against, not a prediction of what you would be offered.",
+    options: [
+      [25000, "Around £25k"], [30000, "Around £30k"], [40000, "Around £40k"],
+      [50000, "Around £50k"], [60000, "Around £60k"], [75000, "Around £75k"],
+      [100000, "£100k or more"],
+    ],
+  },
+  {
+    key: "earningsImportance", group: "pay",
+    question: "How much does earning potential matter to you?",
+    options: [["high", "A great deal"], ["medium", "Somewhat"],
+              ["low", "Not much"]],
+  },
+  {
+    key: "workLifeBalance", group: "hours",
+    question: "How important are predictable, contained working hours?",
+    hint: "Only scored for careers where an official profile records typical "
+        + "weekly hours.",
+    options: [["high", "Very important"], ["medium", "Fairly important"],
+              ["low", "Not important"]],
+  },
+  {
+    key: "unsocialHours", group: "hours",
+    question: "How do you feel about shifts, evenings, weekends or on-call?",
+    options: [["willing", "Happy to work them"],
+              ["occasionally", "Occasionally is fine"],
+              ["prefer_standard", "I would rather work standard hours"]],
+  },
+  {
+    key: "remoteWorking", group: "where",
+    question: "How important is remote or hybrid working?",
+    options: [["important", "Important to me"], ["nice", "Nice to have"],
+              ["not_important", "Not important"]],
+  },
+  {
+    key: "travelTolerance", group: "where",
+    question: "How much work travel suits you?",
+    options: [["happy", "I am happy to travel"], ["some", "Some travel is fine"],
+              ["minimal", "I would rather keep travel to a minimum"]],
+  },
+  {
+    key: "patientContact", group: "work",
+    question: "How much direct patient contact do you want?",
+    options: SEEK_SOME_AVOID,
+  },
+  {
+    key: "laboratoryWork", group: "work",
+    question: "How much laboratory work do you want?",
+    options: SEEK_SOME_AVOID,
+  },
+  {
+    key: "researchWork", group: "work",
+    question: "How much research do you want in the role?",
+    options: SEEK_SOME_AVOID,
+  },
+  {
+    key: "commercialWork", group: "work",
+    question: "How much commercial or business-facing work do you want?",
+    options: SEEK_SOME_AVOID,
+  },
+  {
+    key: "leadershipWork", group: "work",
+    question: "How much do you want to lead teams or services?",
+    options: SEEK_SOME_AVOID,
+  },
+  {
+    key: "retrainingTolerance", group: "change",
+    question: "How much retraining are you prepared to take on?",
+    hint: "Only scored once you have a profile, because it is matched against the "
+        + "transition effort for you specifically.",
+    options: [["willing", "I am open to a full retraining route"],
+              ["some", "Some study or a qualification is fine"],
+              ["minimal", "I would rather build on what I already have"]],
+  },
+  {
+    key: "openToSectorChange", group: "change",
+    question: "Are you open to moving outside your current profession or sector?",
+    options: [["yes", "Yes"], ["maybe", "Maybe"], ["no", "No"]],
+  },
+];
+
+/** Preference keys and the values each will accept. */
+const PREFERENCE_VALUES = new Map(PREFERENCE_FIELDS.map((field) =>
+  [field.key, new Set(field.options.map(([value]) => value))]));
+
+/**
+ * Preference keys that earlier versions stored as booleans.
+ *
+ * Nothing in the interface ever wrote them, but an exported file could carry
+ * them, and a migration that silently dropped a stated preference would be a
+ * quiet way of losing somebody's answer.
+ */
+const LEGACY_PREFERENCES = {
+  patientFacing: ["patientContact", "seek", "avoid"],
+  laboratoryBased: ["laboratoryWork", "seek", "avoid"],
+  researchIntensity: ["researchWork", "seek", "avoid"],
+  leadershipInterest: ["leadershipWork", "seek", "avoid"],
+  commercialInterest: ["commercialWork", "seek", "avoid"],
+  remoteWorkInterest: ["remoteWorking", "important", "not_important"],
+};
+
 /** What matters most right now — used to order the next actions. */
 export const PRIORITY_OPTIONS = [
   { id: "progression", label: "Progression" },
@@ -96,15 +229,28 @@ export function emptyProfile() {
     digitalSignals: [],
     commercialSignals: [],
 
+    // Every preference starts unstated, and unstated is not the same as "no
+    // strong feeling": an unstated dimension is left out of preference fit
+    // entirely rather than scored as neutral.
     preferences: {
-      patientFacing: null,
-      laboratoryBased: null,
-      researchIntensity: null,
-      leadershipInterest: null,
-      commercialInterest: null,
-      dataDigitalInterest: null,
-      remoteWorkInterest: null,
+      salaryTarget: null,
+      earningsImportance: null,
+      workLifeBalance: null,
+      unsocialHours: null,
+      remoteWorking: null,
+      travelTolerance: null,
+      patientContact: null,
+      laboratoryWork: null,
+      researchWork: null,
+      commercialWork: null,
+      leadershipWork: null,
+      retrainingTolerance: null,
       openToSectorChange: null,
+
+      // Kept because an older export may carry it. No market-data field
+      // describes how digital a career is, so it is not scored; keeping the key
+      // loses nothing, and inventing a dimension to justify it would.
+      dataDigitalInterest: null,
     },
 
     careerGoal: null,
@@ -164,10 +310,29 @@ export function normaliseProfile(input) {
 
   const prefs = (input.preferences && typeof input.preferences === "object")
     ? input.preferences : {};
-  for (const key of Object.keys(base.preferences)) {
-    const value = prefs[key];
-    base.preferences[key] = (value === true || value === false
-      || typeof value === "string") ? value : null;
+
+  // A salary target is a number, and only one of the offered rungs: an arbitrary
+  // figure typed into a URL or an edited export must not become a filter value.
+  const targetRungs = new Set(PREFERENCE_FIELDS
+    .find((field) => field.key === "salaryTarget").options.map(([value]) => value));
+  base.preferences.salaryTarget = targetRungs.has(Number(prefs.salaryTarget))
+    ? Number(prefs.salaryTarget) : null;
+
+  for (const [key, allowed] of PREFERENCE_VALUES) {
+    if (key === "salaryTarget") continue;
+    base.preferences[key] = allowed.has(prefs[key]) ? prefs[key] : null;
+  }
+  base.preferences.dataDigitalInterest =
+    typeof prefs.dataDigitalInterest === "boolean"
+      ? prefs.dataDigitalInterest : null;
+
+  // Booleans written by an earlier version become the equivalent stated answer,
+  // but never overwrite one the current schema already holds.
+  for (const [legacy, [key, whenTrue, whenFalse]] of
+       Object.entries(LEGACY_PREFERENCES)) {
+    if (base.preferences[key] !== null) continue;
+    if (prefs[legacy] === true) base.preferences[key] = whenTrue;
+    else if (prefs[legacy] === false) base.preferences[key] = whenFalse;
   }
 
   base.careerGoal = ["target", "explore"].includes(input.careerGoal)
@@ -282,6 +447,21 @@ export function profileDomains(profile) {
 /** Orientations the profile evidences, ignoring stated interests. */
 export function profileOrientations(profile) {
   return orientationsFor(allSignals(profile).map((signal) => signal.domain));
+}
+
+/**
+ * Has the user stated any preference at all?
+ *
+ * Views use this to decide whether to offer preference fit rather than showing
+ * "Not enough preference data" against every career, which would be noise.
+ * `openToSectorChange` is excluded: it is not one of the scored dimensions, so on
+ * its own it cannot produce a fit result.
+ */
+export function hasPreferences(profile) {
+  const prefs = (profile && profile.preferences) || {};
+  return PREFERENCE_FIELDS.some((field) =>
+    field.key !== "openToSectorChange" && prefs[field.key] !== null
+    && prefs[field.key] !== undefined);
 }
 
 /** Enough to run a meaningful match? Used to decide what to prompt for. */

@@ -7,26 +7,66 @@
  * of what happens to be rendered.
  */
 
-import { h, panel, button, link, careerCard, debounce, empty } from "../ui.js";
+import {
+  h, panel, button, link, careerCard, debounce, empty, scoredFit,
+} from "../ui.js";
 import { ORIENTATIONS } from "../ontology.js";
+import * as market from "../market-data.js";
 
 const PAGE = 24;
 
+/**
+ * Salary filter rungs.
+ *
+ * The label is deliberately about the career, not the person: "typical salary
+ * reaches at least" describes the top of the published range, and nothing here
+ * implies anybody would personally be paid it.
+ */
+const SALARY_RUNGS = [30000, 40000, 50000, 60000, 75000, 100000];
+
+/**
+ * Sort orders.
+ *
+ * Each names the field it actually sorts on rather than implying a hidden
+ * composite quality score. Ties break on title then career id everywhere, so the
+ * order is stable across reloads and identical for two people with the same
+ * filters.
+ */
+const SORTS = {
+  relevance: { label: "Default order" },
+  salary: { label: "Highest typical salary" },
+  alignment: { label: "Best background alignment", needsProfile: true },
+  fit: { label: "Best preference fit", needsPreferences: true },
+  effort: { label: "Lowest transition effort", needsProfile: true },
+  title: { label: "Alphabetical, A to Z" },
+  verified: { label: "Most recently checked salary" },
+};
+
 /** Filter state survives navigation within a session, which users expect. */
-const filters = {
+const DEFAULTS = {
   query: "",
   family: "",
-  depth: "",
   regulation: "",
   orientation: "",
   tag: "",
+  salaryReaches: "",
+  evidence: "",
+  pattern: "",
+  remote: "",
+  patientContact: "",
+  laboratory: "",
+  research: "",
+  commercial: "",
+  fit: "",
+  depth: "",
+  sort: "relevance",
   shown: PAGE,
 };
 
+const filters = { ...DEFAULTS };
+
 export function resetFilters() {
-  Object.assign(filters,
-    { query: "", family: "", depth: "", regulation: "", orientation: "",
-      tag: "", shown: PAGE });
+  Object.assign(filters, DEFAULTS);
 }
 
 export async function renderExplorer(app) {
@@ -36,8 +76,9 @@ export async function renderExplorer(app) {
                          "aria-live": "polite" });
 
   const draw = () => {
-    const matching = applyFilters(catalogue.careers);
+    const matching = sortCareers(app, applyFilters(app, catalogue.careers));
     count.textContent = `${matching.length} of ${catalogue.count} careers`
+      + `, ${SORTS[filters.sort].label.toLowerCase()}`
       + (app.hasProfile() ? " · alignment shown against your profile" : "");
     results.replaceChildren(
       matching.length
@@ -45,6 +86,11 @@ export async function renderExplorer(app) {
             matching.slice(0, filters.shown).map((career) =>
               careerCard(career, {
                 match: app.hasProfile() ? app.matchFor(career) : null,
+                // Only when something could actually be compared. A badge reading
+                // "Not enough preference data" on every card is noise, not
+                // honesty — the preferences screen is where that gets explained.
+                fit: scoredFit(app, career),
+                effort: app.effortCache.get(career.id) || null,
                 saved: app.isSaved(career.id),
                 comparing: app.isComparing(career.id),
                 onCompare: (id) => { app.toggleCompare(id); draw(); },
@@ -63,41 +109,109 @@ export async function renderExplorer(app) {
     );
   };
 
+  /**
+   * Anything that changes the result set.
+   *
+   * Effort is the one measure that is not already in memory: it needs a gap
+   * analysis per career, which costs about a second for all 677. It is computed
+   * once, on the first request for it, and the control says so rather than
+   * appearing to hang.
+   */
+  const update = async () => {
+    filters.shown = PAGE;
+    if (needsEffort() && app.hasProfile() && !app.effortCache.size) {
+      count.textContent = "Working out the transition effort for all "
+        + `${catalogue.count} careers…`;
+      await app.allEfforts();
+    }
+    draw();
+  };
+
   const search = h("input", {
     type: "search", id: "career-search", value: filters.query,
     placeholder: `Search ${catalogue.count} life sciences and healthcare careers…`,
     autocomplete: "off",
     onInput: debounce((event) => {
       filters.query = event.target.value;
-      filters.shown = PAGE;
-      draw();
+      update();
     }),
   });
 
-  const selects = [
+  /* The filters people actually decide on, first. */
+  const primary = [
     ["Career family", "family", ["", ...catalogue.families], "All families"],
-    ["Pathway depth", "depth", ["", ...catalogue.depths], "All depths"],
+    ["Typical salary reaches at least", "salaryReaches",
+     ["", ...SALARY_RUNGS.map(String)], "Any salary",
+     Object.fromEntries(SALARY_RUNGS.map((value) =>
+       [String(value), market.money(value)]))],
     ["Regulation", "regulation", ["", "regulated", "unregulated"],
-     "All", { regulated: "Regulated or protected", unregulated: "Generally unregulated" }],
+     "All", { regulated: "Regulated or protected",
+              unregulated: "Generally unregulated" }],
+    ["Remote or hybrid potential", "remote", ["", "high", "medium"],
+     "Any", { high: "High", medium: "Medium or better" }],
+    ["Working pattern", "pattern", ["", "standard", "shifts", "unsocial"],
+     "Any", { standard: "No shift or unsocial pattern recorded",
+              shifts: "Includes shifts",
+              unsocial: "Includes evenings, weekends or on-call" }],
+    ["Patient contact", "patientContact", ["", "high", "medium", "low"],
+     "Any", LEVEL_LABELS],
+    ["Laboratory intensity", "laboratory", ["", "high", "medium", "low"],
+     "Any", LEVEL_LABELS],
+    ["Research intensity", "research", ["", "high", "medium", "low"],
+     "Any", LEVEL_LABELS],
+    ["Commercial intensity", "commercial", ["", "high", "medium", "low"],
+     "Any", LEVEL_LABELS],
+    ["Salary evidence", "evidence",
+     ["", "VERIFIED_GUIDE", "STRONG_ESTIMATE", "INDICATIVE", "LIMITED_DATA"],
+     "Any evidence level",
+     Object.fromEntries(Object.entries(market.EVIDENCE)
+       .map(([key, value]) => [key, value.label]))],
+  ];
+
+  if (app.hasPreferences()) {
+    primary.push(["Preference fit", "fit",
+      ["", "very_strong", "strong", "mixed"], "Any",
+      { very_strong: "Very strong only", strong: "Strong or better",
+        mixed: "Mixed or better" }]);
+  }
+
+  /* Taxonomy controls, kept but moved out of the way — including pathway depth,
+     which describes how much content Helix has written, not anything about the
+     career, and so has no business among a user's decision filters. */
+  const advanced = [
     ["Work orientation", "orientation", ["", ...Object.keys(ORIENTATIONS)],
      "All orientations", ORIENTATIONS],
     ["Tag", "tag", ["", ...catalogue.tags], "All tags"],
+    ["Helix content depth", "depth", ["", ...catalogue.depths], "Any",
+     { Deep: "Detailed guidance available", Standard: "Core guidance available",
+       Explorer: "Career overview available" }],
   ];
 
-  const controls = h("div", { class: "filters" }, selects.map(
-    ([label, key, values, blank, labels]) => {
-      const id = `filter-${key}`;
-      return h("div", { class: "field" }, [
-        h("label", { for: id, text: label }),
-        h("select", { id, onChange: (event) => {
-          filters[key] = event.target.value;
-          filters.shown = PAGE;
-          draw();
-        } }, values.map((value) => h("option", {
-          value, selected: filters[key] === value ? true : null,
-        }, value === "" ? blank : (labels && labels[value]) || value))),
-      ]);
-    }));
+  const selectField = ([label, key, values, blank, labels]) => {
+    const id = `filter-${key}`;
+    return h("div", { class: "field" }, [
+      h("label", { for: id, text: label }),
+      h("select", { id, onChange: (event) => {
+        filters[key] = event.target.value;
+        update();
+      } }, values.map((value) => h("option", {
+        value, selected: filters[key] === value ? true : null,
+      }, value === "" ? blank : (labels && labels[value]) || value))),
+    ]);
+  };
+
+  const sortField = h("div", { class: "field" }, [
+    h("label", { for: "filter-sort", text: "Sort by" }),
+    h("select", { id: "filter-sort", onChange: (event) => {
+      filters.sort = event.target.value;
+      update();
+    } }, Object.entries(SORTS)
+      .filter(([, meta]) => (!meta.needsProfile || app.hasProfile())
+                         && (!meta.needsPreferences || app.hasPreferences()))
+      .map(([key, meta]) => h("option", {
+        value: key, selected: filters.sort === key ? true : null,
+      }, meta.label))),
+  ]);
 
   const node = h("div", { class: "stack" }, [
     panel("Career Explorer", [
@@ -105,13 +219,20 @@ export async function renderExplorer(app) {
         h("label", { for: "career-search", text: "Search careers" }),
         search,
       ]),
-      controls,
+      h("div", { class: "filters" }, [sortField, ...primary.map(selectField)]),
+      h("details", { class: "advanced-filters" }, [
+        h("summary", { text: "Advanced filters" }),
+        h("p", { class: "hint", text: "Taxonomy controls. Content depth describes "
+          + "how much researched guidance Helix has written for a career, not how "
+          + "good or how senior the career is." }),
+        h("div", { class: "filters" }, advanced.map(selectField)),
+      ]),
       h("div", { class: "card-actions" }, [
         button("Reset filters", () => {
           resetFilters();
           search.value = "";
           for (const select of node.querySelectorAll(".filters select")) {
-            select.value = "";
+            select.value = select.id === "filter-sort" ? "relevance" : "";
           }
           draw();
         }, { variant: "quiet" }),
@@ -119,21 +240,41 @@ export async function renderExplorer(app) {
           ? link("See my grouped options", "#/matches", { class: "btn btn-quiet" })
           : link("Build a profile to see alignment", "#/profile",
                  { class: "btn btn-quiet" }),
+        app.hasProfile() && !app.hasPreferences()
+          ? link("Set my priorities", "#/preferences", { class: "btn btn-quiet" })
+          : null,
       ]),
       count,
+      h("p", { class: "hint", text: "Salary filters describe the published range "
+        + "for a career, not what any individual would be paid. Patient contact, "
+        + "laboratory, research and commercial intensity, remote potential and "
+        + "travel are inferred from each career's subject matter rather than "
+        + "surveyed." }),
     ], { id: "explore-heading",
          hint: "Every career in the dataset is searchable here, including those "
              + "whose pathway content is still being expanded." }),
     results,
   ]);
 
-  draw();
+  await update();
   return node;
 }
 
-function applyFilters(careers) {
+const LEVEL_LABELS = { high: "High", medium: "Medium", low: "Low" };
+
+/** Work patterns that mean hours outside a standard week. */
+const UNSOCIAL = ["shifts", "evenings and weekends", "on call", "bank holidays"];
+
+/** Does the current view need transition effort computed? */
+function needsEffort() {
+  return filters.sort === "effort";
+}
+
+function applyFilters(app, careers) {
   const query = filters.query.trim().toLowerCase();
   const words = query.split(/\s+/).filter(Boolean);
+  const fitRank = { very_strong: 0, strong: 1, mixed: 2 };
+
   return careers.filter((career) => {
     if (filters.family && career.family !== filters.family) return false;
     if (filters.depth && career.pathway_depth !== filters.depth) return false;
@@ -142,12 +283,127 @@ function applyFilters(careers) {
     if (filters.orientation
         && !career.derived.orientations.includes(filters.orientation)) return false;
     if (filters.tag && !(career.core_tags || []).includes(filters.tag)) return false;
+
+    const pay = market.salary(career.id);
+    if (filters.salaryReaches) {
+      // "Reaches at least" is about the top of the typical range, which is what
+      // the label says. A career with no salary record is excluded rather than
+      // assumed to qualify.
+      if (!pay || pay.high < Number(filters.salaryReaches)) return false;
+    }
+    if (filters.evidence && (!pay || pay.evidenceKey !== filters.evidence)) {
+      return false;
+    }
+
+    const work = market.workLife(career.id);
+    if (filters.remote) {
+      const level = work && work.remote;
+      if (filters.remote === "high" && level !== "high") return false;
+      if (filters.remote === "medium"
+          && !["high", "medium"].includes(level)) return false;
+    }
+    if (filters.pattern) {
+      // Only careers whose pattern is actually recorded can answer this. Absent
+      // data is not evidence of standard hours, so it is excluded rather than
+      // counted as a match.
+      const patterns = (work && work.patterns) || [];
+      if (!patterns.length) return false;
+      const unsocial = patterns.filter((item) => UNSOCIAL.includes(item));
+      if (filters.pattern === "standard" && unsocial.length) return false;
+      if (filters.pattern === "shifts" && !patterns.includes("shifts")) return false;
+      if (filters.pattern === "unsocial" && !unsocial.length) return false;
+    }
+    for (const [key, field] of [["patientContact", "patientContact"],
+                                ["laboratory", "laboratory"],
+                                ["research", "research"],
+                                ["commercial", "commercial"]]) {
+      if (filters[key] && (!work || work[field] !== filters[key])) return false;
+    }
+
+    if (filters.fit) {
+      const fit = scoredFit(app, career);
+      if (!fit || fitRank[fit.key] === undefined
+          || fitRank[fit.key] > fitRank[filters.fit]) return false;
+    }
+
     if (words.length) {
       const haystack = career.derived.searchText;
       return words.every((word) => haystack.includes(word));
     }
     return true;
   });
+}
+
+/**
+ * Order the filtered list.
+ *
+ * Every order names the field it sorts on. There is no composite "best career"
+ * score, because the whole design of the product is that alignment, preference
+ * fit and effort are different questions and the trade-off between them belongs
+ * to the person deciding.
+ *
+ * Ties break on title, then career id. Both are unique across the catalogue, so
+ * the order is fully determined: the same filters produce the same sequence on
+ * every reload and on anybody else's machine.
+ */
+function sortCareers(app, careers) {
+  const list = [...careers];
+  const byTitleThenId = (a, b) =>
+    a.title.localeCompare(b.title, "en-GB") || a.id.localeCompare(b.id);
+
+  const descending = (valueOf) => (a, b) => {
+    const difference = valueOf(b) - valueOf(a);
+    return difference || byTitleThenId(a, b);
+  };
+
+  switch (filters.sort) {
+    case "salary":
+      // typical_high, as the label says. Careers with no salary record sort last
+      // rather than being treated as zero-paying.
+      return list.sort(descending((career) => {
+        const pay = market.salary(career.id);
+        return pay ? pay.high : -1;
+      }));
+
+    case "alignment":
+      return list.sort(descending((career) => {
+        const match = app.matchFor(career);
+        return match ? match.score : -1;
+      }));
+
+    case "fit":
+      return list.sort(descending((career) => {
+        const fit = scoredFit(app, career);
+        return fit ? fit.score : -1;
+      }));
+
+    case "effort": {
+      // Lower effort first, so this one ascends. An uncomputed career sorts last.
+      return list.sort((a, b) => {
+        const rank = (career) => {
+          const effort = app.effortCache.get(career.id);
+          return effort ? effort.rank : 99;
+        };
+        return rank(a) - rank(b) || byTitleThenId(a, b);
+      });
+    }
+
+    case "verified":
+      return list.sort((a, b) => {
+        const checked = (career) => {
+          const pay = market.salary(career.id);
+          return pay ? pay.lastVerified : "";
+        };
+        return checked(b).localeCompare(checked(a)) || byTitleThenId(a, b);
+      });
+
+    case "title":
+      return list.sort(byTitleThenId);
+
+    default:
+      // The dataset's own order, which groups careers by family.
+      return list;
+  }
 }
 
 /* ------------------------------------------------------------------ matches */
@@ -184,6 +440,10 @@ export async function renderMatches(app) {
       const analysis = await app.analysisFor(match.careerId);
       decorations.set(match.careerId, {
         effort: analysis.effort,
+        // The analysis computes fit with the transition effort in hand, so
+        // retraining tolerance is one of its dimensions here. Cards elsewhere get
+        // the cheaper version without it.
+        fit: analysis.fit && analysis.fit.scored ? analysis.fit : null,
         whyLine: analysis.why.why,
       });
     }
@@ -215,6 +475,8 @@ export async function renderMatches(app) {
                 group.items.slice(0, shown[key]).map((match) =>
                   careerCard(match.career, {
                     match,
+                    fit: decorations.get(match.careerId)
+                      ? decorations.get(match.careerId).fit : null,
                     effort: decorations.get(match.careerId)
                       ? decorations.get(match.careerId).effort : null,
                     why: decorations.get(match.careerId)

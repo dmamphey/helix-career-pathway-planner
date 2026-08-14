@@ -12,6 +12,8 @@ import collections
 import datetime as dt
 from pathlib import Path
 
+from .title_matcher import content_tokens, normalise
+
 ROOT = Path(__file__).resolve().parent.parent.parent
 AUDIT = ROOT / "docs" / "MARKET-DATA-AUDIT.md"
 
@@ -54,6 +56,103 @@ def print_summary(published: dict, warnings: list[str]) -> None:
         print(f"  {METHOD_LABELS.get(key, key):34s} {count:>4}")
     if warnings:
         print(f"\n{len(warnings)} warning(s) recorded in the audit.")
+
+
+def _alias_candidates(records: list[dict], resolver) -> list[str]:
+    """The curation worklist: careers one human decision away from real evidence.
+
+    The matcher refuses anything that is not an exact title or a curated alias,
+    which is right — a poor direct match is worse than a transparent derived
+    estimate. But it means the audit could say "42 review candidates" without ever
+    saying *which*, leaving the most valuable work in the project invisible and
+    the reviewer to rediscover it by hand.
+
+    Listed here with the profile each career nearly matched and the score, so
+    accepting or rejecting one is a reading task rather than a research task.
+
+    Seniority-rejected matches are deliberately excluded. They look like the
+    strongest candidates by score and are exactly the ones that must never become
+    aliases: an alias from "Senior Biomedical Scientist" to the entry-grade
+    profile would reintroduce, by hand, the bug the matcher exists to prevent.
+    """
+    log = getattr(resolver, "match_log", None)
+    if not log:
+        return []
+
+    evidence_by_id = {
+        r["career_id"]: (r.get("salary") or {}).get("evidence_quality", "")
+        for r in records}
+
+    candidates = [entry for entry in log
+                  if entry.get("match_method") == "review_candidate"
+                  and entry.get("profile_title")]
+    if not candidates:
+        return []
+
+    # Strongest first, so the most likely aliases are read first; career id
+    # breaks ties so the file is stable between runs.
+    candidates.sort(key=lambda e: (-float(e.get("match_score") or 0),
+                                   e["career_id"]))
+
+    lines = [
+        "",
+        "## Alias candidates for human review",
+        "",
+        f"{len(candidates)} careers have a strong but inexact title match against "
+        "an external job profile. None is used: only an exact title or a curated "
+        "alias is accepted, because a wrong direct match publishes another job's "
+        "salary as this one's fact.",
+        "",
+        "Each row is one human decision. Confirming a row means adding the career's "
+        "normalised title to `data/reference/ncs_career_aliases.json`, after which "
+        "the next run promotes that career from a derived estimate to "
+        "career-specific evidence. Rejecting a row means leaving it derived, which "
+        "is already correct — so doing nothing here is safe.",
+        "",
+        "Seniority variants are **not** listed. They are rejected on purpose and "
+        "must stay rejected: aliasing one to its base profile would publish an "
+        "entry-grade range for a senior post.",
+        "",
+        "A score of 1.00 does **not** mean the two are the same job. Matching "
+        "drops setting words such as *clinical*, *healthcare* and *NHS*, because "
+        "they usually describe where a job is done rather than what it is. When "
+        "the dropped word is the whole difference between the two titles, the "
+        "score is high for the wrong reason — *Clinical Photographer* and "
+        "*Photographer* are not one occupation. Those rows are flagged below and "
+        "need the most careful reading, not the least.",
+        "",
+        "| Career | Helix title | Closest external profile | Score | Currently | Note |",
+        "|---|---|---|---|---|---|",
+    ]
+    for entry in candidates[:120]:
+        current = EVIDENCE_LABELS.get(evidence_by_id.get(entry["career_id"], ""),
+                                      "—")
+        lines.append(
+            f"| {entry['career_id']} | {entry['career_title']} | "
+            f"{entry['profile_title']} (`{entry['profile_slug']}`) | "
+            f"{float(entry.get('match_score') or 0):.2f} | {current} | "
+            f"{_qualifier_note(entry['career_title'], entry['profile_title'])} |")
+    if len(candidates) > 120:
+        lines.append(f"| … | and {len(candidates) - 120} more | | | | |")
+    return lines
+
+
+def _qualifier_note(career_title: str, profile_title: str) -> str:
+    """Flag a score that is high only because a distinguishing word was dropped.
+
+    `NOISE_WORDS` removes *clinical*, *healthcare*, *health* and *NHS* before
+    comparison, which is right for "NHS Biomedical Scientist" and wrong for
+    "Clinical Photographer": there, the dropped word is the entire difference
+    between two genuinely different occupations with different pay. Both come out
+    at 1.00, so the score alone cannot tell a reviewer which is which.
+    """
+    dropped = (set(normalise(career_title).split()) - content_tokens(career_title)
+               - set(normalise(profile_title).split()))
+    if not dropped:
+        return ""
+    words = ", ".join(f"*{word}*" for word in sorted(dropped))
+    return (f"Scores high only because {words} was dropped — check these are "
+            f"really one occupation")
 
 
 def write_audit(published: dict, base: dict, resolver, warnings: list[str]) -> Path:
@@ -165,6 +264,8 @@ def write_audit(published: dict, base: dict, resolver, warnings: list[str]) -> P
         for record in review[:60]:
             lines.append(f"| {record['career_id']} | {record['title']} | "
                          f"close external title match needing human confirmation |")
+
+    lines += _alias_candidates(records, resolver)
 
     if warnings:
         lines += ["", "## Warnings", ""]

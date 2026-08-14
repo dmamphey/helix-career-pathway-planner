@@ -8,6 +8,7 @@
 
 import { h, panel, button, link, notice, confirmDialog, empty } from "../ui.js";
 import { profileForm, profileSummary, signalChips } from "./profile-form.js";
+import { preferenceForm } from "./preferences.js";
 import {
   extractText, redactPersonalData, ProfileInterpreter, UnsupportedFormatError,
   UnreadableDocumentError,
@@ -276,6 +277,18 @@ export async function renderQuestions(app) {
                          text: option.label }),
           ]);
         })),
+      ]),
+
+      // Folded away rather than dropped onto the end of the screen. These
+      // questions are genuinely optional, and a wall of twelve more radio groups
+      // reads as a demand however the label is worded.
+      h("details", { class: "pref-disclosure" }, [
+        h("summary", {}, [
+          h("strong", { text: "Optional: what you want from your working life" }),
+          h("span", { class: "hint", text: " — a separate preference fit on every "
+            + "career. It does not change your background alignment." }),
+        ]),
+        preferenceForm(draft, { exclude: ["openToSectorChange"] }),
       ]),
 
       h("div", { class: "card-actions" }, [

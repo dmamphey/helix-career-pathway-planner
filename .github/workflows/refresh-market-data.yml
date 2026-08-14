@@ -1,0 +1,237 @@
+# Monthly refresh of the published salary and working-life dataset.
+#
+# The workflow never writes to `main`. It opens a pull request, because a salary
+# figure changing is a content decision that somebody should look at — an
+# automated push would let an upstream change alter what 677 careers say about
+# pay with nobody in the loop.
+#
+# Three gates have to pass before a pull request is opened at all: coverage must
+# still be 677 of 677, the schema validation must pass, and no API key may appear
+# anywhere in the generated files. Any of them failing fails the run and produces
+# nothing.
+#
+# Only official, GitHub-owned actions are used, plus the `gh` CLI for the pull
+# request. That is deliberate: it removes the supply-chain question that a
+# third-party pull-request action would otherwise raise here.
+
+name: Refresh market data
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: Why this run was triggered, recorded in the pull request
+        required: false
+        default: Manual refresh
+  schedule:
+    # 04:17 on the 3rd of each month. An odd minute, because the top of the hour
+    # is the busiest slot on shared runners.
+    - cron: "17 4 3 * *"
+
+# Least privilege: the job needs to push a branch and open a pull request.
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: refresh-market-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # The enrichment pipeline imports nothing outside the Python standard
+      # library, so there is nothing to install and nothing to pin. This step
+      # exists to fail loudly if that ever stops being true, rather than letting
+      # a new dependency arrive unpinned and unnoticed.
+      - name: Confirm the pipeline still has no third-party dependencies
+        run: |
+          python - <<'PY'
+          import ast, pathlib, sys
+          stdlib = set(sys.stdlib_module_names)
+          local = {"tools", "market_data", "providers"}
+          offenders = set()
+          for path in pathlib.Path("tools").rglob("*.py"):
+              tree = ast.parse(path.read_text(encoding="utf-8"))
+              for node in ast.walk(tree):
+                  if isinstance(node, ast.Import):
+                      names = [alias.name for alias in node.names]
+                  elif isinstance(node, ast.ImportFrom):
+                      names = [node.module or ""] if node.level == 0 else []
+                  else:
+                      continue
+                  for name in names:
+                      root = name.split(".")[0]
+                      if root and root not in stdlib and root not in local:
+                          offenders.add(f"{path}: {name}")
+          if offenders:
+              print("Third-party imports found. Pin them before this can run:")
+              for line in sorted(offenders):
+                  print(f"  {line}")
+              raise SystemExit(1)
+          print("Standard library only.")
+          PY
+
+      - name: Keep the current dataset for change comparison
+        run: cp data/helix_market_data_uk_v1.json /tmp/previous-market-data.json
+
+      - name: Enrich
+        env:
+          # Absent secrets are absent, not empty-string failures: the pipeline
+          # reports the National Careers Service API as unavailable and falls
+          # back to the public profiles and deterministic derivation.
+          NCS_API_KEY: ${{ secrets.NCS_API_KEY }}
+          NCS_API_BASE: ${{ vars.NCS_API_BASE }}
+          SKILLS_ENGLAND_API_KEY: ${{ secrets.SKILLS_ENGLAND_API_KEY }}
+        run: python tools/market_data/enrich.py --all --quiet
+
+      - name: Validate, including large-change detection
+        run: |
+          python tools/market_data/validate.py \
+            --previous /tmp/previous-market-data.json
+
+      - name: Require 677 of 677 salary coverage
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          base = json.loads(
+              pathlib.Path("data/careerpath_uk_careers_v1.json")
+              .read_text(encoding="utf-8"))
+          careers = base.get("careers", base if isinstance(base, list) else [])
+          expected = len(careers)
+          data = json.loads(
+              pathlib.Path("data/helix_market_data_uk_v1.json")
+              .read_text(encoding="utf-8"))
+          records = data["records"]
+          covered = [
+              r for r in records
+              if isinstance(r.get("salary", {}).get("typical_low"), (int, float))
+              and isinstance(r["salary"].get("typical_high"), (int, float))
+              and r["salary"]["typical_low"] > 0
+              and r["salary"]["typical_high"] >= r["salary"]["typical_low"]
+              and r["salary"].get("evidence_quality") not in (None, "", "PENDING")
+              and r["salary"].get("estimate_method")
+              and (r["salary"].get("source_records")
+                   or r["salary"].get("methodology_notes"))
+          ]
+          print(f"records {len(records)} / careers {expected}")
+          print(f"publishable salaries {len(covered)}")
+          if len(records) != expected or len(covered) != expected:
+              raise SystemExit(
+                  f"coverage is {len(covered)}/{expected}: refusing to publish")
+          PY
+
+      - name: Confirm the base taxonomy was not modified
+        run: |
+          if ! git diff --quiet -- data/careerpath_uk_careers_v1.json; then
+            echo "The supplied 677-career taxonomy was modified. Refusing."
+            git diff --stat -- data/careerpath_uk_careers_v1.json
+            exit 1
+          fi
+          echo "Base taxonomy unchanged."
+
+      # The generated files are read as bytes and searched for the secret values
+      # themselves. Nothing is echoed: a scan that prints what it was looking for
+      # is a leak of its own.
+      - name: Fail if any secret appears in generated output
+        env:
+          NCS_API_KEY: ${{ secrets.NCS_API_KEY }}
+          SKILLS_ENGLAND_API_KEY: ${{ secrets.SKILLS_ENGLAND_API_KEY }}
+        run: |
+          python - <<'PY'
+          import os, pathlib
+          secrets = [v for v in (os.environ.get("NCS_API_KEY", ""),
+                                 os.environ.get("SKILLS_ENGLAND_API_KEY", ""))
+                     if len(v.strip()) >= 8]
+          targets = [
+              pathlib.Path("data/helix_market_data_uk_v1.json"),
+              pathlib.Path("docs/MARKET-DATA-AUDIT.md"),
+              pathlib.Path("docs/DATASET-AUDIT.md"),
+          ]
+          leaked = []
+          for target in targets:
+              if not target.exists():
+                  continue
+              blob = target.read_bytes()
+              for value in secrets:
+                  if value.strip().encode() in blob:
+                      leaked.append(target.as_posix())
+          if leaked:
+              print("A configured secret appears in generated output:")
+              for name in sorted(set(leaked)):
+                  print(f"  {name}")
+              raise SystemExit(1)
+          print(f"Scanned {len(targets)} generated files against "
+                f"{len(secrets)} configured secret(s). Clean.")
+          PY
+
+      - name: Regenerate the dataset audit
+        run: python tools/audit_dataset.py
+
+      - name: Stop here if nothing changed
+        id: changes
+        run: |
+          if git diff --quiet -- data docs; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No change in the published data. Nothing to open."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git diff --stat -- data docs
+          fi
+
+      - name: Open a pull request
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REASON: ${{ inputs.reason || 'Scheduled monthly refresh' }}
+        run: |
+          set -euo pipefail
+          BRANCH="refresh/market-data-$(date -u +%Y-%m-%d)"
+          git config user.name "github-actions[bot]"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add data docs
+          # Separate -m flags rather than one multi-line string: inside a YAML
+          # block scalar the continuation lines would carry this indentation
+          # straight into the commit message.
+          git commit \
+            -m "Refresh UK market data" \
+            -m "$REASON" \
+            -m "Coverage, schema validation, base-taxonomy integrity and the secret scan all passed before this branch was created."
+          git push --set-upstream origin "$BRANCH"
+
+          {
+            echo "Automated refresh of the salary and working-life dataset."
+            echo
+            echo "**Checks that already passed on this branch**"
+            echo
+            echo "- 677 of 677 careers carry a publishable salary"
+            echo "- schema validation, including large-change detection"
+            echo "- the supplied base taxonomy is byte-for-byte unchanged"
+            echo "- no configured secret appears in any generated file"
+            echo
+            echo "**Please review before merging**"
+            echo
+            echo "Any figure that moved materially is listed in the validation"
+            echo "output on this run, and the counts by evidence class are in"
+            echo "\`docs/MARKET-DATA-AUDIT.md\`. A large change is flagged rather"
+            echo "than blocked, so it needs a human decision."
+          } > /tmp/pr-body.md
+
+          gh pr create \
+            --title "Refresh UK market data ($(date -u +%Y-%m-%d))" \
+            --body-file /tmp/pr-body.md \
+            --base main \
+            --head "$BRANCH"

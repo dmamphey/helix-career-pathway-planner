@@ -55,6 +55,7 @@ export async function render(app, context) {
       match: analysis ? analysis.match : null,
       gaps: analysis ? analysis.gaps : null,
       effort: analysis ? analysis.effort : null,
+      fit: analysis ? analysis.fit : null,
       why: analysis ? analysis.why : null,
       pack: await loadRulePack(id),
     });
@@ -160,12 +161,33 @@ function salaryPanel(entries) {
             + "firmly each figure is grounded." });
 }
 
+/**
+ * The three personal measures, side by side and never combined.
+ *
+ * Alignment, preference fit and effort answer three different questions, and the
+ * whole value of putting them in adjacent rows is that a career can score well on
+ * one and badly on another. The preference rows appear only once somebody has
+ * stated a preference; without one there is nothing to say, and a row of
+ * "Not enough preference data" would just take up space.
+ */
 function fitPanel(app, entries) {
   if (!app.hasProfile()) return null;
+  const anyFit = entries.some((entry) => entry.fit && entry.fit.scored);
+
   return panel("Fit for you", [
     grid(entries, [
       ["Background alignment", (entry) => entry.match
         ? alignmentBadge(entry.match) : text("—")],
+      ...(app.hasPreferences() ? [
+        ["Preference fit", (entry) => entry.fit
+          ? h("span", { class: `fit fit-${entry.fit.key}`,
+                        title: entry.fit.explain }, entry.fit.label)
+          : text("—")],
+        ["Why it fits your priorities", (entry) => reasonList(
+          entry.fit ? entry.fit.reasons : [], "Nothing you stated matched")],
+        ["Possible mismatches", (entry) => reasonList(
+          entry.fit ? entry.fit.mismatches : [], "None identified")],
+      ] : []),
       ["Transition effort", (entry) => entry.effort
         ? h("span", { class: `effort effort-${entry.effort.key}`,
                       title: entry.effort.explain }, entry.effort.label)
@@ -178,9 +200,35 @@ function fitPanel(app, entries) {
       ["Largest development gaps", (entry) => list(
         entry.gaps ? entry.gaps.transitions.development.slice(0, 4) : [])],
     ]),
-    h("p", { class: "hint", text: "Background alignment describes overlap between "
-      + "your profile and the career. It is not a prediction about recruitment." }),
+    h("p", { class: "hint", text: "These are three separate measures and Helix "
+      + "never merges them. Background alignment describes overlap between your "
+      + "profile and the career; preference fit describes how well it matches "
+      + "what you said you wanted; transition effort describes how big the move "
+      + "would be. None of them is a prediction about recruitment." }),
+    app.hasPreferences()
+      ? h("p", { class: "hint", text: "Preference fit is judged only on the "
+          + "questions you answered that Helix could compare with each career, and "
+          + "a career is never marked down for information Helix does not hold." })
+      : h("div", { class: "callout callout-info" }, [
+          h("p", { text: "You have not set any career priorities, so preference "
+            + "fit is not shown. It compares each career against what you want "
+            + "from working life, separately from your background." }),
+          h("div", { class: "card-actions" }, [
+            link("Set my priorities", "#/preferences", { class: "btn" }),
+          ]),
+        ]),
+    app.hasPreferences() && !anyFit
+      ? h("p", { class: "hint", text: "None of the priorities you stated could be "
+          + "compared with these particular careers." })
+      : null,
   ], { id: "fit-heading" });
+}
+
+/** Contributing reasons or mismatches, as plain sentences. */
+function reasonList(items, emptyLabel) {
+  if (!items || !items.length) return text(emptyLabel);
+  return h("ul", { class: "plain" }, items.slice(0, 3).map((item) =>
+    h("li", { text: item.text })));
 }
 
 function routePanel(entries) {

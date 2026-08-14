@@ -48,8 +48,24 @@ Structured career profile         the only thing the engines see
         │
         ├──► Action engine              exactly three, prioritised
         │
-        └──► Adjacency engine           similar careers, next moves, pivots
+        ├──► Adjacency engine           similar careers, next moves, pivots
+        │
+        ├──► Preference fit             stated priorities, scored separately
+        │
+        └──► Transition effort          how big the move is, separately again
 ```
+
+Three measures are reported, and they are deliberately never merged:
+
+| Measure | Answers | Source |
+|---|---|---|
+| **Background alignment** | How much of this career do I already do? | `matcher.js` |
+| **Preference fit** | Would I want this job? | `preference-fit.js` |
+| **Transition effort** | How big a move is it? | `transition-effort.js` |
+
+A career can score well on one and badly on another — that is the information a
+single blended number would destroy. Changing a stated preference cannot move an
+alignment score, and the suite tests that directly.
 
 Vanilla ES modules, no build step, no framework.
 
@@ -70,14 +86,25 @@ helix-career-pathway-planner/
 │   ├── action-engine.js        the next three actions
 │   ├── adjacency.js            the career graph
 │   ├── rules.js                career rule pack loader
+│   ├── market-data.js          salary, hours and role context
+│   ├── preference-fit.js       stated priorities, scored separately
+│   ├── transition-effort.js    how big a move is, and why
+│   ├── comparison.js           compare selection and "what stands out"
 │   ├── storage.js              localStorage, export and import
 │   ├── ui.js                   shared interface components
 │   └── views/                  one module per screen
 ├── data/
 │   ├── careerpath_uk_careers_v1.json    the supplied dataset, unmodified
-│   └── career_rules/                    optional researched packs
+│   ├── helix_market_data_uk_v1.json     generated: salary and working life
+│   ├── career_rules/                    optional researched packs
+│   └── reference/                       schema, seed and source registry
+├── tools/market_data/          the enrichment pipeline, and its tests
 ├── assets/vendor/              PDF.js and Mammoth (fetched, not committed)
-├── docs/DATASET-AUDIT.md       generated audit of the launch dataset
+├── docs/
+│   ├── DATASET-AUDIT.md            generated audit of the launch dataset
+│   ├── MARKET-DATA-AUDIT.md        generated salary coverage and quality
+│   └── MARKET-DATA-METHODOLOGY.md  where every salary comes from
+├── .github/workflows/          monthly market-data refresh
 ├── tests/                      browser test suite and CV fixtures
 └── tools/                      dev server, library fetch, dataset audit
 ```
@@ -181,6 +208,52 @@ that "bigger pivots" does not fill up with twelve variants of one job.
 `gap-engine.js`. That separation is the point: a strong alignment can never bury a
 registration requirement, because the two never touch.
 
+**Stated working-life preferences are not part of this score either.** They used
+to contribute to the "stated interests" component, which meant one number was
+answering two questions — how much of this career do I already do, and how much
+would I enjoy it. They now feed `preference-fit.js` alone.
+
+## How preference fit works
+
+Twelve optional questions about what somebody wants from working life: a salary
+target, how much hours and pattern matter, remote working, travel, and how much
+patient contact, laboratory work, research, commercial work and leadership they
+want. Every one defaults to "No preference", and an unanswered question is left
+out of the scoring rather than counted as indifference.
+
+Three rules keep the result honest:
+
+1. **A dimension is scored only when both halves exist** — a stated preference
+   and a recorded value for that career. Typical weekly hours exist for 54 of the
+   677 careers, so the hours dimension is simply absent for the other 623.
+2. **The result is normalised over the dimensions actually scored**, never over
+   the full list.
+3. **Missing career data never subtracts.** There is no neutral filler and no
+   penalty term.
+
+A stated tolerance that rules nothing out is also left unscored: somebody happy
+to work shifts is not better matched to a shift job than to a nine-to-five one,
+and scoring it would inflate every label they see without telling them anything.
+
+Results are labelled Very strong fit, Strong fit, Mixed fit, Low fit, or "Not
+enough preference data", and the contributing reasons and mismatches are shown
+alongside. It is never described as a probability.
+
+## How transition effort works
+
+A third measure again, from `transition-effort.js`: verified requirements, formal
+training routes, the number of genuine development gaps, and how adjacent the
+person's existing sector and skills are. Salary and popularity are deliberately
+not inputs.
+
+One rule matters more than the rest: **a registration gate is a floor, not a cost
+that adjacency can pay off.** Without it, an HCPC-registered biomedical scientist
+was told that Clinical Scientist is a "lower transition" — the same-family
+discount cancelled out the registration requirement. Registration as one
+profession is not a licence to practise as another, even under the same
+regulator, so the check requires the recorded *profession* to match, not just the
+regulator. HCPC registers fifteen of them.
+
 ## Requirements and verification
 
 Four categories:
@@ -236,12 +309,14 @@ edits appear to do nothing.
 http://localhost:8766/tests/
 ```
 
-54 checks run in the browser — that is where the parsers need real `File` objects
+90 checks run in the browser — that is where the parsers need real `File` objects
 and the storage guarantees need a real `localStorage`. They cover dataset
 integrity, ontology coverage, PDF/DOCX/TXT extraction, the scanned-PDF fallback,
 determinism, grouping, the requirement separation, pathway generation for a sample
-spanning every family and depth, exactly-three actions, adjacency, and storage
-including hostile input.
+spanning every family and depth, exactly-three actions, adjacency, storage
+including hostile input, market-data completeness for all 677 careers, comparison
+selection and its shareable route, preference determinism and its separation from
+alignment, and the deployment path rules.
 
 Build the CV fixtures first (they are generated, not committed):
 
@@ -251,6 +326,17 @@ python tests/make_fixtures.py
 
 Note: the storage tests write to and clear Helix's localStorage key on that
 origin. Do not run them in a browser profile holding a profile you want to keep.
+
+The enrichment pipeline has its own suite, which needs no browser and no network:
+
+```bash
+python tools/market_data/tests.py
+```
+
+65 checks covering title matching (including the rule that a seniority variant is
+never a direct match), salary derivation, range rounding, profile-page parsing,
+record freshness, the alias worklist, the published file's completeness, and the
+validator's ability to reject data the resolver would never produce.
 
 ### Testing privacy yourself
 
@@ -289,6 +375,12 @@ Live deployment:
 The path comes from the repository name: the custom domain is attached to the
 `dmamphey.github.io` user site, and project repositories are served beneath it. So
 renaming the repository renames the public URL, and the two cannot drift apart.
+
+> **If you are working from the v1 upgrade pack, ignore its §4.** That document
+> names `/career-pathway/` as production and calls `/helix-career-pathway-planner/`
+> a stale reference to be cleaned up. It is the wrong way round: the pack predates
+> the repository rename, the short path now 404s, and the long one is live. This
+> has been confirmed and the URLs above are correct. Do not "fix" them.
 
 ## Extending it
 
