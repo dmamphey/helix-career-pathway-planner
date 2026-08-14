@@ -12,7 +12,7 @@
  * researched about it, and the interface says so.
  */
 
-import { domainLabel } from "./ontology.js";
+import { domainLabel, lowerLabel } from "./ontology.js";
 import { GAP_STATUS } from "./gap-engine.js";
 
 /** Milestone statuses. Every one has text, never colour alone. */
@@ -175,13 +175,13 @@ function generated(profile, match, gaps, depth) {
     milestones.push({
       id: `develop_${item.domain || item.id}`,
       kind: "development",
-      title: `Build ${domainLabel(item.domain).toLowerCase()}`,
+      title: `Build ${lowerLabel(domainLabel(item.domain))}`,
       meaning: item.detail,
       why: `${domainLabel(item.domain)} is part of what this career is `
          + "described as involving, and is not yet identified in your profile.",
       action: `Find a route to real exposure: a course, a project, a secondment, `
             + `or a piece of work in your current role that involves `
-            + `${domainLabel(item.domain).toLowerCase()}.`,
+            + `${lowerLabel(domainLabel(item.domain))}.`,
       domain: item.domain,
       status: "action_required",
     });
@@ -194,7 +194,7 @@ function generated(profile, match, gaps, depth) {
       title: "Translate your experience into this sector's language",
       meaning: "You appear to hold "
         + gaps.transitions.translation.slice(0, 4)
-            .map((item) => item.label.toLowerCase()).join(", ")
+            .map((item) => lowerLabel(item.label)).join(", ")
         + ", but from a different sector.",
       why: "Recruiters in a new sector often miss relevant experience because it "
          + "is described in the vocabulary of the old one.",

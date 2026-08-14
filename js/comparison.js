@@ -10,6 +10,8 @@
  * it migrates in alongside existing saved data rather than replacing anything.
  */
 
+import { lowerLabel } from "./ontology.js";
+
 export const MIN_COMPARE = 2;
 export const MAX_COMPARE = 4;
 
@@ -89,7 +91,7 @@ export function standoutSummary(entries) {
         text: `${best.career.title} has the highest typical salary range of these `
             + `options, reaching ${best.salary.range.split(" to ")[1]}.`
             + (best.salary.evidenceRank >= 2
-                ? ` That figure is ${best.salary.evidenceLabel.toLowerCase()}, so `
+                ? ` That figure is ${lowerLabel(best.salary.evidenceLabel)}, so `
                   + `treat it as a broad indication.`
                 : ""),
       });
@@ -103,7 +105,7 @@ export function standoutSummary(entries) {
     notes.push({
       kind: "alignment",
       text: `${best.career.title} has the closest overlap with your current `
-          + `profile (${best.match.label.toLowerCase()}).`,
+          + `profile (${lowerLabel(best.match.label)}).`,
     });
   }
 
@@ -117,9 +119,9 @@ export function standoutSummary(entries) {
       notes.push({
         kind: "effort",
         text: `${easiest.career.title} looks like the smaller move from where you `
-            + `are (${easiest.effort.label.toLowerCase()}); `
+            + `are (${lowerLabel(easiest.effort.label)}); `
             + `${hardest.career.title} would be the larger one `
-            + `(${hardest.effort.label.toLowerCase()}).`,
+            + `(${lowerLabel(hardest.effort.label)}).`,
       });
     }
   }
@@ -131,7 +133,7 @@ export function standoutSummary(entries) {
     notes.push({
       kind: "preference",
       text: `${best.career.title} fits your stated priorities best of these `
-          + `(${best.fit.label.toLowerCase()}).`,
+          + `(${lowerLabel(best.fit.label)}).`,
     });
   }
 

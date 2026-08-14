@@ -13,6 +13,8 @@
  * a fact about a route, not a discouragement.
  */
 
+import { lowerLabel } from "./ontology.js";
+
 export const LEVELS = {
   lower: {
     key: "lower", rank: 0, label: "Lower transition",
@@ -147,7 +149,7 @@ export function transitionEffort(profile, match, gaps) {
  */
 export function whyThisCareer(profile, match, gaps) {
   const strengths = (gaps.transitions.transferable || [])
-    .slice(0, 4).map((item) => item.label.toLowerCase());
+    .slice(0, 4).map((item) => lowerLabel(item.label));
   const contributing = match.components
     .filter((component) => component.fit >= 0.6 && component.evidence.length)
     .slice(0, 2);
@@ -165,7 +167,7 @@ export function whyThisCareer(profile, match, gaps) {
   }
 
   const gapsList = (gaps.transitions.development || [])
-    .slice(0, 3).map((item) => item.label.toLowerCase());
+    .slice(0, 3).map((item) => lowerLabel(item.label));
   const translation = (gaps.transitions.translation || []).length;
 
   let stretch = "";

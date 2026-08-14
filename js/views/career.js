@@ -28,6 +28,7 @@ import { money } from "../market-data.js";
 import { adjacentCareers } from "../adjacency.js";
 import { loadRulePack } from "../rules.js";
 import { developmentIndicators } from "../matcher.js";
+import { lowerLabel } from "../ontology.js";
 
 export async function render(app, context) {
   const career = app.catalogue.get(context.params.id);
@@ -484,7 +485,7 @@ function fitCard(app, career, analysis) {
             : null,
           fit.unscored.length
             ? h("p", { class: "hint", text: "Not scored for this career: "
-                + fit.unscored.map((item) => `${item.label.toLowerCase()} `
+                + fit.unscored.map((item) => `${lowerLabel(item.label)} `
                   + `(${item.why})`).join("; ") + "." })
             : null,
         ])

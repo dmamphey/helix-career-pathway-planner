@@ -419,7 +419,7 @@ function findQualifications(lines) {
     for (const entry of QUALIFICATION_LEVELS) {
       const hit = entry.patterns.find((p) => containsPhrase(haystack, p));
       if (!hit) continue;
-      const subject = subjectAfter(line, hit);
+      const subject = stripLevelPrefix(subjectAfter(line, hit), entry);
       const key = `${entry.level}|${subject.toLowerCase()}`;
       if (seen.has(key)) continue;
       seen.add(key);
@@ -427,11 +427,58 @@ function findQualifications(lines) {
       break; // one qualification per line keeps this predictable
     }
   }
+
+  /*
+   * A level on its own adds nothing once the same level has a subject.
+   *
+   * CVs name a qualification more than once — in a summary line, then again in
+   * the education section with its subject. The bare mention produced a second
+   * entry with an empty subject, so the review screen showed "BSc · BSc
+   * Biomedical Science" and the reader had to work out that those were one
+   * degree. Where the subject is unknown everywhere, the bare entry is kept: a
+   * BSc with no subject is still worth recording.
+   */
+  const withSubject = new Set(found.filter((q) => q.subject).map((q) => q.level));
+  const kept = found.filter((q) => q.subject || !withSubject.has(q.level));
+
   // Highest first, so the review screen leads with the most relevant.
   const rank = new Map(QUALIFICATION_LEVELS.map((e) => [e.level, e.rank]));
-  return found
+  return kept
     .sort((a, b) => (rank.get(b.level) || 0) - (rank.get(a.level) || 0))
     .slice(0, 8);
+}
+
+/**
+ * Remove a restatement of the qualification from the front of its own subject.
+ *
+ * A CV that writes "Doctor of Business Administration (DBA) — DBA Life Science
+ * Entrepreneurship" gets read from the long form, the bracketed abbreviation is
+ * stripped as an aside, and the second "DBA" survives into the subject. The
+ * review screen then showed "DBA DBA Life Science Entrepreneurship", which reads
+ * like a parsing accident because it is one.
+ *
+ * Repeats until nothing more matches, because a title can restate itself more
+ * than once, and matches the level name as well as its patterns so that "MSc MSc
+ * Haematology" is caught alongside the spelled-out forms.
+ */
+function stripLevelPrefix(subject, entry) {
+  const tokens = [entry.level, ...entry.patterns]
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length);
+  let text = subject;
+  for (let pass = 0; pass < 4; pass += 1) {
+    const before = text;
+    for (const token of tokens) {
+      const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      // A lookahead rather than \b: a token ending in "." (as "d.b.a." does)
+      // has no word boundary after it.
+      text = text.replace(
+        new RegExp(`^${escaped}(?![A-Za-z0-9])[\\s:,\\-–—]*`, "i"), "");
+    }
+    text = text.trim();
+    if (text === before) break;
+  }
+  return text;
 }
 
 /** The words following a qualification token, cleaned of institutions. */

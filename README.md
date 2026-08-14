@@ -309,7 +309,7 @@ edits appear to do nothing.
 http://localhost:8766/tests/
 ```
 
-92 checks run in the browser — that is where the parsers need real `File` objects
+97 checks run in the browser — that is where the parsers need real `File` objects
 and the storage guarantees need a real `localStorage`. They cover dataset
 integrity, ontology coverage, PDF/DOCX/TXT extraction, the scanned-PDF fallback,
 determinism, grouping, the requirement separation, pathway generation for a sample

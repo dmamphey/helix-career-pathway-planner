@@ -17,6 +17,7 @@ import { developmentHorizon } from "../action-engine.js";
 import { describeProfile } from "../profile.js";
 import { groupResults } from "../matcher.js";
 import * as market from "../market-data.js";
+import { lowerLabel } from "../ontology.js";
 
 export async function render(app, context) {
   const careerId = context.params.id;
@@ -159,7 +160,7 @@ export async function render(app, context) {
           ? h("div", {}, [
               h("p", {}, [
                 h("strong", { text: `${pay.range} a year` }),
-                ` (${pay.geography}). Evidence: ${pay.evidenceLabel.toLowerCase()}`
+                ` (${pay.geography}). Evidence: ${lowerLabel(pay.evidenceLabel)}`
                 + ` — ${pay.evidenceExplain}`,
               ]),
               h("p", { text: `Method: ${pay.methodLabel}. Last checked `
@@ -277,8 +278,8 @@ export async function render(app, context) {
               const optionMatch = app.matchFor(option);
               return h("li", { text: `${option.title} (${option.family})`
                 + (optionPay ? ` — ${optionPay.range}, `
-                    + `${optionPay.evidenceLabel.toLowerCase()}` : "")
-                + (optionMatch ? `; ${optionMatch.label.toLowerCase()}` : "") });
+                    + `${lowerLabel(optionPay.evidenceLabel)}` : "")
+                + (optionMatch ? `; ${lowerLabel(optionMatch.label)}` : "") });
             })),
           ])
         : null,

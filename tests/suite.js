@@ -13,6 +13,7 @@ import { buildCatalogue, loadCareers, sourcesFor, seniorityOf, tokenise }
   from "../js/career-data.js";
 import {
   TAG_DOMAINS, DOMAINS, SYNONYMS, containsPhrase, resolveText, FAMILY_META,
+  lowerLabel,
 } from "../js/ontology.js";
 import {
   emptyProfile, normaliseProfile, addSignal, allSignals, demoProfile,
@@ -252,6 +253,77 @@ test("skill signals are detected across several domains", async () => {
   const domains = allSignals(profile).map((s) => s.domain);
   for (const expected of ["quality", "education", "leadership", "pathology"]) {
     assert(domains.includes(expected), `${expected} not detected in ${domains}`);
+  }
+});
+
+test("a qualification never restates its own level in the subject", () => {
+  /*
+   * A CV writing "Doctor of Business Administration DBA Life Science
+   * Entrepreneurship" was read from the long form, so the abbreviation that
+   * followed it stayed in the subject and the review screen showed
+   * "DBA DBA Life Science Entrepreneurship and Innovation Strategy".
+   */
+  const text = [
+    "Education",
+    "Doctor of Business Administration DBA Life Science Entrepreneurship "
+      + "and Innovation Strategy",
+    "MSc MSc Haematology",
+  ].join("\n");
+  const { profile } = ProfileInterpreter.parse(text, { catalogue });
+  for (const qualification of profile.qualifications) {
+    const shown = `${qualification.level} ${qualification.subject}`.trim();
+    assert(!new RegExp(`^${qualification.level}\\s+${qualification.level}\\b`, "i")
+             .test(shown),
+           `qualification reads "${shown}"`);
+  }
+  const dba = profile.qualifications.find((q) => q.level === "DBA");
+  assert(dba, "the DBA was not recognised at all");
+  assert(/^Life Science/i.test(dba.subject),
+         `DBA subject was "${dba.subject}"`);
+});
+
+test("a bare level is dropped once the same level has a subject", () => {
+  const text = ["Education", "BSc", "BSc Biomedical Science"].join("\n");
+  const { profile } = ProfileInterpreter.parse(text, { catalogue });
+  const bsc = profile.qualifications.filter((q) => q.level === "BSc");
+  equal(bsc.length, 1, `BSc appeared ${bsc.length} times: `
+    + JSON.stringify(bsc));
+  assert(bsc[0].subject, "the entry kept was the one without a subject");
+});
+
+test("a level with no subject anywhere is still kept", () => {
+  const { profile } = ProfileInterpreter.parse("Education\nBSc\n",
+                                               { catalogue });
+  assert(profile.qualifications.some((q) => q.level === "BSc"),
+         "a lone BSc was discarded");
+});
+
+test("abbreviations keep their capitals mid-sentence", () => {
+  // "AI and machine learning".toLowerCase() produced an action reading
+  // "Build your highest-priority gap: ai and machine learning".
+  equal(lowerLabel("AI and machine learning"), "AI and machine learning");
+  equal(lowerLabel("GxP and validation"), "GxP and validation");
+  equal(lowerLabel("Medical devices and MedTech"), "medical devices and MedTech");
+  equal(lowerLabel("Laboratory science"), "laboratory science");
+  equal(lowerLabel("Quality"), "quality");
+});
+
+test("no generated action flattens an abbreviation", async () => {
+  const profile = demoProfile("bms");
+  for (const id of ["CP-402", "CP-428", "CP-003"]) {
+    const career = catalogue.get(id);
+    const pack = await loadRulePack(id);
+    const match = scoreCareer(profile, career);
+    const gaps = analyseGaps(profile, match, pack, catalogue.sources);
+    const pathway = buildPathway(profile, match, gaps, pack, {});
+    for (const action of nextActions(profile, match, gaps, pathway,
+                                     { registry: catalogue.sources })) {
+      const text = `${action.title} ${action.detail} ${action.why}`;
+      assert(!/\bai\b/.test(text),
+             `an action lowercased AI: "${action.title}"`);
+      assert(!/\bgxp\b/.test(text),
+             `an action lowercased GxP: "${action.title}"`);
+    }
   }
 });
 

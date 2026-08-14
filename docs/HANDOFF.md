@@ -158,7 +158,7 @@ all of it needs either a decision or an external unblock.
 ```bash
 python tools/serve.py                 # http://localhost:8766 (threaded, no-cache)
 ```
-Browser tests: open `http://localhost:8766/tests/` — **90 should pass**. They need
+Browser tests: open `http://localhost:8766/tests/` — **97 should pass**. They need
 fixtures:
 ```bash
 python tests/make_fixtures.py

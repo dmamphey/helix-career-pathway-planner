@@ -783,6 +783,26 @@ export function domainGroup(id) {
 }
 
 /** Orientations implied by a set of domains. */
+/**
+ * Lowercase a label for use mid-sentence, without flattening abbreviations.
+ *
+ * `"AI and machine learning".toLowerCase()` gave "ai and machine learning", so
+ * an action read "Build your highest-priority gap: ai and machine learning"
+ * while the sentence underneath it said "AI" correctly. The same fault would hit
+ * "GxP and validation" and "Medical devices and MedTech".
+ *
+ * A word is only lowercased when it looks like an ordinary word — optionally
+ * capitalised, then lower-case letters. Anything else keeps the case it was
+ * given, which covers AI and GCP as well as GxP, MedTech, R&D and ISO 15189
+ * without needing a list of abbreviations to maintain.
+ */
+export function lowerLabel(text) {
+  return String(text || "")
+    .split(/(\s+)/)
+    .map((word) => (/^[A-Z]?[a-z]+$/.test(word) ? word.toLowerCase() : word))
+    .join("");
+}
+
 export function orientationsFor(domainIds) {
   const found = new Set();
   for (const id of domainIds) {

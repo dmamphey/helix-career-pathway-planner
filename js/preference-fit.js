@@ -34,6 +34,7 @@
 
 import * as market from "./market-data.js";
 import { PREFERENCE_FIELDS } from "./profile.js";
+import { lowerLabel } from "./ontology.js";
 
 /** The bands, and the only words the interface may use for them. */
 export const FIT_LEVELS = {
@@ -234,7 +235,7 @@ export function preferenceFit(profile, career, options = {}) {
       add("retraining", "Retraining required",
           retrainingScore(options.effort.key, prefs.retrainingTolerance),
           prefs.retrainingTolerance === "minimal" ? STRONG : MODERATE,
-          `Moving into it looks like a ${options.effort.label.toLowerCase()}.`);
+          `Moving into it looks like a ${lowerLabel(options.effort.label)}.`);
     } else {
       skip("retraining", "Retraining required",
            "this needs a profile, so Helix can work out the transition for you");
@@ -331,7 +332,7 @@ function scaleScore(scale, firm, value) {
  * because these lines are also what the PDF and the comparison table carry.
  */
 function orientationNote(label, wish, value, score) {
-  const subject = label.toLowerCase();
+  const subject = lowerLabel(label);
   const wanted = {
     seek: `You want a lot of ${subject}`,
     some: `You are happy with some ${subject}`,

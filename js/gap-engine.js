@@ -16,7 +16,7 @@
  * and the user can add the evidence.
  */
 
-import { DOMAINS, domainLabel } from "./ontology.js";
+import { DOMAINS, domainLabel, lowerLabel } from "./ontology.js";
 import { EDUCATION_EXPECTATION } from "./matcher.js";
 import { allSignals } from "./profile.js";
 
@@ -266,7 +266,7 @@ function pushPackItems(items, list, category, held) {
       title: item.title,
       detail: isHeld
         ? `${item.detail} Your profile already evidences `
-          + `${domainLabel(item.domain).toLowerCase()}.`
+          + `${lowerLabel(domainLabel(item.domain))}.`
         : item.detail,
       sourceCode: item.sourceCode || "",
       fromPack: true,

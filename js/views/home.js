@@ -79,6 +79,9 @@ function howItWorks() {
     ["Build your profile", "From your CV, or by hand."],
     ["Explore career possibilities",
      "Matched against our full UK career database."],
+    ["Compare your shortlist",
+     "Side-by-side comparison of up to four careers — salary, working life, "
+     + "professional requirements and how big a move each would be."],
     ["Choose a destination", "Select one career to plan against."],
     ["See your gaps and pathway", "What you have, what you would need."],
     ["Take your next 3 actions", "Prioritised, and small enough to start."],

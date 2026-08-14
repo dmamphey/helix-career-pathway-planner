@@ -17,7 +17,7 @@
  * gate less urgent.
  */
 
-import { domainLabel } from "./ontology.js";
+import { domainLabel, lowerLabel } from "./ontology.js";
 
 const TIER = {
   verified_blocker: 0,
@@ -94,7 +94,7 @@ export function nextActions(profile, match, gaps, pathway, options = {}) {
       tier: TIER.development,
       title: item.fromPack
         ? item.title
-        : `Build your highest-priority gap: ${label.toLowerCase()}`,
+        : `Build your highest-priority gap: ${lowerLabel(label)}`,
       detail: item.fromPack
         ? item.detail
         : `${label} is part of what this career involves and is not yet `
@@ -122,7 +122,7 @@ export function nextActions(profile, match, gaps, pathway, options = {}) {
       candidates.push({
         id: `strengthen_${item.domain || item.id}`,
         tier: TIER.development,
-        title: `Deepen ${label.toLowerCase()}`,
+        title: `Deepen ${lowerLabel(label)}`,
         detail: `${item.detail} Your profile already aligns well with this `
           + "career, so the useful work is depth rather than breadth.",
         why: "Nothing is missing outright, so this is the strongest available "
@@ -140,7 +140,7 @@ export function nextActions(profile, match, gaps, pathway, options = {}) {
       tier: TIER.evidence,
       title: "Describe what you already do in this career's language",
       detail: "You appear to hold "
-        + translation.slice(0, 3).map((item) => item.label.toLowerCase()).join(", ")
+        + translation.slice(0, 3).map((item) => lowerLabel(item.label)).join(", ")
         + " from a different sector. Rewrite your strongest two examples in the "
         + "vocabulary this career uses, then check them against a live job advert.",
       why: "This is the cheapest action available: no new skill, better "

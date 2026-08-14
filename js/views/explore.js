@@ -10,7 +10,7 @@
 import {
   h, panel, button, link, careerCard, debounce, empty, scoredFit,
 } from "../ui.js";
-import { ORIENTATIONS } from "../ontology.js";
+import { ORIENTATIONS, lowerLabel } from "../ontology.js";
 import * as market from "../market-data.js";
 
 const PAGE = 24;
@@ -78,7 +78,7 @@ export async function renderExplorer(app) {
   const draw = () => {
     const matching = sortCareers(app, applyFilters(app, catalogue.careers));
     count.textContent = `${matching.length} of ${catalogue.count} careers`
-      + `, ${SORTS[filters.sort].label.toLowerCase()}`
+      + `, ${lowerLabel(SORTS[filters.sort].label)}`
       + (app.hasProfile() ? " · alignment shown against your profile" : "");
     results.replaceChildren(
       matching.length
@@ -187,13 +187,49 @@ export async function renderExplorer(app) {
        Explorer: "Career overview available" }],
   ];
 
+  /*
+   * Dropdowns are staged, then applied together.
+   *
+   * Every change used to redraw immediately, so choosing four filters meant four
+   * passes over 677 careers — and picking the effort sort started a second of
+   * gap analysis before the rest of the choices had even been made. Selections
+   * now collect in `pending` until Apply commits them, which is also what makes
+   * the count meaningful: it describes what is on screen rather than a state the
+   * user has already moved on from.
+   *
+   * Search stays live. Typing is incremental and cheap, and having to press a
+   * button to see a search take effect is the kind of friction nobody asks for.
+   */
+  const pending = { ...filters };
+
+  const pendingChanges = () => Object.keys(DEFAULTS)
+    .filter((key) => key !== "shown" && key !== "query")
+    .filter((key) => pending[key] !== filters[key]).length;
+
+  const applyButton = button("Apply filters", async () => {
+    Object.assign(filters, pending);
+    await update();
+    refreshApply();
+  }, { variant: "primary" });
+
+  const applyHint = h("span", { class: "hint apply-hint", role: "status",
+                                "aria-live": "polite" });
+
+  const refreshApply = () => {
+    const changes = pendingChanges();
+    applyButton.disabled = changes === 0;
+    applyHint.textContent = changes
+      ? `${changes} change${changes === 1 ? "" : "s"} not yet applied`
+      : "";
+  };
+
   const selectField = ([label, key, values, blank, labels]) => {
     const id = `filter-${key}`;
     return h("div", { class: "field" }, [
       h("label", { for: id, text: label }),
       h("select", { id, onChange: (event) => {
-        filters[key] = event.target.value;
-        update();
+        pending[key] = event.target.value;
+        refreshApply();
       } }, values.map((value) => h("option", {
         value, selected: filters[key] === value ? true : null,
       }, value === "" ? blank : (labels && labels[value]) || value))),
@@ -203,8 +239,8 @@ export async function renderExplorer(app) {
   const sortField = h("div", { class: "field" }, [
     h("label", { for: "filter-sort", text: "Sort by" }),
     h("select", { id: "filter-sort", onChange: (event) => {
-      filters.sort = event.target.value;
-      update();
+      pending.sort = event.target.value;
+      refreshApply();
     } }, Object.entries(SORTS)
       .filter(([, meta]) => (!meta.needsProfile || app.hasProfile())
                          && (!meta.needsPreferences || app.hasPreferences()))
@@ -228,12 +264,16 @@ export async function renderExplorer(app) {
         h("div", { class: "filters" }, advanced.map(selectField)),
       ]),
       h("div", { class: "card-actions" }, [
+        applyButton,
+        applyHint,
         button("Reset filters", () => {
           resetFilters();
+          Object.assign(pending, filters);
           search.value = "";
           for (const select of node.querySelectorAll(".filters select")) {
             select.value = select.id === "filter-sort" ? "relevance" : "";
           }
+          refreshApply();
           draw();
         }, { variant: "quiet" }),
         app.hasProfile()
@@ -256,6 +296,7 @@ export async function renderExplorer(app) {
     results,
   ]);
 
+  refreshApply();
   await update();
   return node;
 }
