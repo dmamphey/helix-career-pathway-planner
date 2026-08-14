@@ -21,7 +21,7 @@ import { nextActions } from "./action-engine.js";
 import { transitionEffort, whyThisCareer } from "./transition-effort.js";
 import { loadRulePack } from "./rules.js";
 import {
-  clear, errorPanel, clearNotice, notice, button, h, link,
+  clear, errorPanel, clearNotice, notice, button, h, link, datasetLabel,
 } from "./ui.js";
 
 import * as homeView from "./views/home.js";
@@ -385,9 +385,16 @@ async function boot() {
   }
   app.persist();
 
-  document.getElementById("dataset-note").textContent =
-    `${app.catalogue.count} UK careers · dataset v${app.catalogue.meta.version}`
-    + (marketStatus.ok ? ` · salary data v${marketStatus.meta.version}` : "");
+  // The dataset line used to sit under the tagline on every page. It is version
+  // metadata, which belongs on the My data screen with the rest of the
+  // provenance rather than in the masthead of a career tool. The element may be
+  // absent, so this only fills it when a page still carries one.
+  const datasetNote = document.getElementById("dataset-note");
+  if (datasetNote) {
+    datasetNote.textContent =
+      `${app.catalogue.count} UK careers · dataset ${datasetLabel(app.catalogue.meta)}`
+      + (marketStatus.ok ? ` · salary data ${datasetLabel(marketStatus.meta)}` : "");
+  }
 
   for (const [pattern, view] of VIEWS) {
     router.route(pattern, (context) => show(view, context));

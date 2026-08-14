@@ -19,6 +19,7 @@ import datetime as dt
 import json
 import os
 import re
+import statistics
 import sys
 import unittest
 from pathlib import Path
@@ -225,19 +226,83 @@ class Derivation(unittest.TestCase):
         self.assertGreaterEqual(result.low, min(contributor_lows))
         self.assertLessEqual(result.low, result.high)
 
-    def test_no_published_estimate_exceeds_what_it_was_derived_from(self):
+    def test_an_estimate_exceeds_its_contributors_only_by_seniority(self):
+        """A derived range may sit above its contributors, but only for a reason.
+
+        Being a more senior grade than the careers it was derived from is that
+        reason — Consultant Biomedical Scientist should out-earn the
+        practitioners it is priced against. Anything else must stay inside the
+        span of the evidence, and the excess is capped at the documented
+        multiplier so a large claimed gap cannot become an unbounded one.
+        """
         by_id = {r["career_id"]: r for r in PUBLISHED["records"]}
         for record in PUBLISHED["records"]:
             salary = record["salary"]
             sources = salary.get("derived_from_career_ids") or []
             if salary["estimate_method"] != "related_career_derived" or not sources:
                 continue
-            highs = [by_id[cid]["salary"]["typical_high"]
-                     for cid in sources if cid in by_id]
+            contributors = [by_id[cid] for cid in sources if cid in by_id]
+            if not contributors:
+                continue
+            ceiling = max(c["salary"]["typical_high"] for c in contributors)
+            if salary["typical_high"] <= ceiling:
+                continue
+
             with self.subTest(career=record["career_id"]):
-                self.assertLessEqual(salary["typical_high"], max(highs),
-                                     "a derived range claims more than any career "
-                                     "it was derived from")
+                steps = (derive._rank(record["title"])
+                         - statistics.median([derive._rank(c["title"])
+                                              for c in contributors]))
+                self.assertGreater(
+                    steps, 0,
+                    f"{record['title']} exceeds its contributors without being "
+                    f"a more senior grade than them")
+                self.assertNotEqual(
+                    derive.seniority_class(record["title"]), "specialist",
+                    "a 'specialist' title was allowed past its contributors, "
+                    "which is the unreliable signal §15 warns about")
+                allowed = ceiling * (1 + derive.STEP_MULTIPLIER * steps)
+                self.assertLessEqual(
+                    salary["typical_high"], round(allowed) + 1000,
+                    "the excess is larger than the seniority adjustment allows")
+
+    def test_a_seniority_ladder_is_priced_as_a_ladder(self):
+        """Four progressive grades must not report one salary.
+
+        Specialist, Senior, Lead and Consultant Biomedical Scientist all shared
+        the class "senior", so they took the same multiplier over the same
+        neighbours and published the identical range.
+        """
+        by_title = {r["title"]: r for r in PUBLISHED["records"]}
+        ladder = ["Biomedical Scientist", "Specialist Biomedical Scientist",
+                  "Senior Biomedical Scientist", "Lead Biomedical Scientist",
+                  "Consultant Biomedical Scientist"]
+        highs = []
+        for title in ladder:
+            self.assertIn(title, by_title, f"{title} is missing from the dataset")
+            highs.append(by_title[title]["salary"]["typical_high"])
+        self.assertEqual(len(set(highs)), len(highs),
+                         f"grades share a salary: {dict(zip(ladder, highs))}")
+        self.assertEqual(highs, sorted(highs),
+                         f"the ladder is not monotonic: {dict(zip(ladder, highs))}")
+
+    def test_no_senior_variant_is_paid_less_than_its_base_career(self):
+        by_title = {r["title"]: r for r in PUBLISHED["records"]}
+        order = {name: i for i, name in enumerate(derive.SENIORITY_ORDER)}
+        for record in PUBLISHED["records"]:
+            match = re.match(
+                r"^(Senior|Lead|Consultant|Specialist|Principal|Advanced)\s+(.*)$",
+                record["title"])
+            base = by_title.get(match.group(2)) if match else None
+            if not base:
+                continue
+            if (order[derive.seniority_class(record["title"])]
+                    <= order[derive.seniority_class(base["title"])]):
+                continue
+            with self.subTest(career=record["title"]):
+                self.assertGreater(
+                    record["salary"]["typical_high"],
+                    base["salary"]["typical_high"],
+                    f"{record['title']} is not paid above {base['title']}")
 
     def test_similarity_prefers_the_same_family(self):
         target = career("CP-Z", "Andrology Scientist")

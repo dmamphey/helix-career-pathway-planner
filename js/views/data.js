@@ -1,6 +1,9 @@
 /** Saved data: what is stored, and the controls to export, import or delete it. */
 
-import { h, panel, button, link, notice, confirmDialog } from "../ui.js";
+import {
+  h, panel, button, link, notice, confirmDialog, datasetLabel,
+  DATASET_DISPLAY_NAME,
+} from "../ui.js";
 import * as storage from "../storage.js";
 import * as market from "../market-data.js";
 import { describeProfile, signalLabels } from "../profile.js";
@@ -34,7 +37,8 @@ export async function render(app) {
         h("dd", { text: `${Object.keys(state.progress).length} career(s) with `
           + `recorded progress` }),
         h("dt", { text: "Dataset version" }),
-        h("dd", { text: state.datasetVersion || app.catalogue.meta.version }),
+        h("dd", { text: datasetLabel({
+          version: state.datasetVersion || app.catalogue.meta.version }) }),
         h("dt", { text: "Last saved" }),
         h("dd", { text: state.savedAt
           ? new Date(state.savedAt).toLocaleString("en-GB") : "Never" }),
@@ -93,9 +97,9 @@ export async function render(app) {
     panel("Dataset", [
       h("dl", { class: "summary" }, [
         h("dt", { text: "Name" }),
-        h("dd", { text: app.catalogue.meta.name }),
+        h("dd", { text: DATASET_DISPLAY_NAME }),
         h("dt", { text: "Version" }),
-        h("dd", { text: `${app.catalogue.meta.version} (generated `
+        h("dd", { text: `${datasetLabel(app.catalogue.meta)} (generated `
           + `${app.catalogue.meta.generated})` }),
         h("dt", { text: "Careers loaded" }),
         h("dd", { text: `${app.catalogue.count}` }),
@@ -142,7 +146,8 @@ function marketPanel(app) {
       h("dt", { text: "Careers with a published salary" }),
       h("dd", { text: `${counts.total} of ${app.catalogue.count}` }),
       h("dt", { text: "Salary data version" }),
-      h("dd", { text: `${state.meta.version} (generated ${state.meta.generated})` }),
+      h("dd", { text: `${datasetLabel(state.meta)} (generated `
+        + `${state.meta.generated})` }),
       h("dt", { text: "Careers with typical hours" }),
       h("dd", { text: `${counts.withHours} — from official job profiles only. `
         + `The rest show “Not yet available” rather than an estimate.` }),

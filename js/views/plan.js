@@ -11,7 +11,7 @@
  * has nowhere to hold any of those.
  */
 
-import { h, panel, button, link, empty } from "../ui.js";
+import { h, panel, button, link, empty, datasetLabel } from "../ui.js";
 import { MILESTONE_STATUS } from "../pathway-engine.js";
 import { developmentHorizon } from "../action-engine.js";
 import { describeProfile } from "../profile.js";
@@ -73,7 +73,7 @@ export async function render(app, context) {
       h("header", { class: "plan-head" }, [
         h("h1", { text: "My Career Pathway Plan" }),
         h("p", { class: "plan-meta", text: `Generated ${generated} · Helix Career Pathway Planner `
-          + `· dataset v${app.catalogue.meta.version}` }),
+          + `· dataset ${datasetLabel(app.catalogue.meta)}` }),
       ]),
 
       planSection("Current career position", [

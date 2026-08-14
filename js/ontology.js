@@ -664,6 +664,17 @@ export const QUALIFICATION_LEVELS = [
   { level: "PhD", rank: 7, patterns: ["phd", "ph.d", "dphil", "doctorate",
     "doctor of philosophy"] },
   { level: "MD", rank: 7, patterns: ["md (res)", "doctor of medicine"] },
+  /*
+   * A professional doctorate, so it ranks with the others.
+   *
+   * The bare abbreviation is deliberately not a pattern. In a life sciences and
+   * healthcare CV, "DBA" far more often means database administrator than Doctor
+   * of Business Administration, and reading a job title as a doctorate is a
+   * worse error than failing to spot one — the person can always add it by hand
+   * from the dropdown, which is what this entry is mainly here to provide.
+   */
+  { level: "DBA", rank: 7,
+    patterns: ["doctor of business administration", "d.b.a."] },
 ];
 
 /**

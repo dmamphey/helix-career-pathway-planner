@@ -159,6 +159,12 @@ main:focus { outline: none; }
 }
 .site-foot h3 { font-size: .95rem; }
 .disclaimer { max-width: 90ch; }
+
+.foot-links {
+  display: flex; flex-wrap: wrap; gap: .4rem 1.4rem;
+  margin: 0 0 1rem; font-weight: 600;
+}
+.foot-links a { color: var(--brand-blue-dark); }
 .site-foot details { margin-top: 1rem; }
 .site-foot summary { cursor: pointer; padding: .4rem 0; }
 
@@ -182,6 +188,24 @@ main:focus { outline: none; }
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 1.8rem 1.5rem;
+}
+/* The product name leads the landing page and is given room to breathe. It
+   scales with the viewport rather than stepping at a breakpoint, so a long name
+   stays on a sensible number of lines from 320px upwards. */
+.hero-name {
+  font-size: clamp(1.9rem, 5.2vw, 2.6rem);
+  line-height: 1.15;
+  letter-spacing: -.015em;
+  color: var(--brand-navy);
+  margin: .2rem 0 0;
+}
+.hero-tagline {
+  font-size: clamp(1.02rem, 2.2vw, 1.22rem);
+  line-height: 1.45;
+  color: var(--brand-blue-dark);
+  font-weight: 600;
+  max-width: 58ch;
+  margin: .55rem 0 1rem;
 }
 .hero .lede { font-size: 1.06rem; color: var(--muted); max-width: 70ch; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1.2rem 0; }

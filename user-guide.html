@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>User guide — Helix Career Pathway Planner</title>
+<meta name="description" content="Complete user guide to Helix Career Pathway Planner: building your profile from a CV or by hand, setting career priorities, exploring and filtering 677 UK careers, comparing options side by side, reading the three fit measures, and producing a career plan.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='13'%20fill='%2317395f'/%3E%3Cg%20stroke='%2322a7d0'%20fill='none'%20stroke-width='5'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M32%206L38%209L43%2012L45%2015L44%2018L40%2021L34%2024L28%2027L22%2030L19%2033L19%2036L22%2039L28%2042L34%2045L40%2048L44%2051L45%2054L43%2057'/%3E%3Cpath%20d='M32%206L26%209L21%2012L19%2015L20%2018L24%2021L30%2024L36%2027L42%2030L45%2033L45%2036L42%2039L36%2042L30%2045L24%2048L20%2051L19%2054L21%2057'/%3E%3Cpath%20d='M19%2015.5L45%2015.5'%20stroke-width='4'/%3E%3Cpath%20d='M19%2034.5L45%2034.5'%20stroke-width='4'/%3E%3Cpath%20d='M19%2053.5L45%2053.5'%20stroke-width='4'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* Guide-specific layout. Everything else is inherited from the application's
+     own stylesheet, so the guide cannot drift away from the product's look. */
+  .guide { max-width: 78ch; margin: 0 auto; padding: 1.5rem 1rem 5rem; }
+  .guide h1 { font-size: clamp(1.8rem, 5vw, 2.4rem); color: var(--brand-navy);
+              margin-bottom: .3rem; }
+  .guide h2 { margin-top: 2.4rem; padding-top: 1.2rem;
+              border-top: 1px solid var(--line); color: var(--brand-navy); }
+  .guide h3 { margin-top: 1.6rem; font-size: 1.02rem; }
+  .guide .contents { background: var(--panel); border: 1px solid var(--line);
+                     border-radius: var(--radius); padding: 1.1rem 1.3rem; }
+  .guide .contents h2 { margin: 0 0 .6rem; border: 0; padding: 0;
+                        font-size: 1.05rem; }
+  .guide .contents ol { margin: 0; padding-left: 1.3rem; columns: 2;
+                        column-gap: 2rem; }
+  .guide .contents li { margin-bottom: .3rem; break-inside: avoid; }
+  .guide table { width: 100%; border-collapse: collapse; margin: .8rem 0; }
+  .guide th, .guide td { text-align: left; vertical-align: top;
+                         padding: .5rem .6rem; border-bottom: 1px solid var(--line); }
+  .guide th { color: var(--brand-navy); }
+  .guide .back { display: inline-block; margin-bottom: 1.2rem; font-weight: 600; }
+  @media (max-width: 46rem) { .guide .contents ol { columns: 1; } }
+</style>
+</head>
+<body>
+
+<a class="skip" href="#guide-main">Skip to main content</a>
+
+<header class="site-head">
+  <div class="bar">
+    <a class="brand" href="index.html">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="34" height="34" focusable="false"
+             stroke="currentColor" fill="none" stroke-width="5"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M32 6L38 9L43 12L45 15L44 18L40 21L34 24L28 27L22 30L19 33L19 36L22 39L28 42L34 45L40 48L44 51L45 54L43 57"/>
+          <path d="M32 6L26 9L21 12L19 15L20 18L24 21L30 24L36 27L42 30L45 33L45 36L42 39L36 42L30 45L24 48L20 51L19 54L21 57"/>
+          <path d="M19 15.5L45 15.5" stroke-width="4"/>
+          <path d="M19 34.5L45 34.5" stroke-width="4"/>
+          <path d="M19 53.5L45 53.5" stroke-width="4"/>
+        </svg>
+      </span>
+      <span class="brand-text">
+        <strong>Helix</strong>
+        <small>Career Pathway Planner</small>
+      </span>
+    </a>
+    <nav id="nav" aria-label="Main">
+      <a href="index.html">Open Helix</a>
+    </nav>
+  </div>
+</header>
+
+<main id="guide-main" class="guide" tabindex="-1">
+
+<a class="back" href="index.html">← Back to Helix</a>
+
+<h1>Helix user guide</h1>
+<p class="lede">How to build a profile, explore 677 UK life sciences and
+   healthcare careers, compare your options and produce a plan. Nothing here
+   requires an account, and your CV never leaves your device.</p>
+
+<nav class="contents" aria-labelledby="contents-heading">
+  <h2 id="contents-heading">Contents</h2>
+  <ol>
+    <li><a href="#what">What Helix does</a></li>
+    <li><a href="#data">Your data</a></li>
+    <li><a href="#quick">Quick start</a></li>
+    <li><a href="#profile">Building your profile</a></li>
+    <li><a href="#priorities">Career priorities</a></li>
+    <li><a href="#measures">The three measures</a></li>
+    <li><a href="#options">My options</a></li>
+    <li><a href="#explorer">Career Explorer</a></li>
+    <li><a href="#career">Career pages</a></li>
+    <li><a href="#salary">Salary and evidence</a></li>
+    <li><a href="#compare">Comparing careers</a></li>
+    <li><a href="#pathway">Pathway and next actions</a></li>
+    <li><a href="#plan">Your career plan</a></li>
+    <li><a href="#saved">Saved careers and My data</a></li>
+    <li><a href="#limits">Limitations</a></li>
+  </ol>
+</nav>
+
+<h2 id="what">1. What Helix does</h2>
+<p>Helix answers four questions for somebody working in, or moving into, UK life
+   sciences and healthcare:</p>
+<ol>
+  <li>Where am I now?</li>
+  <li>What career options are realistically open to me?</li>
+  <li>What am I missing for the route I choose?</li>
+  <li>What should I do next?</li>
+</ol>
+<p>It turns a CV — or a profile you build by hand — into a structured career
+   profile, compares that against 677 UK career destinations, and produces a
+   pathway, a gap analysis and exactly three next actions.</p>
+<p><strong>What it is not.</strong> Helix is not an AI career adviser. There is no
+   language model anywhere in it, and matching is deterministic: the same profile
+   always produces the same result. It does not predict whether you will get a
+   job and never shows a percentage chance of anything. It does not determine
+   professional eligibility — where a career is regulated it says so, links to the
+   regulator, and asks you to confirm your own position.</p>
+
+<h2 id="data">2. Your data</h2>
+<p>Your CV is read inside your browser tab. It is not uploaded to Optymum SS, and
+   Helix does not store the document or its text.</p>
+<ul>
+  <li>Contact details are stripped out <em>before</em> the text is read.</li>
+  <li>The structured profile has no fields for your name, email address,
+      telephone number, postal address or employer — a field that does not exist
+      cannot be filled in by accident later.</li>
+  <li>The evidence Helix attaches to your profile is always wording from its own
+      vocabulary, never a sentence copied out of your document.</li>
+  <li>If you choose to save progress, only the structured profile, your saved
+      career ids and your milestone progress go into this browser's local
+      storage. There is no account and no server.</li>
+</ul>
+<p>Opening a career page contacts nobody. Salary information is read from a single
+   file published with the site, which is why the figures never change between
+   page views and why nothing anywhere learns which careers you looked at.</p>
+<p>You can export, import or delete everything from
+   <a href="index.html#/data">My data</a>.</p>
+
+<h2 id="quick">3. Quick start</h2>
+<ol>
+  <li><strong>Build your profile.</strong> Upload a CV, or build one by hand. You
+      confirm everything before it is used.</li>
+  <li><strong>Explore career possibilities.</strong> Matched against the full UK
+      career database.</li>
+  <li><strong>Choose a destination.</strong> Select one career to plan against.</li>
+  <li><strong>See your gaps and pathway.</strong> What you have, what you would
+      need.</li>
+  <li><strong>Take your next 3 actions.</strong> Prioritised, and small enough to
+      start.</li>
+</ol>
+<p>If you would rather look around first, the start screen offers four
+   demonstration profiles. Everything in them is fictional.</p>
+
+<h2 id="profile">4. Building your profile</h2>
+<h3>From a CV</h3>
+<p>Helix reads text-based PDF, DOCX and TXT. There is no optical character
+   recognition, so a scanned document cannot be read — Helix says so plainly
+   rather than producing an empty profile.</p>
+<p>Extraction is a <em>draft</em>. The review screen is not skippable, because the
+   person the profile describes is the only authority on whether it is right.
+   Correct anything wrong and add anything missed. Helix also lists what it could
+   not establish, and guesses nothing to fill those gaps.</p>
+<h3>By hand</h3>
+<p>The manual builder produces exactly the same structured profile, and the
+   matching engine cannot tell the difference. You record your current role,
+   career family, approximate years of experience, education, professional
+   registration, the sectors you have worked in, and the skills you have real
+   evidence for.</p>
+<p><strong>Registration is recorded carefully.</strong> A professional-body
+   membership is not the same thing as statutory registration, so they are stored
+   separately, and Helix never treats either as established eligibility.</p>
+
+<h2 id="priorities">5. Career priorities</h2>
+<p><a href="index.html#/preferences">My priorities</a> asks twelve optional
+   questions about what you want from working life: a salary target, how much
+   hours and working pattern matter, remote working, travel, and how much patient
+   contact, laboratory work, research, commercial work and leadership you want.</p>
+<p>Every question defaults to <strong>No preference</strong>, and that is a real
+   answer — an unanswered question is left out of the scoring entirely rather than
+   counted as indifference.</p>
+<p>Three rules keep the result honest:</p>
+<ul>
+  <li>A question is scored only when you have answered it <em>and</em> Helix holds
+      the matching fact about that career. Typical weekly hours, for example,
+      exist for 91 of the 677 careers.</li>
+  <li>The result is worked out across the questions that could actually be
+      compared, not across all of them.</li>
+  <li>A career is never marked down because something about it is unknown.</li>
+</ul>
+<p>Answering these questions <strong>cannot change your background alignment</strong>.
+   The two are computed separately and deliberately kept apart.</p>
+
+<h2 id="measures">6. The three measures</h2>
+<p>Helix reports three separate things about a career and never combines them into
+   one score. A career can do well on one and badly on another, and which
+   trade-off matters is your decision.</p>
+<table>
+  <thead>
+    <tr><th scope="col">Measure</th><th scope="col">The question it answers</th></tr>
+  </thead>
+  <tbody>
+    <tr><th scope="row">Background alignment</th>
+        <td>How much of this career's subject matter does my profile already
+            cover? Shown as Strong alignment, Good alignment, Worth exploring or
+            Bigger career pivot.</td></tr>
+    <tr><th scope="row">Preference fit</th>
+        <td>How well does it match the priorities I stated? Shown as Very strong,
+            Strong, Mixed, Low fit, or Not enough preference data.</td></tr>
+    <tr><th scope="row">Transition effort</th>
+        <td>How big a move would it be? Shown as Lower, Moderate, Substantial, or
+            Major retraining or professional route.</td></tr>
+  </tbody>
+</table>
+<p><strong>None of them is a probability of getting a job.</strong> Transition
+   effort in particular describes the distance to cover, not your chances of
+   covering it — a high-effort route is a fact about the route, not a reason not
+   to take it.</p>
+<p>Mandatory and regulated requirements are computed separately from all three and
+   shown on their own, so a strong alignment can never hide a registration
+   requirement.</p>
+
+<h2 id="options">7. My options</h2>
+<p><a href="index.html#/matches">My options</a> groups every career by how much of
+   a transition it would be — closest matches, strong adjacent moves, and bigger
+   pivots — rather than by how good a career it is. Each group is capped per career
+   family so that "bigger pivots" does not fill up with twelve variants of one
+   job.</p>
+<p>Every card explains why that career appeared, in terms of the overlap Helix
+   actually found in your profile.</p>
+
+<h2 id="explorer">8. Career Explorer</h2>
+<p><a href="index.html#/explore">Explore careers</a> searches all 677. Filters:</p>
+<ul>
+  <li><strong>Typical salary reaches at least</strong> — describes the top of a
+      career's published range. It does not imply you personally would be paid
+      it.</li>
+  <li><strong>Career family</strong> and <strong>Regulation</strong>.</li>
+  <li><strong>Remote or hybrid potential</strong>, <strong>Working pattern</strong>
+      (shifts, evenings and weekends, on-call), and the
+      <strong>patient contact</strong>, <strong>laboratory</strong>,
+      <strong>research</strong> and <strong>commercial</strong> intensity
+      levels.</li>
+  <li><strong>Salary evidence</strong>, to see only careers grounded in a
+      particular class of source.</li>
+  <li><strong>Preference fit</strong>, once you have stated priorities.</li>
+</ul>
+<p>Sorting covers default order, highest typical salary, best background
+   alignment, best preference fit, lowest transition effort, alphabetical, and
+   most recently checked salary. Each names the field it sorts on — there is no
+   hidden combined "best career" score.</p>
+<p>Taxonomy controls sit under <strong>Advanced filters</strong>, including Helix
+   content depth, which describes how much researched guidance has been written
+   for a career and says nothing about the career itself.</p>
+
+<h2 id="career">9. Career pages</h2>
+<p>Each career page opens with the facts you weigh a career on: typical salary and
+   its evidence class, typical hours, working pattern, main settings, and — when
+   you have a profile — the three measures side by side.</p>
+<p>Below that: what the career involves, salary and working life in full, how
+   people enter it, why it may fit you, possible progression, similar careers and
+   pivots, and the sources behind everything.</p>
+<p>Where Helix has matched an official job profile it shows that profile's
+   description and attributes it. Where it has not, it shows the
+   <em>career family's</em> description and says so — it does not write a
+   role description it cannot source.</p>
+
+<h2 id="salary">10. Salary and evidence</h2>
+<p>Every salary carries a label saying how firmly it is grounded, shown next to
+   the number rather than hidden in a footnote.</p>
+<table>
+  <thead>
+    <tr><th scope="col">Label</th><th scope="col">What it means</th></tr>
+  </thead>
+  <tbody>
+    <tr><th scope="row">Career-specific guide</th>
+        <td>An official careers source published this range for this exact
+            job.</td></tr>
+    <tr><th scope="row">Strong estimate</th>
+        <td>A high-quality occupation or pay-framework mapping, but not published
+            for this exact title.</td></tr>
+    <tr><th scope="row">Indicative estimate</th>
+        <td>Derived from closely related careers that do have stronger evidence,
+            with any difference in seniority priced in.</td></tr>
+    <tr><th scope="row">Limited-data estimate</th>
+        <td>A median across the career's family and seniority level. A broad
+            indication only.</td></tr>
+  </tbody>
+</table>
+<p>Use <strong>About this salary</strong> on any career page to see the source,
+   method, geography, the date it was last checked and how a derived figure was
+   produced.</p>
+<p>Salary figures are estimates for comparing careers. They vary substantially by
+   employer, sector, location, experience, hours and working pattern. Figures
+   taken from a source are republished as issued; derived figures are rounded to
+   the nearest thousand, because they are the output of an average and should not
+   claim a precision the arithmetic cannot support.</p>
+<p>Full detail is in the
+   <a href="docs/MARKET-DATA-METHODOLOGY.md">market data methodology</a>.</p>
+
+<h2 id="compare">11. Comparing careers</h2>
+<p>Use <strong>Compare</strong> on any career card or career page. You do not have
+   to save a career first. Up to four can be compared at once; a tray at the
+   bottom of the screen shows what you have selected and follows you around the
+   application.</p>
+<p>The comparison opens with a short summary of what stands out — facts the data
+   supports, never a claim that one career is best — then salary, fit, professional
+   route, working life, and the sources behind each figure.</p>
+<p>A comparison can be shared: the address bar carries only career ids, never
+   anything about you. Somebody opening your link sees the general facts and none
+   of your personal columns.</p>
+
+<h2 id="pathway">12. Pathway and next actions</h2>
+<p>Choosing a target career produces a pathway of milestones from where you are to
+   where you want to be, and exactly three next actions — prioritised, and small
+   enough to start. Verification of a regulated requirement always comes
+   first.</p>
+<p>Requirements are separated into four honest categories: verified, must be
+   confirmed officially, usually expected, and career-enhancing or optional.
+   Where Helix has not verified a role-specific requirements pack against a
+   current official source, it says so and links to the source instead of
+   asserting a rule.</p>
+<p>Tick milestones off as you go; progress is saved on your device.</p>
+
+<h2 id="plan">13. Your career plan</h2>
+<p>From a pathway you can produce a printable plan covering your current position,
+   the target career, typical salary and its evidence, working life, the three
+   measures with the reasons behind each, strengths, gaps, requirements to
+   confirm, your next three actions, milestones, other options you were
+   considering, and the sources.</p>
+<p>Use your browser's print dialogue and choose <em>Save as PDF</em>. The document
+   contains your structured profile only — never your CV, your name or any contact
+   details, because Helix does not hold them.</p>
+
+<h2 id="saved">14. Saved careers and My data</h2>
+<p><strong>Saved</strong> is a shortlist — come back to this later.
+   <strong>Compare</strong> is a working set — hold these side by side while I
+   decide. They are deliberately separate, and you never have to save something in
+   order to compare it.</p>
+<p><a href="index.html#/data">My data</a> shows exactly what is stored on your
+   device, lets you export it as a JSON file, import it on another device, or
+   delete everything. It also reports salary coverage, what each evidence class
+   means, and what the three measures mean.</p>
+
+<h2 id="limits">15. Limitations</h2>
+<ul>
+  <li><strong>UK only.</strong> Requirements differ substantially between
+      countries.</li>
+  <li><strong>Salary figures are estimates.</strong> Most are derived rather than
+      published for that exact job, and every one is labelled.</li>
+  <li><strong>No regional breakdown.</strong> All figures are UK-wide.</li>
+  <li><strong>Hours and working patterns are not known for every career.</strong>
+      Where they are unknown Helix shows "Not yet available" rather than
+      estimating.</li>
+  <li><strong>Patient contact, laboratory, research and commercial intensity,
+      remote potential and travel are inferred</strong> from each career's subject
+      matter rather than measured in a survey, and are labelled that way.</li>
+  <li><strong>Requirements are not individually verified for every career.</strong>
+      Always confirm current mandatory requirements with the relevant official
+      organisation.</li>
+</ul>
+
+<p class="hint" style="margin-top:2rem">Helix Career Pathway Planner provides
+   career-development guidance and decision support. It does not determine
+   professional eligibility, guarantee employment or replace advice from
+   regulators, professional bodies, employers or training providers.</p>
+
+<p><a class="back" href="index.html">← Back to Helix</a></p>
+
+</main>
+
+<footer class="site-foot">
+  <p class="foot-links">
+    <a href="index.html">Open Helix</a>
+    <a href="https://www.optymumss.com/compliments-complaints/"
+       target="_blank" rel="noopener">Feedback</a>
+  </p>
+</footer>
+
+</body>
+</html>

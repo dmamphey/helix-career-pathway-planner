@@ -16,9 +16,19 @@ export async function render(app) {
   ]);
 }
 
+/**
+ * The landing hero.
+ *
+ * The product is named first and given room, because somebody arriving from a
+ * link needs to know what they have opened before they are asked to do anything.
+ * The tagline sits directly under it at a size that can actually be read, then
+ * the pitch explains the offer — name, then what it is, then what it does.
+ */
 function hero(app, hasProfile) {
   return h("section", { class: "hero" }, [
-    h("h1", { text: "Navigate your next move in life sciences and healthcare." }),
+    h("h1", { class: "hero-name", text: "Helix Career Pathway Planner" }),
+    h("p", { class: "hero-tagline", text:
+      "Career navigation for life sciences and healthcare professionals." }),
     h("p", { class: "lede", text:
       "Start with your CV or build a profile manually. Helix maps your "
       + "experience against hundreds of career destinations, highlights "
@@ -74,9 +84,10 @@ function currentProfileCard(app) {
 
 function howItWorks() {
   const steps = [
-    ["Build your profile", "From your CV, or by hand. You confirm everything."],
-    ["Explore career possibilities", "Matched against the full UK dataset."],
-    ["Choose a destination", "One career to plan against."],
+    ["Build your profile", "From your CV, or by hand."],
+    ["Explore career possibilities",
+     "Matched against our full UK career database."],
+    ["Choose a destination", "Select one career to plan against."],
     ["See your gaps and pathway", "What you have, what you would need."],
     ["Take your next 3 actions", "Prioritised, and small enough to start."],
   ];

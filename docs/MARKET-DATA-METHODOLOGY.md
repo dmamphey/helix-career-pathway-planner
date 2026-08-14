@@ -143,6 +143,26 @@ The last resort, and the reason all 677 careers have a figure: a robust median
 across careers in the same family at a comparable level.
 Result: **Limited-data estimate**.
 
+### How seniority is priced
+
+A derived range is adjusted when the career is a more or less senior grade than
+the careers it was derived from. The ladder separates practitioner, specialist,
+senior, manager, lead, consultant and executive grades, so that Specialist,
+Senior, Lead and Consultant Biomedical Scientist are priced as the four
+progressive grades they are rather than all reported at one salary.
+
+One rung is treated with more caution than the rest. §15 warns that "Specialist"
+does not mean the same seniority in every sector, and the titles bear it out: a
+Specialist Biomedical Scientist is a real grade, an Information Governance
+Specialist is a subject-matter role at no particular grade, and nothing in the
+title separates them. A "Specialist" title is therefore never allowed to push an
+estimate above everything it was derived from.
+
+"Consultant" is read the same way. As a prefix — Consultant Biomedical Scientist,
+Consultant in Public Health — it is the senior clinical grade. As a trailing noun
+— Quality Consultant, Life Sciences Consultant — it is an advisory role at no
+particular grade, and carries no seniority claim.
+
 ### Why a good match is sometimes refused
 
 Title matching does not accept a match merely because it would improve coverage.

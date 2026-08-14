@@ -11,6 +11,33 @@ import { GAP_STATUS } from "./gap-engine.js";
 import * as market from "./market-data.js";
 import { MILESTONE_STATUS } from "./pathway-engine.js";
 
+/**
+ * The release stage shown beside every dataset version.
+ *
+ * One constant rather than the word "Beta" typed into each screen, so the day it
+ * stops being a beta is a one-line change and cannot leave a stale label behind
+ * on a screen somebody forgot about.
+ */
+export const RELEASE_STAGE = "Beta";
+
+/** A dataset version as the interface states it: "v1.0 Beta". */
+export function datasetLabel(meta) {
+  const version = (meta && meta.version) || "unknown";
+  return `v${version}${RELEASE_STAGE ? ` ${RELEASE_STAGE}` : ""}`;
+}
+
+/**
+ * The name the interface gives the career taxonomy.
+ *
+ * The supplied file still calls itself "CareerPath UK …", from before the
+ * rename to Helix, and that file is byte-for-byte immutable — the pipeline
+ * verifies its hash on every run and the refresh workflow fails if it changes.
+ * So the current name is applied here, where presentation belongs, rather than
+ * by editing a reference file to fix a label.
+ */
+export const DATASET_DISPLAY_NAME =
+  "Helix UK Life Sciences & Healthcare Career Dataset";
+
 /** Minimal element builder. Props starting with "on" become listeners. */
 export function h(tag, props = {}, children = []) {
   const node = document.createElement(tag);
