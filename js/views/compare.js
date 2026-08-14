@@ -21,6 +21,7 @@ import {
   MAX_COMPARE, MIN_COMPARE, idsFromRoute, standoutSummary,
 } from "../comparison.js";
 import { loadRulePack } from "../rules.js";
+import { differences } from "../baseline.js";
 
 export async function render(app, context) {
   // A route with ids wins over the stored selection, so a shared link shows what
@@ -69,18 +70,182 @@ export async function render(app, context) {
     ], { id: "compare-heading" });
   }
 
-  return h("div", { class: "stack" }, [
-    header(app, entries, ids),
+  const host = h("div", { class: "stack" });
+  const redraw = () => host.replaceChildren(
+    header(app, entries, ids, redraw),
+    baselinePicker(app, entries, redraw),
+    baselinePanel(app, entries),
     standout(entries),
     salaryPanel(entries),
     fitPanel(app, entries),
     routePanel(entries),
     workLifePanel(entries),
     evidencePanel(entries),
+  );
+  redraw();
+  return host;
+}
+
+/* ------------------------------------------------------------------ baseline */
+
+/**
+ * Choosing what to measure against.
+ *
+ * Offered, never imposed. Where the profile names a current role, the career
+ * closest to it is suggested by name — but it is a suggestion with a button, not
+ * a default that quietly reframes the whole screen. Somebody comparing four
+ * careers they might move into has not necessarily decided that today's job is
+ * the thing to measure from.
+ */
+function baselinePicker(app, entries, redraw) {
+  const baseline = app.baselineCareer();
+  const suggestion = baseline ? null : suggestBaseline(app, entries);
+
+  return h("section", { class: "panel baseline-picker" }, [
+    h("h2", { text: "Compare against one career" }),
+    baseline
+      ? h("div", { class: "stack" }, [
+          h("p", {}, [
+            "Measuring everything against ",
+            h("strong", { text: baseline.title }),
+            ".",
+          ]),
+          h("div", { class: "card-actions" }, [
+            button("Remove baseline", () => {
+              app.setBaseline(baseline.id);
+              redraw();
+            }, { variant: "quiet" }),
+            link("Open this career", `#/career/${baseline.id}`,
+                 { class: "btn btn-quiet" }),
+          ]),
+        ])
+      : h("div", { class: "stack" }, [
+          h("p", { class: "hint", text: "Pin one career as a baseline and Helix "
+            + "will show the others as differences from it — how much more or "
+            + "less they pay, how the working life changes, what the "
+            + "professional route does. Usually that is your current job." }),
+          suggestion
+            ? h("div", { class: "callout callout-info" }, [
+                h("p", {}, [
+                  `Your profile says you work as a `,
+                  h("strong", { text: app.profile().currentRole }),
+                  `. ${suggestion.title} looks like the closest career in the `
+                  + `catalogue.`,
+                ]),
+                h("div", { class: "card-actions" }, [
+                  button(`Use ${suggestion.title} as my baseline`, () => {
+                    app.setBaseline(suggestion.id);
+                    redraw();
+                  }, { variant: "primary" }),
+                ]),
+              ])
+            : null,
+          h("div", { class: "card-actions" }, entries.map((entry) =>
+            button(`Pin ${entry.career.title}`, () => {
+              app.setBaseline(entry.career.id);
+              redraw();
+            }, { variant: "quiet" }))),
+        ]),
+  ], { id: "baseline-heading" });
+}
+
+/**
+ * The catalogue career closest to the profile's stated current role.
+ *
+ * Title similarity only, and only when it is close enough to name out loud. A
+ * weak guess presented as "your current role" would be worse than no suggestion,
+ * because the baseline silently reframes every number on the screen.
+ */
+function suggestBaseline(app, entries) {
+  const role = app.profile() && app.profile().currentRole;
+  if (!role) return null;
+  const wanted = role.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  if (!wanted) return null;
+
+  let best = null;
+  let bestScore = 0;
+  for (const career of app.catalogue.careers) {
+    const title = career.title.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    if (title === wanted) return career;
+    const a = new Set(title.split(" "));
+    const b = new Set(wanted.split(" "));
+    const shared = [...a].filter((word) => b.has(word)).length;
+    const score = shared / Math.max(1, Math.min(a.size, b.size));
+    if (score > bestScore) { bestScore = score; best = career; }
+  }
+  return bestScore >= 0.7 ? best : null;
+}
+
+/**
+ * Every compared career as a difference from the baseline.
+ *
+ * Measured differences and directional ones are marked differently, because they
+ * are not the same kind of claim. "+£8,500" came from two numbers; "less patient
+ * contact" came from two words on a three-point scale, and rendering it as "−1"
+ * would invent a measurement nobody made.
+ */
+function baselinePanel(app, entries) {
+  const baseline = app.baselineCareer();
+  if (!baseline) return null;
+
+  const reference = entryFor(app, entries, baseline);
+  const others = entries.filter((entry) => entry.career.id !== baseline.id);
+  if (!others.length) {
+    return panel(`Against ${baseline.title}`, [
+      h("p", { class: "hint", text: "The baseline is the only career in this "
+        + "comparison. Add another to see the differences." }),
+    ], { id: "baseline-delta-heading" });
+  }
+
+  return panel(`Against ${baseline.title}`, [
+    h("p", { class: "hint", text: `Everything below is stated as a change from `
+      + `${baseline.title}. A measured difference is shown as a figure; anything `
+      + `Helix records as low, medium or high is shown as a direction, because `
+      + `subtracting those words would invent a measurement.` }),
+    ...others.map((entry) => deltaCard(reference, entry)),
+  ], { id: "baseline-delta-heading" });
+}
+
+function deltaCard(reference, entry) {
+  const rows = differences(reference, entry);
+  return h("article", { class: "delta-card" }, [
+    h("h3", {}, [link(entry.career.title, `#/career/${entry.career.id}`)]),
+    h("ul", { class: "delta-list" }, rows.map((row) => {
+      const value = row.value;
+      if (!value) {
+        return h("li", { class: "delta-row delta-unknown" }, [
+          h("span", { class: "delta-label", text: row.label }),
+          h("span", { class: "delta-value", text: "Not comparable" }),
+        ]);
+      }
+      return h("li", {
+        class: `delta-row delta-${value.direction}`
+             + (value.numeric ? " delta-measured" : ""),
+      }, [
+        h("span", { class: "delta-label", text: row.label }),
+        h("span", { class: "delta-value", text: value.label }),
+        value.detail || value.caveat
+          ? h("span", { class: "delta-detail",
+                        text: value.detail || value.caveat })
+          : null,
+      ]);
+    })),
   ]);
 }
 
-function header(app, entries, ids) {
+/** The baseline's own comparison entry, built if it is not already on screen. */
+function entryFor(app, entries, career) {
+  const existing = entries.find((entry) => entry.career.id === career.id);
+  if (existing) return existing;
+  return {
+    career,
+    salary: market.salary(career.id),
+    work: market.workLife(career.id),
+    role: market.role(career.id),
+  };
+}
+
+function header(app, entries, ids, redraw) {
   return h("section", { class: "panel" }, [
     h("h1", { text: `Comparing ${entries.length} careers` }),
     h("p", { class: "lede", text: entries.map((e) => e.career.title).join(" · ") }),

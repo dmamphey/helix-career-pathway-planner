@@ -20,7 +20,8 @@
 
 import {
   h, panel, button, link, careerCard, alignmentBadge, regulationBadge,
-  evidenceBadge, effortBadge, fitBadge, compareToggle, sourceList, statusPill,
+  evidenceBadge, effortBadge, fitBadge, compareToggle, baselineToggle,
+  sourceList, statusPill,
   dialog, empty, scoredFit,
 } from "../ui.js";
 import * as market from "../market-data.js";
@@ -30,6 +31,7 @@ import { loadRulePack } from "../rules.js";
 import { developmentIndicators } from "../matcher.js";
 import { lowerLabel } from "../ontology.js";
 import { REGIONS, regionLabel, isUk } from "../regions.js";
+import { whyNotRecommended, standing } from "../why-not.js";
 
 export async function render(app, context) {
   const career = app.catalogue.get(context.params.id);
@@ -57,6 +59,7 @@ export async function render(app, context) {
     economicsCard(career, pay, work, app, redraw),
     entryCard(career, pack, analysis),
     analysis ? fitCard(app, career, analysis) : noProfileCard(app),
+    analysis ? whyNotCard(app, career, analysis) : null,
     progressionCard(app, career, pack, role, redraw),
     similarCard(app, career, pack, redraw),
     evidenceCard(app, career, pay, work, role, pack),
@@ -129,6 +132,10 @@ function header(app, career, { match, analysis, pay, work, redraw }) {
       compareToggle(career, {
         comparing: app.isComparing(career.id),
         onCompare: (id) => { app.toggleCompare(id); redraw(); },
+      }),
+      baselineToggle(career, {
+        isBaseline: app.isBaseline(career.id),
+        onBaseline: (id) => { app.setBaseline(id); redraw(); },
       }),
       savedButton,
       link("Back to explorer", "#/explore", { class: "btn btn-quiet" }),
@@ -260,6 +267,90 @@ function aboutCard(career, role) {
     h("ul", { class: "chips" }, (career.core_tags || []).map((tag) =>
       h("li", {}, [h("span", { class: "chip", text: tag })]))),
   ], { id: "about-heading" });
+}
+
+/* ------------------------------------------------------- why not recommended */
+
+/**
+ * The question people ask when their career is not on the list.
+ *
+ * Collapsed by default and only offered for careers outside the top results —
+ * explaining away a career Helix *did* recommend would be a strange thing to
+ * volunteer. The `<details>` element does the work, so it opens with a keyboard,
+ * announces its own state, and needs no script.
+ */
+function whyNotCard(app, career, analysis) {
+  const place = standing(analysis.match, app.ranked());
+  if (place.inTopResults) return null;
+
+  const why = whyNotRecommended(analysis.match, analysis.gaps, career);
+
+  return panel("Why wasn't this one of my top recommendations?", [
+    h("p", {}, [
+      "Helix ranked this ",
+      h("strong", { text: place.rank ? `${ordinal(place.rank)} of `
+        + `${place.total}` : "outside your ranked list" }),
+      ` for background alignment, scoring ${place.score} out of 100 — `
+      + `${lowerLabel(place.label)}.`,
+    ]),
+
+    h("details", { class: "why-not" }, [
+      h("summary", { text: "Show me the reasoning" }),
+
+      h("div", { class: "stack" }, [
+        section("What already fits", why.fits.length
+          ? h("ul", {}, why.fits.map((item) => h("li", {}, [
+              h("strong", { text: item.label }), " — ", item.detail])))
+          : h("p", { class: "hint", text: "Nothing in your profile scored "
+              + "strongly against this career. That is unusual, and normally "
+              + "means the profile is thin rather than that the career is "
+              + "wrong for you." })),
+
+        section("What reduced the match", why.reduced.length
+          ? h("ul", {}, why.reduced.map((item) => h("li", {}, [
+              h("strong", { text: item.label }), " — ", item.detail])))
+          : h("p", { class: "hint", text: "No single component scored badly. "
+              + "This career ranked where it did because others scored higher, "
+              + "not because something counted against it." })),
+
+        section("What would strengthen it", why.strengthen.length
+          ? h("ul", {}, why.strengthen.map((line) => h("li", { text: line })))
+          : h("p", { class: "hint", text: "Nothing specific — the gap here is "
+              + "breadth of profile rather than any one missing thing." })),
+
+        /*
+         * Eligibility, in its own box, below alignment and visually separate
+         * from it. The two answer different questions and the interface has to
+         * make that impossible to miss: a good alignment score is not
+         * permission to practise, and a poor one is not a bar.
+         */
+        h("div", { class: `callout ${why.eligibility.regulated
+            ? "callout-warn" : "callout-info"}` }, [
+          h("h3", { class: "callout-title", text: why.eligibility.heading }),
+          h("p", { text: why.eligibility.text }),
+          why.eligibility.warning
+            ? h("p", {}, [h("strong", { text: why.eligibility.warning })])
+            : null,
+        ]),
+
+        h("p", { class: "hint", text: why.caveat }),
+      ]),
+    ]),
+  ], { id: "why-not-heading" });
+}
+
+function section(title, body) {
+  return h("div", { class: "why-not-section" }, [
+    h("h3", { text: title }),
+    body,
+  ]);
+}
+
+function ordinal(value) {
+  const rest = value % 100;
+  if (rest >= 11 && rest <= 13) return `${value}th`;
+  const suffix = { 1: "st", 2: "nd", 3: "rd" }[value % 10] || "th";
+  return `${value}${suffix}`;
 }
 
 /* ---------------------------------------------------------- salary by region */

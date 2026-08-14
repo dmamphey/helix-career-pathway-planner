@@ -199,6 +199,10 @@ export function careerCard(career, options = {}) {
     options.note ? h("p", { class: "hint", text: options.note }) : null,
     options.why ? h("p", { class: "card-why", text: options.why }) : null,
 
+    options.isBaseline
+      ? h("p", {}, [h("span", { class: "baseline-chip", text: "Your baseline" })])
+      : null,
+
     h("div", { class: "card-actions" }, [
       link("View career", `#/career/${career.id}`, { class: "btn btn-quiet" }),
       options.onCompare ? compareToggle(career, options) : null,
@@ -206,9 +210,25 @@ export function careerCard(career, options = {}) {
         ? button(options.saved ? "Saved ✓" : "Save", options.onSave,
                  { variant: "quiet", pressed: Boolean(options.saved) })
         : null,
+      options.onBaseline ? baselineToggle(career, options) : null,
       options.extra || null,
     ]),
   ]);
+}
+
+/**
+ * Pin as baseline.
+ *
+ * Offered alongside Compare and Save rather than inside a menu, because all
+ * three are the same kind of act — marking a career for a purpose — and hiding
+ * one of them behind an extra click is what made people save careers they only
+ * wanted to compare.
+ */
+export function baselineToggle(career, options) {
+  const on = Boolean(options.isBaseline);
+  return button(on ? "Baseline ✓" : "Pin as baseline",
+                () => options.onBaseline(career.id),
+                { variant: on ? "primary" : "quiet", pressed: on });
 }
 
 /**

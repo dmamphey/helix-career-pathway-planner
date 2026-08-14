@@ -77,6 +77,8 @@ export async function render(app) {
             saved: true,
             comparing: app.isComparing(career.id),
             onCompare: (id) => { app.toggleCompare(id); draw(); },
+            isBaseline: app.isBaseline(career.id),
+            onBaseline: (id) => { app.setBaseline(id); draw(); },
             onSave: () => {
               app.toggleSaved(career.id);
               notice(`${career.title} removed from your saved careers.`, "info");

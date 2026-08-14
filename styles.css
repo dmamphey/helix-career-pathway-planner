@@ -744,6 +744,41 @@ ul.plain, ol.plain { list-style: none; padding: 0; margin: 0; }
 .pay-ends strong { color: var(--brand-navy); }
 .pay-ends-sep { color: var(--brand-cyan); font-weight: 700; }
 
+/* Differences from a baseline. A measured figure and a directional word are
+   styled differently on purpose: they are not the same kind of claim. */
+.delta-card {
+  border: 1px solid var(--line); border-radius: 12px; padding: .9rem 1rem;
+  margin-bottom: .8rem;
+}
+.delta-card h3 { margin: 0 0 .6rem; font-size: 1.02rem; }
+.delta-list { list-style: none; margin: 0; padding: 0; }
+.delta-row {
+  display: grid; grid-template-columns: minmax(9rem, 12rem) 1fr;
+  gap: .2rem .8rem; padding: .45rem 0; border-top: 1px solid var(--line);
+  align-items: baseline;
+}
+.delta-row:first-child { border-top: 0; }
+.delta-label { color: var(--muted); }
+.delta-value { font-weight: 600; }
+.delta-measured .delta-value { font-variant-numeric: tabular-nums; }
+/* Direction is carried by the word itself; the arrow and colour are extra, so
+   the meaning survives greyscale, a screen reader and colour blindness. */
+.delta-up .delta-value::before { content: "▲ "; color: #1a7f4b; }
+.delta-down .delta-value::before { content: "▼ "; color: #a4442c; }
+.delta-same .delta-value, .delta-unknown .delta-value { font-weight: 500; color: var(--muted); }
+.delta-detail { grid-column: 1 / -1; color: var(--muted); font-size: .87rem; }
+.baseline-picker .card-actions { flex-wrap: wrap; }
+.baseline-chip {
+  display: inline-block; font-size: .74rem; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--brand-navy);
+  border: 1px solid var(--brand-cyan); border-radius: 999px; padding: .1rem .5rem;
+}
+
+@media (max-width: 30rem) {
+  .delta-row { grid-template-columns: 1fr; }
+  .delta-label { font-size: .87rem; }
+}
+
 /* The two routes, shown as equals. The direct route is never styled as the
    lesser option — whether a longer route is worth it is not Helix's call. */
 .route-pair {
@@ -851,3 +886,15 @@ ul.plain, ol.plain { list-style: none; padding: 0; margin: 0; }
 .family-context > summary { cursor: pointer; color: var(--brand-blue-dark);
                             font-weight: 600; font-size: .92rem; }
 .family-context p { margin: .5rem 0 0; color: var(--muted); }
+
+/* Why a career was not recommended. Collapsed by default: it is an answer to a
+   question, and a page that volunteers it for every career is arguing. */
+.why-not > summary {
+  cursor: pointer; font-weight: 600; color: var(--brand-blue-dark);
+  padding: .5rem 0; min-height: 44px; display: flex; align-items: center;
+}
+.why-not > summary:focus-visible { outline: 3px solid var(--brand-cyan); outline-offset: 2px; }
+.why-not-section { margin-top: .9rem; }
+.why-not-section h3 { margin: 0 0 .35rem; font-size: 1rem; }
+.why-not-section ul { margin: 0; padding-left: 1.2rem; }
+.why-not-section li { margin-bottom: .35rem; }

@@ -94,6 +94,8 @@ export async function renderExplorer(app) {
                 saved: app.isSaved(career.id),
                 comparing: app.isComparing(career.id),
                 onCompare: (id) => { app.toggleCompare(id); draw(); },
+                isBaseline: app.isBaseline(career.id),
+                onBaseline: (id) => { app.setBaseline(id); draw(); },
                 onSave: () => {
                   app.toggleSaved(career.id);
                   draw();
@@ -525,6 +527,8 @@ export async function renderMatches(app) {
                     saved: app.isSaved(match.careerId),
                     comparing: app.isComparing(match.careerId),
                     onCompare: (id) => { app.toggleCompare(id); draw(); },
+                    isBaseline: app.isBaseline(career.id),
+                    onBaseline: (id) => { app.setBaseline(id); draw(); },
                     onSave: () => { app.toggleSaved(match.careerId); draw(); },
                     extra: link("Build pathway", `#/pathway/${match.careerId}`,
                                 { class: "btn btn-quiet" }),
