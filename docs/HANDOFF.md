@@ -54,9 +54,9 @@ All phases of the specification are implemented and verified in a browser.
 
 ### Done and verified
 
-- `tools/market_data/` — cache, five providers (NCS API + NCS public, ONS, NHS
-pay, NHS Health Careers links,
-  Skills England), title matcher, derive, resolver, validate, report, CLI.
+- `tools/market_data/` — cache, five providers (NCS API and NCS public, ONS,
+  NHS pay frameworks, NHS Health Careers links, Skills England), title matcher,
+  derive, resolver, validate, report, CLI.
 - `data/helix_market_data_uk_v1.json` — 677/677 salary: **110 VERIFIED_GUIDE**
   (career-specific National Careers Service profiles), **330 INDICATIVE**,
   **237 LIMITED_DATA**. Validation passes. 107 attributed role summaries,
@@ -89,7 +89,7 @@ pay, NHS Health Careers links,
   their reasons, "other options considered" from the shortlist, salary source.
 - `.github/workflows/refresh-market-data.yml` (§47) and
   `docs/MARKET-DATA-METHODOLOGY.md` (§66).
-- **Tests: 92 browser checks and 75 Python checks, all passing.**
+- **Tests: 97 browser checks and 75 Python checks, all passing.**
 
 ### Two behaviour changes worth knowing about
 
