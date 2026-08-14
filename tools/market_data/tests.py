@@ -313,6 +313,143 @@ class Derivation(unittest.TestCase):
 
 # ------------------------------------------------------------------- rounding
 
+class SourceDeduplication(unittest.TestCase):
+    """One published profile is one piece of evidence, not four.
+
+    Curated aliases let several careers resolve to the same external profile —
+    Clinical, Community, Hospital and Industrial Pharmacist all take their range
+    from one NCS page. Counting it once per career let it dominate a weighted
+    median, and Accuracy Checking Pharmacy Technician was priced off five
+    identical pharmacist entries into a professional grade.
+    """
+
+    def sourced(self, career_id, title, low, high, profile, family=None):
+        subject = career(career_id, title,
+                         family=family or "Nursing, Midwifery & Pharmacy",
+                         core_tags=["medicines", "pharmacy", "patient care"])
+        return subject, {"salary": {
+            "typical_low": low, "typical_high": high,
+            "evidence_quality": "VERIFIED_GUIDE",
+            "source_records": [{"source_code": "NCS_PUBLIC_PROFILE",
+                                "source_profile_id": profile}]}}
+
+    def test_careers_sharing_a_source_are_counted_once(self):
+        anchors = [
+            self.sourced("CP-A", "Pharmacist", 40000, 65000, "pharmacist"),
+            self.sourced("CP-B", "Clinical Pharmacist", 40000, 65000, "pharmacist"),
+            self.sourced("CP-C", "Hospital Pharmacist", 40000, 65000, "pharmacist"),
+            self.sourced("CP-D", "Community Pharmacist", 40000, 65000, "pharmacist"),
+            self.sourced("CP-E", "Pharmacy Technician", 28000, 39000,
+                         "pharmacy-technician"),
+            self.sourced("CP-F", "Nursing Associate", 26000, 31000,
+                         "nursing-associate"),
+            self.sourced("CP-G", "Midwife", 32000, 48000, "midwife"),
+        ]
+        target = career("CP-Z", "Accuracy Checking Pharmacy Technician",
+                        family="Nursing, Midwifery & Pharmacy",
+                        core_tags=["medicines", "pharmacy", "patient care"])
+        result = derive.from_related(target, anchors)
+        self.assertIsNotNone(result)
+        used = set(result.contributors)
+        pharmacists = used & {"CP-A", "CP-B", "CP-C", "CP-D"}
+        self.assertLessEqual(
+            len(pharmacists), 1,
+            f"the same pharmacist profile was counted {len(pharmacists)} times")
+
+    def test_derived_anchors_are_never_deduplicated(self):
+        """A derived range has no external source, so it must not be collapsed."""
+        anchors = [salaried(f"CP-{i}", f"Scientist {i}", 30000 + i * 1000,
+                            50000 + i * 1000, quality="INDICATIVE")
+                   for i in range(5)]
+        for _, record in anchors:
+            record["salary"]["source_records"] = []
+        target = career("CP-Z", "Andrology Scientist")
+        result = derive.from_related(target, anchors)
+        self.assertIsNotNone(result)
+        self.assertGreaterEqual(len(result.contributors), 3,
+                                "derived anchors were wrongly collapsed")
+
+    def test_no_published_range_is_dominated_by_one_source(self):
+        by_id = {r["career_id"]: r for r in PUBLISHED["records"]}
+
+        def source_of(record):
+            for entry in record["salary"].get("source_records") or []:
+                if entry.get("source_profile_id"):
+                    return entry["source_profile_id"]
+            return None
+
+        for record in PUBLISHED["records"]:
+            sources = record["salary"].get("derived_from_career_ids") or []
+            if len(sources) < 3:
+                continue
+            used = [source_of(by_id[c]) for c in sources if c in by_id]
+            named = [s for s in used if s]
+            with self.subTest(career=record["career_id"]):
+                self.assertEqual(
+                    len(named), len(set(named)),
+                    "a derived range cites the same external profile more than "
+                    "once among its contributors")
+
+
+class NhsHealthCareersLinks(unittest.TestCase):
+    """Links only. NHS England reserves all rights in this content.
+
+    The provider is built so copying is impossible rather than merely
+    discouraged, and these tests hold that line: they check the published data
+    carries URLs and no prose, and that nothing claims otherwise.
+    """
+
+    def links(self):
+        out = []
+        for record in PUBLISHED["records"]:
+            for entry in record["role"].get("external_profiles") or []:
+                out.append((record, entry))
+        return out
+
+    def test_some_careers_carry_a_link(self):
+        self.assertGreater(len(self.links()), 0,
+                           "no NHS Health Careers links were published")
+
+    def test_every_link_is_a_url_on_the_expected_host(self):
+        for record, entry in self.links():
+            with self.subTest(career=record["career_id"]):
+                self.assertTrue(entry["source_url"].startswith(
+                    "https://www.healthcareers.nhs.uk/"))
+                self.assertEqual(entry["provider"], "NHS Health Careers")
+
+    def test_a_link_record_carries_no_content(self):
+        """No summary, no description, no borrowed title — only where to read it."""
+        allowed = {"provider", "source_code", "source_url", "match_method",
+                   "content_reproduced", "licence_note"}
+        for record, entry in self.links():
+            with self.subTest(career=record["career_id"]):
+                self.assertEqual(set(entry) - allowed, set(),
+                                 "a link record grew a field that could hold "
+                                 "borrowed content")
+                self.assertFalse(entry["content_reproduced"])
+                for field in ("summary", "description", "title", "tasks", "text"):
+                    self.assertNotIn(field, entry)
+
+    def test_a_link_never_becomes_the_role_description(self):
+        """An NHS link must not be mistaken for a sourced Helix description."""
+        for record, _ in self.links():
+            role = record["role"]
+            if role.get("summary_kind") != "authoritative":
+                continue
+            with self.subTest(career=record["career_id"]):
+                for source in role.get("source_records") or []:
+                    self.assertNotIn("healthcareers.nhs.uk",
+                                     source.get("source_url", ""),
+                                     "a role description is attributed to NHS "
+                                     "Health Careers, whose content may not be "
+                                     "reproduced")
+
+    def test_the_attribution_records_the_linking_basis(self):
+        blob = " ".join(PUBLISHED.get("attribution", []))
+        self.assertIn("NHS Health Careers", blob)
+        self.assertIn("not reproduced", blob)
+
+
 class Rounding(unittest.TestCase):
 
     def test_ranges_are_rounded_away_from_false_precision(self):

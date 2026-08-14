@@ -1,0 +1,20 @@
+{
+  "_comment": [
+    "Curated mappings from a Helix career to an NHS Health Careers role page.",
+    "",
+    "These produce a LINK ONLY. NHS England reserves all rights in the content at",
+    "healthcareers.nhs.uk and its terms limit use to personal viewing, so Helix",
+    "reproduces none of it. The same terms explicitly permit linking, which is",
+    "what these entries do. See tools/market_data/providers/nhs_careers.py.",
+    "",
+    "Key   = the Helix career title as title_matcher.normalise() produces it.",
+    "Value = the final path segment of the role page URL, for example",
+    "        'diagnostic-radiographer' from",
+    "        https://www.healthcareers.nhs.uk/explore-roles/allied-health-professionals/roles-allied-health-professions/diagnostic-radiographer",
+    "",
+    "Only add an entry where the NHS page is about the same job. A link that",
+    "sends somebody to a different role is worse than no link at all, because it",
+    "carries the NHS's authority."
+  ],
+  "aliases": {}
+}

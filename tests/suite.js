@@ -819,6 +819,45 @@ test("an authoritative role summary is only ever shown when attributed", () => {
   }
 });
 
+test("further-reading links are links, and carry no borrowed content", () => {
+  /*
+   * NHS England reserves all rights in the Health Careers profiles and limits
+   * use to personal viewing, while explicitly permitting links. So Helix stores
+   * a URL and nothing else — not even the page's title. This test is the line
+   * that keeps it that way.
+   */
+  let linked = 0;
+  for (const career of catalogue.careers) {
+    const role = market.role(career.id);
+    if (!role || !role.externalProfiles.length) continue;
+    linked += 1;
+    for (const entry of role.externalProfiles) {
+      assert(entry.source_url.startsWith("https://"),
+             `${career.id} external profile is not an https URL`);
+      assert(entry.provider, `${career.id} external profile names no provider`);
+      assert(entry.content_reproduced === false,
+             `${career.id} external profile claims content is reproduced`);
+      for (const field of ["summary", "description", "title", "tasks", "text"]) {
+        assert(!(field in entry),
+               `${career.id} external profile carries a "${field}" field`);
+      }
+    }
+  }
+  assert(linked > 0, "no career carries a further-reading link");
+});
+
+test("an external link is never used as the role description", () => {
+  for (const career of catalogue.careers) {
+    const role = market.role(career.id);
+    if (!role || !role.summary) continue;
+    for (const source of role.sources) {
+      assert(!String(source.source_url || "").includes("healthcareers.nhs.uk"),
+             `${career.id} attributes its description to a source whose content `
+             + `may not be reproduced`);
+    }
+  }
+});
+
 test("no role summary carries page furniture", () => {
   for (const career of catalogue.careers) {
     const role = market.role(career.id);

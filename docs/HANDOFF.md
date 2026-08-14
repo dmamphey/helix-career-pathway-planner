@@ -54,14 +54,16 @@ All phases of the specification are implemented and verified in a browser.
 
 ### Done and verified
 
-- `tools/market_data/` — cache, four providers (NCS API + NCS public, ONS, NHS,
+- `tools/market_data/` — cache, five providers (NCS API + NCS public, ONS, NHS
+pay, NHS Health Careers links,
   Skills England), title matcher, derive, resolver, validate, report, CLI.
-- `data/helix_market_data_uk_v1.json` — 677/677 salary: **91 VERIFIED_GUIDE**
-  (career-specific National Careers Service profiles), **347 INDICATIVE**,
-  **239 LIMITED_DATA**. Validation passes. 88 attributed role summaries,
-  91 careers with typical hours.
-  37 curated aliases in `data/reference/ncs_career_aliases.json` took
-  career-specific coverage from 54 to 91, and better anchors moved a further
+- `data/helix_market_data_uk_v1.json` — 677/677 salary: **110 VERIFIED_GUIDE**
+  (career-specific National Careers Service profiles), **330 INDICATIVE**,
+  **237 LIMITED_DATA**. Validation passes. 107 attributed role summaries,
+  110 careers with typical hours, and 43 careers carrying a link to an
+  NHS Health Careers profile — a link only, never its text.
+  55 curated aliases in `data/reference/ncs_career_aliases.json` took
+  career-specific coverage from 54 to 110, and better anchors moved a further
   182 careers off the family-median fallback.
 - `js/market-data.js`, `js/comparison.js`, `js/transition-effort.js`,
   `js/preference-fit.js`, `js/views/compare.js`, `js/views/preferences.js`.
@@ -87,7 +89,7 @@ All phases of the specification are implemented and verified in a browser.
   their reasons, "other options considered" from the shortlist, salary source.
 - `.github/workflows/refresh-market-data.yml` (§47) and
   `docs/MARKET-DATA-METHODOLOGY.md` (§66).
-- **Tests: 90 browser checks and 65 Python checks, all passing.**
+- **Tests: 92 browser checks and 75 Python checks, all passing.**
 
 ### Two behaviour changes worth knowing about
 
@@ -161,7 +163,7 @@ fixtures:
 ```bash
 python tests/make_fixtures.py
 ```
-Pipeline tests — no browser, no network, no API quota. **65 should pass**:
+Pipeline tests — no browser, no network, no API quota. **75 should pass**:
 ```bash
 python tools/market_data/tests.py
 ```

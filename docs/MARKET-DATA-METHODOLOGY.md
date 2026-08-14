@@ -6,8 +6,8 @@ read by anyone assessing whether the numbers can be trusted — no programming
 knowledge is needed.
 
 The short version: Helix publishes a salary range for all 677 careers, but it
-does not pretend they are all equally well evidenced. **91 come from an official
-careers guide written for that exact job. The other 586 are estimates, and every
+does not pretend they are all equally well evidenced. **110 come from an official
+careers guide written for that exact job. The other 567 are estimates, and every
 one of them is labelled as an estimate wherever it appears.**
 
 ---
@@ -204,10 +204,10 @@ rather than hidden in a footnote.
 
 | Label | What it means | Count |
 |---|---|---|
-| **Career-specific guide** | An official careers source published this range for this exact job | 91 |
+| **Career-specific guide** | An official careers source published this range for this exact job | 110 |
 | **Strong estimate** | A high-quality occupation or pay-framework mapping, but not published for this exact title | 0 |
-| **Indicative estimate** | Derived from closely related careers with stronger evidence | 347 |
-| **Limited-data estimate** | A median across the career's family and seniority level. A broad indication only | 239 |
+| **Indicative estimate** | Derived from closely related careers with stronger evidence | 330 |
+| **Limited-data estimate** | A median across the career's family and seniority level. A broad indication only | 237 |
 
 There are currently no Strong estimates. That is because the ONS occupation step
 requires a defensible SOC mapping, and Helix does not yet have human-verified SOC
@@ -221,7 +221,7 @@ profiles exist and only 54 matched by exact title, so human-checked aliases
 convert derived estimates into career-specific evidence without waiting for
 anybody.
 
-**37 have been curated so far**, taking career-specific coverage from 54 to 91.
+**55 have been curated so far**, taking career-specific coverage from 54 to 110.
 The effect was larger than those 32 careers: giving derivation better anchors
 moved a further 182 careers off the family-median fallback, so Limited-data
 estimates fell from 421 to 239.
@@ -257,7 +257,7 @@ distinguishes them everywhere they appear.
 
 **Recorded by a source.** Typical weekly hours and working patterns — shifts,
 evenings and weekends, on-call, bank holidays — come from official job profiles.
-They exist for the 91 careers with a matched profile. For the other 586 Helix
+They exist for the 110 careers with a matched profile. For the other 567 Helix
 shows "Not yet available" rather than estimating them.
 
 **Inferred from the taxonomy.** Patient contact, laboratory intensity, research
@@ -270,6 +270,41 @@ not survey data. Every screen that shows these values says so.
 ---
 
 ## 7. Role descriptions
+
+### Why most careers show their family
+
+Where an official job profile has been matched, Helix shows that profile's
+description and attributes it. Where none has been matched it shows the **career
+family's** description and says so, rather than generating role-specific prose.
+
+There is no source that would fix this. The National Careers Service publishes
+737 profiles and Helix uses every one that matches; NHS Health Careers publishes
+around 630; ESCO's open API returns an exact title match for about 4 per cent of
+the remainder and nonsense for the rest — it offered *speech and language
+therapist* for Chemical Pathologist and *livestock advisor* for Medical Advisor.
+Many Helix careers are simply finer-grained than anything a national service
+writes a profile for.
+
+### NHS Health Careers: linked, never copied
+
+NHS England publishes role profiles that fit this catalogue better than anything
+else available, and Helix links to 43 of them without reproducing a word.
+
+That is a licensing decision. The National Careers Service is Crown copyright
+under the Open Government Licence and may be republished with attribution. The
+Health Careers terms are the opposite: they reserve all intellectual property
+rights, state that the site is maintained for personal use and viewing, and
+prohibit using the accompanying text for any other purpose. The same terms
+explicitly permit linking, so that is what Helix does.
+
+The pipeline enforces this structurally rather than by good intentions. It reads
+only `sitemap.xml`, never requests a role page, and has no parser for one. What
+it stores is a URL — not a summary, not even the page's title, so the words beside
+every link come from Helix's own taxonomy. The links open in a full window
+because their terms forbid framing, and the test suite fails if a link record
+ever grows a field that could hold borrowed prose.
+
+
 
 Where an official job profile has been matched, Helix shows that profile's
 description of the role and attributes it.

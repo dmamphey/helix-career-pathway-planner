@@ -204,6 +204,28 @@ function aboutCard(career, role) {
         ])
       : null,
 
+    /*
+     * Further reading, as links rather than quotations.
+     *
+     * NHS England reserves all rights in the Health Careers profiles and limits
+     * use to personal viewing, so Helix sends people there instead of copying
+     * anything across. Its terms also forbid framing, hence target="_blank" —
+     * the page has to load in the reader's whole window.
+     */
+    role && role.externalProfiles.length
+      ? h("div", { class: "further-reading" }, [
+          h("h3", { text: "Read more about this role" }),
+          h("ul", { class: "plain" }, role.externalProfiles.map((entry) =>
+            h("li", {}, [
+              link(`${entry.provider} publishes a profile for this role`,
+                   entry.source_url, { external: true }),
+            ]))),
+          h("p", { class: "hint", text: "Published by the organisation named, on "
+            + "its own website. Helix links to it rather than reproducing it, so "
+            + "you are reading their current wording rather than a copy." }),
+        ])
+      : null,
+
     h("h3", { text: "Typical background signals" }),
     h("p", { text: career.typical_entry_signal }),
     h("p", { class: "hint", text:

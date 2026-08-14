@@ -25,7 +25,7 @@ import json
 from pathlib import Path
 
 from . import derive
-from .providers import nhs, ons
+from .providers import nhs, nhs_careers, ons
 from .providers.ncs import LICENCE, ApiProvider, PublicProvider
 from .title_matcher import match_career
 
@@ -89,8 +89,9 @@ def _round_range(low: float, high: float) -> tuple[float, float]:
     return low, high
 
 
-def load_aliases() -> dict[str, str]:
-    path = REFERENCE / "ncs_career_aliases.json"
+def load_aliases(filename: str = "ncs_career_aliases.json") -> dict[str, str]:
+    """A curated normalised-title -> slug map, or empty if none is present."""
+    path = REFERENCE / filename
     if not path.exists():
         return {}
     data = json.loads(path.read_text(encoding="utf-8"))
@@ -109,6 +110,9 @@ class Resolver:
         self.ons = ons.Provider(offline=offline, refresh=refresh)
         self.nhs = nhs.Provider()
         self.aliases = load_aliases()
+        self.nhs_careers = nhs_careers.Provider(
+            offline=offline, refresh=refresh,
+            aliases=load_aliases("nhs_careers_aliases.json"))
         self.notes: list[str] = []
         self.match_log: list[dict] = []
 
@@ -122,6 +126,10 @@ class Resolver:
                 "no career-specific salary evidence could be gathered this run.")
         if not self.api.available:
             self.notes.append(self.api.unavailable_reason())
+        # Consulted for links only, so its note is recorded either way.
+        self.nhs_careers.index()
+        if self.nhs_careers.note:
+            self.notes.append(self.nhs_careers.note)
 
         resolved: dict[str, dict] = {}
         for position, career in enumerate(self.careers, start=1):
@@ -343,6 +351,9 @@ class Resolver:
                 "Government Licence v3.0.",
                 "Career salary and working-hours guidance: National Careers "
                 "Service, Crown copyright.",
+                "Links to NHS Health Careers are provided under the linking "
+                "permission in its terms of use. Its content is not reproduced "
+                "here and remains the property of NHS England.",
             ],
             "pipeline_notes": self.notes,
             "direct_evidence_count": direct_count,
@@ -396,6 +407,11 @@ class Resolver:
         role.setdefault("alternative_titles", [])
         role.setdefault("progression", [])
         role.setdefault("source_records", [])
+
+        # Where else somebody can read about this role. Links, not content: see
+        # providers/nhs_careers.py for why NHS Health Careers is never copied.
+        further = self.nhs_careers.link_for(career)
+        role["external_profiles"] = [further] if further else []
 
         mapping = dict((part or {}).get("mapping") or {})
         for key in ("ncs_profile_id", "ncs_title", "soc2020_code", "soc2020_title",

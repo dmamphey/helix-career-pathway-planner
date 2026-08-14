@@ -309,7 +309,7 @@ edits appear to do nothing.
 http://localhost:8766/tests/
 ```
 
-90 checks run in the browser — that is where the parsers need real `File` objects
+92 checks run in the browser — that is where the parsers need real `File` objects
 and the storage guarantees need a real `localStorage`. They cover dataset
 integrity, ontology coverage, PDF/DOCX/TXT extraction, the scanned-PDF fallback,
 determinism, grouping, the requirement separation, pathway generation for a sample
@@ -333,7 +333,7 @@ The enrichment pipeline has its own suite, which needs no browser and no network
 python tools/market_data/tests.py
 ```
 
-65 checks covering title matching (including the rule that a seniority variant is
+75 checks covering title matching (including the rule that a seniority variant is
 never a direct match), salary derivation, range rounding, profile-page parsing,
 record freshness, the alias worklist, the published file's completeness, and the
 validator's ability to reject data the resolver would never produce.

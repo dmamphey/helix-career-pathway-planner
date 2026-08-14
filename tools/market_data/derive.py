@@ -140,6 +140,21 @@ def similarity(target: dict, other: dict) -> float:
             + 0.15 * title_score)
 
 
+def _source_key(career: dict, salary: dict) -> str:
+    """What external source a resolved salary came from, if any.
+
+    Two careers that took their range from the same published profile are one
+    piece of evidence. A derived range has no external source of its own, so it
+    returns "" and is never de-duplicated against anything.
+    """
+    for record in salary.get("source_records") or []:
+        for field in ("source_profile_id", "source_url"):
+            value = record.get(field)
+            if value:
+                return f"{record.get('source_code', '')}:{value}"
+    return ""
+
+
 def _weighted_median(pairs: list[tuple[float, float]]) -> float:
     """Median of values weighted by similarity. Robust to one odd neighbour."""
     if not pairs:
@@ -176,7 +191,27 @@ def from_related(target: dict, resolved: list[tuple[dict, dict]],
             scored.append((score, career, salary))
 
     scored.sort(key=lambda item: (-item[0], item[1]["id"]))
-    neighbours = scored[:8]
+
+    # One source is one piece of evidence, however many careers cite it.
+    #
+    # Curated aliases mean several careers can resolve to the same external
+    # profile: Clinical, Community, Hospital and Industrial Pharmacist all take
+    # their range from the one NCS pharmacist page. Left alone, a weighted median
+    # counts that page four times and it dominates the result — Accuracy Checking
+    # Pharmacy Technician was priced off five identical pharmacist entries and
+    # came out above a band 5 technician grade. Keeping only the most similar
+    # career per source restores the median to a vote among distinct evidence.
+    seen_sources: set[str] = set()
+    neighbours = []
+    for score, career, salary in scored:
+        fingerprint = _source_key(career, salary)
+        if fingerprint and fingerprint in seen_sources:
+            continue
+        if fingerprint:
+            seen_sources.add(fingerprint)
+        neighbours.append((score, career, salary))
+        if len(neighbours) >= 8:
+            break
     if len(neighbours) < minimum:
         return None
 

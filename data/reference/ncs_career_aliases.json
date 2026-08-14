@@ -54,6 +54,9 @@
 
   "aliases": {
     "clinical pharmacist": "pharmacist",
+    "hospital pharmacist": "pharmacist",
+    "community pharmacist": "pharmacist",
+    "industrial pharmacist": "pharmacist",
 
     "biochemistry laboratory technician": "laboratory-technician",
     "genomics laboratory technician": "laboratory-technician",
@@ -97,7 +100,27 @@
     "environmental microbiologist": "microbiologist",
     "food microbiologist": "microbiologist",
     "veterinary microbiologist": "microbiologist",
-    "plant geneticist": "geneticist"
+    "plant geneticist": "geneticist",
+
+    "electronics engineer medical devices": "electronics-engineer",
+    "mechanical engineer medical devices": "mechanical-engineer",
+
+    "diagnostic radiographer": "radiographer",
+    "therapeutic radiographer": "radiographer",
+    "adult nurse": "nurse",
+
+    "counselling psychologist": "psychologist",
+    "educational psychologist": "psychologist",
+    "health psychologist": "psychologist",
+    "practitioner psychologist": "psychologist",
+
+    "cardiothoracic surgeon": "surgeon",
+    "ent surgeon": "surgeon",
+    "general surgeon": "surgeon",
+    "oral surgeon": "surgeon",
+    "orthopaedic surgeon": "surgeon",
+    "paediatric surgeon": "surgeon",
+    "chemical pathologist": "pathologist"
   },
 
   "_reviewed_and_rejected": {
@@ -118,9 +141,33 @@
       "candidate": "photographer",
       "reason": "Clinical photography is a healthcare science role in medical illustration. The photographer profile's 17k-45k is dominated by commercial and freelance work with a quite different pay structure."
     },
-    "health psychologist": {
+    "health psychologist -> clinical psychologist": {
       "candidate": "clinical-psychologist",
-      "reason": "Both are HCPC-protected practitioner psychologist titles, but they are different professions with different training routes. Registration as one is not a licence to practise as the other, which is the same reason transition effort refuses to treat two HCPC professions as interchangeable."
+      "reason": "Rejected as a SIBLING, then accepted against the GENERIC occupation instead. Health psychologist and clinical psychologist are two different HCPC-protected professions with different training routes, and registration as one is not a licence to practise as the other. But a health psychologist is unambiguously a psychologist, so the alias now points at the general 'psychologist' profile. The distinction is the rule: a named specialism may map to its parent occupation, never sideways to a sibling specialism."
+    },
+    "analytical chemist, synthetic chemist and medicinal chemist": {
+      "candidate": "chemist",
+      "reason": "Accepted on the titles, then withdrawn on the evidence. The chemist profile publishes 26k-40k, and these were the only direct anchors in Pharma, Biotech R&D & Manufacturing — so derivation spread that range across 44 further careers, including Antibody Scientist, Biologics Scientist and Cell Line Development Scientist, which are PhD-level industry posts paying well above it. The validator flagged 46 careers sharing one range and it was right. Two careers gained a career-specific label and 44 were made materially less accurate. An alias in a family with few anchors carries far more weight than the one career it names, so the low end of a generic profile can poison a whole family."
+    },
+    "cell biologist / molecular biologist and the other named biologists": {
+      "candidate": "biologist",
+      "reason": "Rejected because derivation already does better. These careers derive from the NCS research scientist profile at 27k-48k, which fits a PhD-level research post; the general biologist profile publishes 24k-40k and would lower them while adding a career-specific label. An alias is only an improvement if it beats what derivation already produces."
+    },
+    "gcp auditor and the other GxP auditors": {
+      "candidate": "auditor",
+      "reason": "The auditor profile describes inspecting financial records and procedures. A GxP auditor audits pharmaceutical quality systems against regulatory standards. Same word, different occupation."
+    },
+    "genetic counsellor": {
+      "candidate": "counsellor",
+      "reason": "A genetic counsellor is a registered healthcare science professional working in clinical genetics, not a talking-therapies counsellor. The 25k-48k counsellor range does not describe the role."
+    },
+    "plant pathologist and veterinary pathologist": {
+      "candidate": "pathologist",
+      "reason": "The pathologist profile at 54k-115k describes a medical pathologist working in hospitals and laboratories — a doctor. Chemical pathologist is one and was accepted; plant and veterinary pathology are different disciplines entirely and were not."
+    },
+    "medical writer and the other medical writing roles": {
+      "candidate": "writer",
+      "reason": "The writer profile publishes no salary at all, so there is nothing to gain, and medical writing is in any case a distinct and better-paid niche from general authorship."
     },
     "clinical dental technician": {
       "candidate": "dental-technician",

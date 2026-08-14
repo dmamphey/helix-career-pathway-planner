@@ -11,8 +11,8 @@ This report is produced by `tools/market_data/report.py` as part of every enrich
 | Careers in the base taxonomy | 677 |
 | Market-data records | 677 |
 | Careers with a published salary range | **677** |
-| Careers with typical weekly hours | 91 |
-| Careers with an authoritative role description | 88 |
+| Careers with typical weekly hours | 110 |
+| Careers with an authoritative role description | 107 |
 | Records past their review date | 0 |
 | Records flagged for manual review | 0 |
 
@@ -20,27 +20,27 @@ This report is produced by `tools/market_data/report.py` as part of every enrich
 
 | Evidence class | Careers | What it means |
 |---|---|---|
-| Career-specific guide (`VERIFIED_GUIDE`) | 91 | A career-specific salary range published by an official careers source for this job. |
+| Career-specific guide (`VERIFIED_GUIDE`) | 110 | A career-specific salary range published by an official careers source for this job. |
 | Strong estimate (`STRONG_ESTIMATE`) | 0 | A high-quality occupation or pay-framework mapping, but not a range published for this exact job title. |
-| Indicative estimate (`INDICATIVE`) | 347 | Derived from closely related careers that do have stronger evidence, with any seniority difference priced in. |
-| Limited-data estimate (`LIMITED_DATA`) | 239 | A median across the career's family and seniority level. A broad indication only. |
+| Indicative estimate (`INDICATIVE`) | 330 | Derived from closely related careers that do have stronger evidence, with any seniority difference priced in. |
+| Limited-data estimate (`LIMITED_DATA`) | 237 | A median across the career's family and seniority level. A broad indication only. |
 
 ## Salary method
 
 | Method | Careers |
 |---|---|
-| Derived from related careers | 347 |
-| Family and seniority median | 239 |
-| National Careers Service career profile | 91 |
+| Derived from related careers | 330 |
+| Family and seniority median | 237 |
+| National Careers Service career profile | 110 |
 
 ## Title matching against external profiles
 
 | Outcome | Careers |
 |---|---|
-| `no_match` | 571 |
+| `no_match` | 553 |
+| `curated_alias` | 56 |
 | `exact_title` | 54 |
-| `curated_alias` | 37 |
-| `review_candidate` | 10 |
+| `review_candidate` | 9 |
 | `seniority_variant_rejected` | 5 |
 
 `seniority_variant_rejected` is a deliberate outcome, not a failure. A career such as *Senior Biomedical Scientist* matches the *Biomedical scientist* profile on every content word, and accepting that would publish an entry-grade range as though it were career-specific fact. Those careers are derived instead, with the seniority difference applied and the evidence labelled honestly.
@@ -48,21 +48,23 @@ This report is produced by `tools/market_data/report.py` as part of every enrich
 ## Provider availability this run
 
 - NCS_API_KEY is not set, so the Job Profiles API was not called. Salary evidence came from the public National Careers Service profiles and from derivation instead.
+- 631 NHS Health Careers role pages indexed from the sitemap. Helix links to them and reproduces none of their content.
 
 ## Sources used
 
 | Provider | Salary records |
 |---|---|
-| National Careers Service (public job profile) | 91 |
+| National Careers Service (public job profile) | 110 |
 
 ## Attribution
 
 - Contains public sector information licensed under the Open Government Licence v3.0.
 - Career salary and working-hours guidance: National Careers Service, Crown copyright.
+- Links to NHS Health Careers are provided under the linking permission in its terms of use. Its content is not reproduced here and remains the property of NHS England.
 
 ## Alias candidates for human review
 
-10 careers have a strong but inexact title match against an external job profile. None is used: only an exact title or a curated alias is accepted, because a wrong direct match publishes another job's salary as this one's fact.
+9 careers have a strong but inexact title match against an external job profile. None is used: only an exact title or a curated alias is accepted, because a wrong direct match publishes another job's salary as this one's fact.
 
 Each row is one human decision. Confirming a row means adding the career's normalised title to `data/reference/ncs_career_aliases.json`, after which the next run promotes that career from a derived estimate to career-specific evidence. Rejecting a row means leaving it derived, which is already correct — so doing nothing here is safe.
 
@@ -74,7 +76,6 @@ A score of 1.00 does **not** mean the two are the same job. Matching drops setti
 |---|---|---|---|---|---|
 | CP-007 | Clinical Biochemist | Biochemist (`biochemist`) | 1.00 | Indicative estimate | Scores high only because *clinical* was dropped — check these are really one occupation |
 | CP-018 | Clinical Photographer | Photographer (`photographer`) | 1.00 | Indicative estimate | Scores high only because *clinical* was dropped — check these are really one occupation |
-| CP-068 | Health Psychologist | Clinical psychologist (`clinical-psychologist`) | 1.00 | Indicative estimate | Scores high only because *health* was dropped — check these are really one occupation |
 | CP-135 | Clinical Dental Technician | Dental technician (`dental-technician`) | 1.00 | Indicative estimate | Scores high only because *clinical* was dropped — check these are really one occupation |
 | CP-136 | Clinical Geneticist | Geneticist (`geneticist`) | 1.00 | Indicative estimate | Scores high only because *clinical* was dropped — check these are really one occupation |
 | CP-312 | Clinical Pharmacologist | Pharmacologist (`pharmacologist`) | 1.00 | Limited-data estimate | Scores high only because *clinical* was dropped — check these are really one occupation |
@@ -82,85 +83,6 @@ A score of 1.00 does **not** mean the two are the same job. Matching drops setti
 | CP-427 | Healthcare Business Intelligence Analyst | Business analyst (`business-analyst`) | 0.67 | Indicative estimate | Scores high only because *healthcare* was dropped — check these are really one occupation |
 | CP-515 | Pharmaceutical Sales Representative | Sales representative (`sales-representative`) | 0.67 | Indicative estimate |  |
 | CP-560 | Public Health Intelligence Analyst | Intelligence analyst (`criminal-intelligence-analyst`) | 0.67 | Limited-data estimate | Scores high only because *health* was dropped — check these are really one occupation |
-
-## Warnings
-
-- CP-263: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-263: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-264: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-264: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-268: typical_low moved 72% (32,000 -> 55,000) — review before publishing
-- CP-268: typical_high moved 72% (53,000 -> 91,000) — review before publishing
-- CP-269: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-269: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-270: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-270: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-273: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-273: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-277: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-277: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-278: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-278: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-279: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-279: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-282: typical_low moved 47% (32,000 -> 47,000) — review before publishing
-- CP-282: typical_high moved 47% (53,000 -> 78,000) — review before publishing
-- CP-287: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-287: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-289: typical_low moved 47% (32,000 -> 47,000) — review before publishing
-- CP-289: typical_high moved 47% (53,000 -> 78,000) — review before publishing
-- CP-292: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-292: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-293: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-293: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-299: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-299: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-313: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-313: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-324: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-324: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-352: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-352: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-355: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-355: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-358: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-358: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-368: typical_low moved 72% (32,000 -> 55,000) — review before publishing
-- CP-368: typical_high moved 72% (53,000 -> 91,000) — review before publishing
-- CP-369: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-369: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-372: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-372: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-376: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-376: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-379: typical_low moved 47% (32,000 -> 47,000) — review before publishing
-- CP-379: typical_high moved 47% (53,000 -> 78,000) — review before publishing
-- CP-380: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-380: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-381: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-381: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-383: typical_low moved 72% (32,000 -> 55,000) — review before publishing
-- CP-383: typical_high moved 72% (53,000 -> 91,000) — review before publishing
-- CP-384: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-384: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-388: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-388: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-467: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-467: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-468: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-468: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-472: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-472: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-535: typical_low moved 59% (32,000 -> 51,000) — review before publishing
-- CP-535: typical_high moved 60% (53,000 -> 85,000) — review before publishing
-- CP-551: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-551: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-559: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-559: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-563: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-563: typical_high moved 36% (53,000 -> 72,000) — review before publishing
-- CP-566: typical_low moved 38% (32,000 -> 44,000) — review before publishing
-- CP-566: typical_high moved 36% (53,000 -> 72,000) — review before publishing
 
 ## Limitations
 

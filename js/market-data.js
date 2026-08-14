@@ -239,6 +239,17 @@ export function role(careerId) {
     alternativeTitles: raw.alternative_titles || [],
     progression: raw.progression || [],
     sources: raw.source_records || [],
+    /*
+     * Where else this role is written about.
+     *
+     * Links, never text. NHS Health Careers reserves all rights in its content
+     * and limits use to personal viewing, while explicitly permitting links —
+     * so Helix points at it and copies nothing, not even a page title. Anything
+     * that appears beside one of these links comes from Helix's own taxonomy.
+     */
+    externalProfiles: (raw.external_profiles || [])
+      .filter((entry) => entry && typeof entry.source_url === "string"
+              && entry.source_url.startsWith("https://")),
   };
 }
 
