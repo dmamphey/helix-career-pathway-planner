@@ -6,8 +6,8 @@ read by anyone assessing whether the numbers can be trusted — no programming
 knowledge is needed.
 
 The short version: Helix publishes a salary range for all 677 careers, but it
-does not pretend they are all equally well evidenced. **86 come from an official
-careers guide written for that exact job. The other 591 are estimates, and every
+does not pretend they are all equally well evidenced. **91 come from an official
+careers guide written for that exact job. The other 586 are estimates, and every
 one of them is labelled as an estimate wherever it appears.**
 
 ---
@@ -162,9 +162,9 @@ rather than hidden in a footnote.
 
 | Label | What it means | Count |
 |---|---|---|
-| **Career-specific guide** | An official careers source published this range for this exact job | 86 |
+| **Career-specific guide** | An official careers source published this range for this exact job | 91 |
 | **Strong estimate** | A high-quality occupation or pay-framework mapping, but not published for this exact title | 0 |
-| **Indicative estimate** | Derived from closely related careers with stronger evidence | 352 |
+| **Indicative estimate** | Derived from closely related careers with stronger evidence | 347 |
 | **Limited-data estimate** | A median across the career's family and seniority level. A broad indication only | 239 |
 
 There are currently no Strong estimates. That is because the ONS occupation step
@@ -179,7 +179,7 @@ profiles exist and only 54 matched by exact title, so human-checked aliases
 convert derived estimates into career-specific evidence without waiting for
 anybody.
 
-**32 have been curated so far**, taking career-specific coverage from 54 to 86.
+**37 have been curated so far**, taking career-specific coverage from 54 to 91.
 The effect was larger than those 32 careers: giving derivation better anchors
 moved a further 182 careers off the family-median fallback, so Limited-data
 estimates fell from 421 to 239.
@@ -215,7 +215,7 @@ distinguishes them everywhere they appear.
 
 **Recorded by a source.** Typical weekly hours and working patterns — shifts,
 evenings and weekends, on-call, bank holidays — come from official job profiles.
-They exist for the 86 careers with a matched profile. For the other 591 Helix
+They exist for the 91 careers with a matched profile. For the other 586 Helix
 shows "Not yet available" rather than estimating them.
 
 **Inferred from the taxonomy.** Patient contact, laboratory intensity, research

@@ -11,8 +11,8 @@ This report is produced by `tools/market_data/report.py` as part of every enrich
 | Careers in the base taxonomy | 677 |
 | Market-data records | 677 |
 | Careers with a published salary range | **677** |
-| Careers with typical weekly hours | 86 |
-| Careers with an authoritative role description | 83 |
+| Careers with typical weekly hours | 91 |
+| Careers with an authoritative role description | 88 |
 | Records past their review date | 0 |
 | Records flagged for manual review | 0 |
 
@@ -20,26 +20,26 @@ This report is produced by `tools/market_data/report.py` as part of every enrich
 
 | Evidence class | Careers | What it means |
 |---|---|---|
-| Career-specific guide (`VERIFIED_GUIDE`) | 86 | A career-specific salary range published by an official careers source for this job. |
+| Career-specific guide (`VERIFIED_GUIDE`) | 91 | A career-specific salary range published by an official careers source for this job. |
 | Strong estimate (`STRONG_ESTIMATE`) | 0 | A high-quality occupation or pay-framework mapping, but not a range published for this exact job title. |
-| Indicative estimate (`INDICATIVE`) | 352 | Derived from closely related careers that do have stronger evidence, with any seniority difference priced in. |
+| Indicative estimate (`INDICATIVE`) | 347 | Derived from closely related careers that do have stronger evidence, with any seniority difference priced in. |
 | Limited-data estimate (`LIMITED_DATA`) | 239 | A median across the career's family and seniority level. A broad indication only. |
 
 ## Salary method
 
 | Method | Careers |
 |---|---|
-| Derived from related careers | 352 |
+| Derived from related careers | 347 |
 | Family and seniority median | 239 |
-| National Careers Service career profile | 86 |
+| National Careers Service career profile | 91 |
 
 ## Title matching against external profiles
 
 | Outcome | Careers |
 |---|---|
-| `no_match` | 576 |
+| `no_match` | 571 |
 | `exact_title` | 54 |
-| `curated_alias` | 32 |
+| `curated_alias` | 37 |
 | `review_candidate` | 10 |
 | `seniority_variant_rejected` | 5 |
 
@@ -53,7 +53,7 @@ This report is produced by `tools/market_data/report.py` as part of every enrich
 
 | Provider | Salary records |
 |---|---|
-| National Careers Service (public job profile) | 86 |
+| National Careers Service (public job profile) | 91 |
 
 ## Attribution
 
@@ -82,6 +82,10 @@ A score of 1.00 does **not** mean the two are the same job. Matching drops setti
 | CP-427 | Healthcare Business Intelligence Analyst | Business analyst (`business-analyst`) | 0.67 | Indicative estimate | Scores high only because *healthcare* was dropped — check these are really one occupation |
 | CP-515 | Pharmaceutical Sales Representative | Sales representative (`sales-representative`) | 0.67 | Indicative estimate |  |
 | CP-560 | Public Health Intelligence Analyst | Intelligence analyst (`criminal-intelligence-analyst`) | 0.67 | Limited-data estimate | Scores high only because *health* was dropped — check these are really one occupation |
+
+## Warnings
+
+- CP-639: typical_low moved 46% (24,000 -> 35,000) — review before publishing
 
 ## Limitations
 

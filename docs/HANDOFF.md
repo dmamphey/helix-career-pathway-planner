@@ -56,11 +56,12 @@ All phases of the specification are implemented and verified in a browser.
 
 - `tools/market_data/` — cache, four providers (NCS API + NCS public, ONS, NHS,
   Skills England), title matcher, derive, resolver, validate, report, CLI.
-- `data/helix_market_data_uk_v1.json` — 677/677 salary: **86 VERIFIED_GUIDE**
-  (career-specific National Careers Service profiles), **352 INDICATIVE**,
-  **239 LIMITED_DATA**. Validation passes. 83 attributed role summaries.
-  32 curated aliases in `data/reference/ncs_career_aliases.json` took
-  career-specific coverage from 54 to 86, and better anchors moved a further
+- `data/helix_market_data_uk_v1.json` — 677/677 salary: **91 VERIFIED_GUIDE**
+  (career-specific National Careers Service profiles), **347 INDICATIVE**,
+  **239 LIMITED_DATA**. Validation passes. 88 attributed role summaries,
+  91 careers with typical hours.
+  37 curated aliases in `data/reference/ncs_career_aliases.json` took
+  career-specific coverage from 54 to 91, and better anchors moved a further
   182 careers off the family-median fallback.
 - `js/market-data.js`, `js/comparison.js`, `js/transition-effort.js`,
   `js/preference-fit.js`, `js/views/compare.js`, `js/views/preferences.js`.
@@ -101,8 +102,8 @@ All phases of the specification are implemented and verified in a browser.
    this job include Biomedical scientists test patient samples…"). It was
    invisible until the career page started rendering summaries. Fixed by
    anchoring the description at the job title used as its subject; the dataset
-   was regenerated offline from the HTTP cache, so it cost no API quota. All 54
-   now extract cleanly, and both suites test for the regression.
+   was regenerated offline from the HTTP cache, so it cost no API quota. Every
+   matched profile now extracts cleanly, and both suites test for the regression.
 
 ## Invariants — breaking any of these is a regression
 

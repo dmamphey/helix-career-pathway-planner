@@ -35,6 +35,18 @@
     "safe choice. Removing an alias is equally safe: the career simply returns to a",
     "derived estimate.",
     "",
+    "DO NOT LOWER THE MATCHER'S 0.6 CANDIDATE THRESHOLD to surface more of these.",
+    "That is the obvious next idea and it is a bad one. The band just below it was",
+    "examined: 178 careers, and they are dominated by false friends. 59 of them hit",
+    "'Clinical scientist', 13 hit 'Nurse', 8 hit 'Surgeon' and 3 hit 'Pathologist'",
+    "purely because they end in the same word — so 'CAR-T Scientist' would be",
+    "offered the salary of a protected NHS profession, and 'Veterinary Surgeon' the",
+    "salary of a medical consultant. 'Workforce Development Manager' matches",
+    "'Business development manager' on two shared tokens and is a different job.",
+    "The threshold is doing exactly what it should. The five sub-discipline entries",
+    "below were taken from that band by direct inspection, on the narrow ground that",
+    "the target profile's own text explicitly covers the application area.",
+    "",
     "AFTER EDITING:",
     "    python tools/market_data/enrich.py --all",
     "    python tools/market_data/validate.py --previous <the file before>"
@@ -79,7 +91,13 @@
     "healthcare careers adviser": "careers-adviser",
     "scientific careers adviser": "careers-adviser",
 
-    "food safety scientist": "food-scientist"
+    "food safety scientist": "food-scientist",
+
+    "agricultural microbiologist": "microbiologist",
+    "environmental microbiologist": "microbiologist",
+    "food microbiologist": "microbiologist",
+    "veterinary microbiologist": "microbiologist",
+    "plant geneticist": "geneticist"
   },
 
   "_reviewed_and_rejected": {
