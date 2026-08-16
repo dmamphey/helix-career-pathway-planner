@@ -9,7 +9,7 @@ development works without running this — but a privacy-first tool should not h
 to contact a third-party host in order to read a CV, so a real deployment should
 serve them from its own domain.
 
-About 20 MB is written into ``assets/vendor/``, most of it the OCR engine
+About 26 MB is written into ``assets/vendor/``, most of it the OCR engine
 and its English training data.
 
 Licences of what is fetched, both of which permit redistribution. The notices are
@@ -50,17 +50,11 @@ FILES = {
         f"https://cdn.jsdelivr.net/npm/tesseract.js@{TESSERACT_VERSION}/dist/tesseract.min.js",
     "tesseract-worker.min.js":
         f"https://cdn.jsdelivr.net/npm/tesseract.js@{TESSERACT_VERSION}/dist/worker.min.js",
-    "tesseract-core/tesseract-core.wasm.js":
-        f"https://cdn.jsdelivr.net/npm/tesseract.js-core@{TESSERACT_CORE_VERSION}/tesseract-core.wasm.js",
-    "tesseract-core/tesseract-core-simd.wasm.js":
-        f"https://cdn.jsdelivr.net/npm/tesseract.js-core@{TESSERACT_CORE_VERSION}/tesseract-core-simd.wasm.js",
-    "tesseract-core/tesseract-core.wasm":
-        f"https://cdn.jsdelivr.net/npm/tesseract.js-core@{TESSERACT_CORE_VERSION}/tesseract-core.wasm",
-    "tesseract-core/tesseract-core-simd.wasm":
-        f"https://cdn.jsdelivr.net/npm/tesseract.js-core@{TESSERACT_CORE_VERSION}/tesseract-core-simd.wasm",
-    # The LSTM-only builds. tesseract.js picks one of these at runtime from what
-    # the browser supports, so all four variants have to be present or OCR fails
-    # on whichever machine happens to choose the missing one.
+    # Only the LSTM builds. tesseract.js v5 uses the LSTM engine for `eng`, and
+    # picks the SIMD variant where the browser supports it — verified by
+    # tests/run_ocr_check.py, which passes with these four files and without the
+    # full legacy builds. Those would add 16 MB to every deployment for a code
+    # path this application never takes.
     "tesseract-core/tesseract-core-lstm.wasm.js":
         f"https://cdn.jsdelivr.net/npm/tesseract.js-core@{TESSERACT_CORE_VERSION}/tesseract-core-lstm.wasm.js",
     "tesseract-core/tesseract-core-simd-lstm.wasm.js":

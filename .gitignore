@@ -13,8 +13,10 @@ __pycache__/
 # Enrichment pipeline HTTP cache: rebuildable, not source.
 tools/market_data/.cache/
 
-# Vendored OCR engine and training data: ~40 MB of third-party binaries that
-# tools/fetch_libraries.py reproduces exactly. Fetch them at deploy time rather
-# than carrying them in every clone.
-assets/vendor/tesseract*
-assets/vendor/tessdata/
+# The OCR engine IS committed, unlike PDF.js and Mammoth.
+#
+# Those two fall back to a CDN cleanly when absent. Tesseract cannot: a Web
+# Worker may not be created from a cross-origin script, so a CDN fallback hangs
+# on the first page instead of failing. GitHub Pages deploys the branch as-is
+# with no build step to fetch it, so the choice is between 26 MB in the
+# repository and a feature that does not work in production.
