@@ -85,7 +85,11 @@ export function panel(title, children, options = {}) {
 
 export function button(label, onClick, options = {}) {
   return h("button", {
-    class: `btn ${options.variant ? `btn-${options.variant}` : ""}`.trim(),
+    // `class` is honoured as well as `variant`, matching `link()`. Without it a
+    // caller could pass a size class, see it silently dropped, and end up with a
+    // button that does not match the ones beside it.
+    class: `btn ${options.variant ? `btn-${options.variant}` : ""} `
+         + `${options.class || ""}`.trim(),
     type: options.type || "button",
     onClick,
     disabled: options.disabled,

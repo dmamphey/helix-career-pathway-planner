@@ -2183,4 +2183,41 @@ test("finishing onboarding always lands on the matches screen", async () => {
   }
 });
 
+test("reset lives on the start screen, and only when there is something to delete", async () => {
+  /*
+   * Moved out of My data, because starting again is decided on the start screen
+   * rather than partway down a settings page. Two properties keep a destructive
+   * control safe next to the primary one: it is absent for a visitor with an
+   * empty browser, and it still goes through the confirmation.
+   */
+  const home = await import("../js/views/home.js");
+
+  const fresh = await appForViews();
+  const freshRow = (await home.render(fresh)).querySelector(".hero-actions");
+  assert(![...freshRow.querySelectorAll("button")]
+           .some((b) => /Reset Helix/.test(b.textContent)),
+         "a first-time visitor was offered a reset of an empty browser");
+
+  const returning = await appForViews({ profile: DEMO_PROFILES[1].build() });
+  const row = (await home.render(returning)).querySelector(".hero-actions");
+  const reset = [...row.querySelectorAll("button")]
+    .find((b) => /Reset Helix/.test(b.textContent));
+  assert(reset, "reset is missing from the start screen");
+  // Same row as the upload button, and the same size as its neighbours.
+  assert(reset.parentElement === row, "reset is not in the hero action row");
+  assert(reset.className.includes("btn-lg"),
+         "reset does not match the buttons beside it");
+  assert(reset.className.includes("btn-danger"),
+         "a destructive control is not marked as one");
+
+  // And it is gone from My data.
+  const data = await import("../js/views/data.js");
+  const dataScreen = await data.render(returning);
+  assert(![...dataScreen.querySelectorAll("button")]
+           .some((b) => /Reset Helix/.test(b.textContent)),
+         "My data still carries its own reset button");
+  assert(/start screen/i.test(dataScreen.textContent),
+         "My data does not say where reset went");
+});
+
 run();

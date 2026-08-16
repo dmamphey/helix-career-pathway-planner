@@ -17,6 +17,38 @@ export async function render(app) {
 }
 
 /**
+ * Reset, in the hero row.
+ *
+ * It used to live at the bottom of My data, which is a reasonable place to file
+ * it and a poor place to find it: starting again is something people decide on
+ * the start screen, not somewhere in a settings page. So it sits beside the
+ * upload button, where the decision is actually made.
+ *
+ * Two things keep a destructive control safe next to a primary one. It only
+ * appears when there is something to delete — a first-time visitor is not
+ * offered the chance to reset an empty browser — and it keeps the same
+ * confirmation dialog, which names what will go and points at the export first.
+ */
+function resetButton(app) {
+  if (!app.hasProfile() && !app.state.savedCareerIds.length
+      && !Object.keys(app.state.progress).length) {
+    return null;
+  }
+  return button("Reset Helix", async () => {
+    const proceed = await confirmDialog(
+      "Delete everything saved on this device?",
+      "Your profile, saved careers and milestone progress will be removed from "
+      + "this browser. Export your data first from My data if you want to keep "
+      + "it. This cannot be undone.",
+      "Delete it all");
+    if (!proceed) return;
+    app.resetAll();
+    notice("Helix has been reset on this device.", "info");
+    app.navigate("/");
+  }, { variant: "danger", class: "btn-lg" });
+}
+
+/**
  * The landing hero.
  *
  * The product is named first and given room, because somebody arriving from a
@@ -40,6 +72,7 @@ function hero(app, hasProfile) {
       hasProfile
         ? link("Continue where I left off", "#/matches", { class: "btn btn-lg" })
         : null,
+      resetButton(app),
     ]),
     h("div", { class: "callout callout-good" }, [
       h("p", {}, [

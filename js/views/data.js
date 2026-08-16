@@ -76,23 +76,22 @@ export async function render(app) {
       ]),
     ], { id: "export-heading" }),
 
+    /*
+     * Reset now lives on the start screen, beside the upload button.
+     *
+     * A pointer rather than nothing: this is where the control used to be, and
+     * somebody who has been here before will come looking for it. Telling them
+     * where it went costs two lines and saves a hunt through the settings.
+     */
     panel("Reset", [
-      h("p", { text: "Deletes the stored profile, saved careers and all "
-        + "milestone progress from this browser. It cannot be undone." }),
-      h("div", { class: "card-actions" }, [
-        button("Reset Helix", async () => {
-          const proceed = await confirmDialog(
-            "Delete everything saved on this device?",
-            "Your profile, saved careers and milestone progress will be removed "
-            + "from this browser. Export your data first if you want to keep it. "
-            + "This cannot be undone.",
-            "Delete it all");
-          if (!proceed) return;
-          app.resetAll();
-          notice("Helix has been reset on this device.", "info");
-          app.navigate("/");
-        }, { variant: "danger" }),
+      h("p", {}, [
+        "Deleting everything saved on this device is now done from the ",
+        link("start screen", "#/"),
+        ", next to the upload button — that is where people decide to start "
+        + "again, rather than partway down a data page.",
       ]),
+      h("p", { class: "hint", text: "Export your data above first if you want "
+        + "to keep it. A reset cannot be undone." }),
     ], { id: "reset-heading" }),
 
     panel("Dataset", [
