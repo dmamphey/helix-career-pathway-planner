@@ -898,3 +898,14 @@ ul.plain, ol.plain { list-style: none; padding: 0; margin: 0; }
 .why-not-section h3 { margin: 0 0 .35rem; font-size: 1rem; }
 .why-not-section ul { margin: 0; padding-left: 1.2rem; }
 .why-not-section li { margin-bottom: .35rem; }
+
+/* Labour market signal strength. Word plus shape, never colour alone. */
+.signal {
+  display: inline-flex; align-items: center; gap: .3rem;
+  font-size: .82rem; font-weight: 700; letter-spacing: .02em;
+  border-radius: 999px; padding: .15rem .6rem; border: 1px solid;
+}
+.signal-strong { color: var(--good); background: var(--good-bg); border-color: var(--good-line); }
+.signal-moderate { color: var(--brand-navy); background: var(--brand-tint); border-color: var(--brand-cyan); }
+.signal-limited { color: var(--warn); background: var(--warn-bg); border-color: var(--warn-line); }
+.signal-insufficient { color: var(--muted); background: #f1f4f7; border-color: var(--line); }

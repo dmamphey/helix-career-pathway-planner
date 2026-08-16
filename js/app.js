@@ -11,6 +11,7 @@ import * as router from "./router.js";
 import * as storage from "./storage.js";
 import { loadCareers, sourcesFor } from "./career-data.js";
 import * as market from "./market-data.js";
+import * as labour from "./labour-market.js";
 import * as comparison from "./comparison.js";
 import { normaliseRegion } from "./regions.js";
 import { normaliseProfile, hasPreferences } from "./profile.js";
@@ -297,6 +298,7 @@ export const app = {
   },
 
   market,
+  labour,
 
   isSaved(careerId) {
     return this.state.savedCareerIds.includes(careerId);
@@ -456,6 +458,11 @@ async function boot() {
   // Salary data is additive: if it fails to load the taxonomy, matching,
   // pathways and gaps all still work, so a failure degrades rather than blocks.
   await market.loadMarketData();
+  // Labour market signals are the most optional thing in Helix: external,
+  // experimental and prone to going stale. A failure here is not worth a
+  // warning banner — the career pages say they have no current signal, which is
+  // a statement about Helix's evidence rather than about the job market.
+  await labour.loadLabourMarket();
   const marketStatus = market.status();
   if (!marketStatus.ok) {
     notice(marketStatus.message, "warn");

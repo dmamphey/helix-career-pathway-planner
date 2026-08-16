@@ -22,6 +22,8 @@ import {
 } from "../comparison.js";
 import { loadRulePack } from "../rules.js";
 import { differences } from "../baseline.js";
+import * as labour from "../labour-market.js";
+import { lowerLabel } from "../ontology.js";
 
 export async function render(app, context) {
   // A route with ids wins over the stored selection, so a shared link shows what
@@ -80,6 +82,7 @@ export async function render(app, context) {
     fitPanel(app, entries),
     routePanel(entries),
     workLifePanel(entries),
+    labourPanel(entries),
     evidencePanel(entries),
   );
   redraw();
@@ -274,6 +277,24 @@ function header(app, entries, ids, redraw) {
 /** The deterministic observations. Facts only, and never a "best" career. */
 function standout(entries) {
   const notes = standoutSummary(entries);
+
+  /*
+   * The market observation is added here rather than inside `standoutSummary`
+   * because that function is pure and takes no external dataset. `strongestDemand`
+   * returns null whenever the compared careers share one advertising category,
+   * so this note appears only when there is a real distinction to draw.
+   */
+  const strongest = labour.strongestDemand(entries.map((entry) => entry.career));
+  if (strongest) {
+    notes.push({
+      kind: "demand",
+      text: `Of these, ${strongest.career.title} sits in the category with the `
+          + `stronger advertising signal — ${lowerLabel(strongest.signal.trendLabel)}`
+          + ` across ${strongest.signal.categoryLabel}. That is a measure of `
+          + `advert volume in a broad category, not of vacancies for this job.`,
+    });
+  }
+
   if (!notes.length) return null;
   return panel("What stands out", [
     h("ul", { class: "standout" }, notes.map((note) =>
@@ -437,6 +458,70 @@ function workLifePanel(entries) {
       + "career profiles where available. The intensity and travel measures are "
       + "inferred from each career's subject matter, not from a survey." }),
   ], { id: "worklife-heading" });
+}
+
+/**
+ * The hiring climate, per career.
+ *
+ * Two of these careers very often read the same signal, because the published
+ * source is categorised by advertising category and several Helix families map
+ * to one. The row says which category each career drew from, so identical
+ * numbers are visibly the same measurement rather than a coincidence — and
+ * `standoutSummary` refuses to name a "strongest market" when the categories
+ * collapse to one.
+ */
+function labourPanel(entries) {
+  const state = labour.status();
+  const signals = entries.map((entry) => labour.demandFor(entry.career));
+  if (!signals.some(Boolean)) {
+    return panel("Current labour market", [
+      h("p", { class: "hint", text: state.ok
+        ? "Helix holds no demand signal for these careers' families."
+        : state.message }),
+    ], { id: "labour-compare-heading" });
+  }
+
+  const byId = new Map(entries.map((entry, index) =>
+    [entry.career.id, signals[index]]));
+  const any = signals.find(Boolean);
+
+  return panel("Current labour market", [
+    grid(entries, [
+      ["Signal strength", (entry) => {
+        const signal = byId.get(entry.career.id);
+        return signal
+          ? h("span", { class: `signal signal-${signal.strengthKey}`,
+                        title: signal.strengthExplain }, signal.strengthLabel)
+          : text("No signal");
+      }],
+      ["Direction of travel", (entry) => {
+        const signal = byId.get(entry.career.id);
+        return text(signal ? signal.trendLabel : "Not known");
+      }],
+      ["Advert volume index", (entry) => {
+        const signal = byId.get(entry.career.id);
+        return text(signal && Number.isFinite(signal.index)
+          ? String(signal.index) : "—");
+      }],
+      ["Vacancy count", () => text("Not published by this source")],
+      ["Measured across", (entry) => {
+        const signal = byId.get(entry.career.id);
+        return text(signal ? signal.categoryLabel : "—");
+      }],
+    ]),
+    h("p", { class: "hint", text: "The index is advert volume against a "
+      + `${any.baseline} baseline, measured across broad advertising `
+      + "categories rather than job titles. Careers in the same category read "
+      + "the same figure — that is one measurement shown twice, not two "
+      + "careers that happen to match." }),
+    h("p", { class: "hint" }, [
+      `${any.source} · released ${any.released} · `,
+      any.sourceUrl
+        ? link("published data", any.sourceUrl, { external: true })
+        : h("span", { text: "published data" }),
+      `, used under the ${any.licence}.`,
+    ]),
+  ], { id: "labour-compare-heading" });
 }
 
 function evidencePanel(entries) {

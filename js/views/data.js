@@ -6,6 +6,7 @@ import {
 } from "../ui.js";
 import * as storage from "../storage.js";
 import * as market from "../market-data.js";
+import * as labour from "../labour-market.js";
 import { describeProfile, signalLabels } from "../profile.js";
 import { FIT_LEVELS } from "../preference-fit.js";
 import { LEVELS as EFFORT_LEVELS } from "../transition-effort.js";
@@ -112,6 +113,7 @@ export async function render(app) {
     ], { id: "dataset-heading" }),
 
     marketPanel(app),
+    labourProviderPanel(),
     methodologyPanel(),
   ]);
 }
@@ -259,4 +261,66 @@ async function doImport(app, file) {
   } catch (error) {
     notice(error.message, "warn");
   }
+}
+
+/**
+ * Which labour market providers were consulted, and what each can answer.
+ *
+ * Published because "no demand data" is an unhelpful thing to be told without a
+ * reason. This names the provider that answered, the ones that did not, exactly
+ * which credential each missing one needs, and — importantly — what each
+ * provider is capable of answering even in principle. A reader can then see that
+ * Helix shows no vacancy count because its working source does not publish one,
+ * not because the number was hidden.
+ */
+function labourProviderPanel() {
+  const state = labour.status();
+  const providers = labour.providerReport();
+  const dataset = labour.meta();
+
+  if (!providers.length) {
+    return panel("Labour market providers", [
+      h("p", { class: "hint", text: state.ok
+        ? "No provider report was published with the current signals."
+        : state.message }),
+    ], { id: "labour-providers-heading" });
+  }
+
+  const ability = (capabilities) => {
+    const can = Object.entries(capabilities)
+      .filter(([, value]) => value)
+      .map(([key]) => key.replace(/_/g, " "));
+    return can.length ? can.join(", ") : "nothing on its own";
+  };
+
+  return panel("Labour market providers", [
+    h("p", { text: "Helix reads labour market signals from a static file "
+      + "written during enrichment. No credential exists in the browser, and no "
+      + "page contacts a job board." }),
+
+    h("div", { class: "table-scroll" }, [
+      h("table", { class: "compare" }, [
+        h("thead", {}, [h("tr", {}, [
+          h("th", { scope: "col", text: "Provider" }),
+          h("th", { scope: "col", text: "Used" }),
+          h("th", { scope: "col", text: "Can answer" }),
+          h("th", { scope: "col", text: "Status" }),
+        ])]),
+        h("tbody", {}, providers.map((entry) => h("tr", {}, [
+          h("th", { scope: "row", text: entry.provider }),
+          h("td", { text: entry.categoriesAnswered
+            ? `${entry.categoriesAnswered} categories` : "No" }),
+          h("td", { text: ability(entry.capabilities) }),
+          h("td", { text: entry.available ? "Available" : entry.reason }),
+        ]))),
+      ]),
+    ]),
+
+    dataset && dataset.limits
+      ? h("div", {}, [
+          h("h3", { text: "What these signals cannot tell you" }),
+          h("ul", {}, dataset.limits.map((line) => h("li", { text: line }))),
+        ])
+      : null,
+  ], { id: "labour-providers-heading" });
 }

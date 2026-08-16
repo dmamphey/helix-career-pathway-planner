@@ -32,6 +32,7 @@ import { developmentIndicators } from "../matcher.js";
 import { lowerLabel } from "../ontology.js";
 import { REGIONS, regionLabel, isUk } from "../regions.js";
 import { whyNotRecommended, standing } from "../why-not.js";
+import * as labour from "../labour-market.js";
 
 export async function render(app, context) {
   const career = app.catalogue.get(context.params.id);
@@ -57,6 +58,7 @@ export async function render(app, context) {
     regulationCard(career, app),
     aboutCard(career, role),
     economicsCard(career, pay, work, app, redraw),
+    labourMarketCard(career),
     entryCard(career, pack, analysis),
     analysis ? fitCard(app, career, analysis) : noProfileCard(app),
     analysis ? whyNotCard(app, career, analysis) : null,
@@ -267,6 +269,111 @@ function aboutCard(career, role) {
     h("ul", { class: "chips" }, (career.core_tags || []).map((tag) =>
       h("li", {}, [h("span", { class: "chip", text: tag })]))),
   ], { id: "about-heading" });
+}
+
+/* ---------------------------------------------------------- labour market */
+
+/**
+ * The current hiring climate, with its limits stated before its numbers.
+ *
+ * The order is deliberate. Every reader arrives wanting "how many jobs are
+ * there", and the honest answer is that Helix does not know — so the scope is
+ * said first and the index second, rather than leading with a number that will
+ * be read as a vacancy count whatever the caption underneath says.
+ */
+function labourMarketCard(career) {
+  const signal = labour.demandFor(career);
+  const state = labour.status();
+
+  if (!signal) {
+    return panel("Current labour market", [
+      h("p", { class: "hint", text: state.ok
+        ? "Helix holds no demand signal for this career's family. That is a "
+          + "statement about Helix's data, not about whether anybody is hiring."
+        : state.message }),
+    ], { id: "labour-heading" });
+  }
+
+  const showIndex = Number.isFinite(signal.index);
+
+  return panel("Current labour market", [
+    h("div", { class: "callout callout-info" }, [
+      h("p", { text: `This describes advertising across ${signal.categoryLabel}, `
+        + `not this job title. ${signal.familyReason}` }),
+      h("p", { class: "hint", text: "Helix has no count of vacancies for this "
+        + "career. The published source measures advert volume against a "
+        + "baseline, and converting that into a number of jobs would mean "
+        + "inventing a total nobody published." }),
+    ]),
+
+    h("dl", { class: "summary" }, [
+      h("dt", { text: "Signal strength" }),
+      h("dd", {}, [
+        h("span", { class: `signal signal-${signal.strengthKey}`,
+                    title: signal.strengthExplain }, signal.strengthLabel),
+      ]),
+
+      h("dt", { text: "Direction of travel" }),
+      h("dd", {}, [
+        h("span", { "aria-hidden": "true", text: `${signal.trendSymbol} ` }),
+        h("strong", { text: signal.trendLabel }),
+        Number.isFinite(signal.trendChangePercent)
+          ? h("span", { class: "hint",
+              text: ` · ${signal.trendChangePercent > 0 ? "+" : ""}`
+                  + `${signal.trendChangePercent}% over `
+                  + `${signal.trendWindow}` })
+          : null,
+      ]),
+
+      ...(showIndex ? [
+        h("dt", { text: "Advert volume index" }),
+        h("dd", {}, [
+          h("strong", { text: String(signal.index) }),
+          h("span", { class: "hint", text: ` · ${signal.baseline}` }),
+        ]),
+      ] : []),
+
+      h("dt", { text: "Vacancy count" }),
+      h("dd", { class: "hint", text: signal.vacancyCount === null
+        ? "Not published by this source"
+        : String(signal.vacancyCount) }),
+
+      h("dt", { text: "Demand by region" }),
+      h("dd", { class: "hint", text: signal.topRegions === null
+        ? "This source publishes UK-wide figures only, so Helix shows no "
+          + "regional demand."
+        : (signal.topRegions.length
+            ? signal.topRegions.join(", ")
+            : "None recorded") }),
+
+      h("dt", { text: "Commonly advertised skills" }),
+      h("dd", { class: "hint", text: signal.commonSkills === null
+        ? "Not measured by this source"
+        : (signal.commonSkills.length
+            ? signal.commonSkills.join(", ") : "None recorded") }),
+    ]),
+
+    signal.stale
+      ? h("div", { class: "callout callout-warn" }, [
+          h("p", { text: `The most recent release of this series is `
+            + `${signal.released}, about `
+            + `${Math.round(signal.ageDays / 30)} months ago. It describes the `
+            + `period it covers rather than the market today, which is why its `
+            + `signal strength is capped.` }),
+        ])
+      : null,
+
+    h("p", { class: "hint" }, [
+      `${signal.source}`,
+      signal.sourceUrl
+        ? h("span", {}, [" · ", link("published data", signal.sourceUrl,
+                                     { external: true })])
+        : null,
+      ` · released ${signal.released} · used under the ${signal.licence}.`,
+    ]),
+    h("p", { class: "hint", text: (signal.notes || [])
+      .filter((note) => /experimental/i.test(note)).join(" ") }),
+  ], { id: "labour-heading" });
 }
 
 /* ------------------------------------------------------- why not recommended */

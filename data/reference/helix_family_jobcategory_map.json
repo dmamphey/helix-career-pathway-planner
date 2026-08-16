@@ -1,0 +1,86 @@
+{
+  "schema": "helix.family_jobcategory_map.v1",
+  "purpose": "Choose which online job advert category carries the demand signal for a Helix career family.",
+  "what_this_is_not": "Not a claim that a career belongs to an advertising category, and never used to produce a vacancy count. It selects which published index to read.",
+  "limits": "Advert categories are broad and commercially defined. Healthcare and Social care covers everything from consultant posts to care work, so the signal describes the hiring climate around a family rather than demand for one job title. Helix says so wherever the figure appears.",
+  "maintained_by": "Helix editorial. Review when ONS changes the category list.",
+  "last_reviewed": "2026-08-14",
+  "baseline_category": "all-industries",
+  "categories": {
+    "healthcare-and-social-care": "Healthcare and Social care",
+    "scientific-qa": "Scientific / QA",
+    "it-computing-software": "IT / Computing / Software",
+    "engineering": "Engineering",
+    "manufacturing": "Manufacturing",
+    "education": "Education",
+    "management-exec-consulting": "Management / exec / consulting",
+    "marketing-advertising-pr": "Marketing / advertising / PR",
+    "all-industries": "All industries"
+  },
+  "families": {
+    "Pharma, Biotech R&D & Manufacturing": {
+      "category": "scientific-qa",
+      "reason": "Industrial R&D and manufacturing science posts are advertised under Scientific / QA."
+    },
+    "Healthcare Science & Diagnostics": {
+      "category": "healthcare-and-social-care",
+      "reason": "Healthcare science posts are advertised through healthcare channels rather than general science ones."
+    },
+    "Allied Health & Clinical Practice": {
+      "category": "healthcare-and-social-care",
+      "reason": "Registered allied health posts are advertised as healthcare."
+    },
+    "Leadership, Education, Operations & Consulting": {
+      "category": "management-exec-consulting",
+      "reason": "The family is defined by management and consulting responsibility."
+    },
+    "Medicine & Dentistry": {
+      "category": "healthcare-and-social-care",
+      "reason": "Medical and dental posts are advertised as healthcare."
+    },
+    "Medical Affairs, Commercial, Market Access & Communications": {
+      "category": "marketing-advertising-pr",
+      "reason": "Medical affairs, market access and communications posts sit with commercial and communications advertising rather than with laboratory science."
+    },
+    "Research & Academia": {
+      "category": "scientific-qa",
+      "reason": "Research posts are advertised under Scientific / QA."
+    },
+    "Quality, Regulatory, Safety & Compliance": {
+      "category": "scientific-qa",
+      "reason": "Quality assurance and regulatory affairs are the QA half of the Scientific / QA category."
+    },
+    "Digital Health, Data, Informatics & AI": {
+      "category": "it-computing-software",
+      "reason": "Health informatics and data posts are advertised as IT and software roles."
+    },
+    "Nursing, Midwifery & Pharmacy": {
+      "category": "healthcare-and-social-care",
+      "reason": "Nursing, midwifery and pharmacy posts are advertised as healthcare."
+    },
+    "Clinical Research & Trials": {
+      "category": "scientific-qa",
+      "reason": "Trial coordination, monitoring and management are advertised under Scientific / QA."
+    },
+    "Medical Devices, MedTech & Engineering": {
+      "category": "engineering",
+      "reason": "Device and biomedical engineering posts are advertised as engineering."
+    },
+    "Public Health, Epidemiology & Health Policy": {
+      "category": "healthcare-and-social-care",
+      "reason": "Public health posts are advertised through healthcare and public sector channels."
+    },
+    "Laboratory, Pathology & Technical Operations": {
+      "category": "scientific-qa",
+      "reason": "Laboratory and technical operations posts are advertised under Scientific / QA."
+    },
+    "Environmental & One Health": {
+      "category": "scientific-qa",
+      "reason": "Environmental and veterinary public health science posts are advertised as scientific roles."
+    },
+    "Cell & Gene Therapy, Omics & Advanced Biology": {
+      "category": "scientific-qa",
+      "reason": "Advanced biology and omics posts are advertised under Scientific / QA."
+    }
+  }
+}
