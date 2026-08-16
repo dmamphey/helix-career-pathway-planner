@@ -265,7 +265,9 @@ function header(app, entries, ids, redraw) {
     h("div", { class: "card-actions" }, [
       button("Clear comparison", () => {
         app.clearCompare();
-        app.navigate("/explore");
+        // Not the Explorer by default: somebody with a profile came from their
+        // options and should land back there, not in a catalogue of 716.
+        app.navigate(app.homeRoute());
       }, { variant: "quiet" }),
       link("Add another career", "#/explore", { class: "btn" }),
     ]),

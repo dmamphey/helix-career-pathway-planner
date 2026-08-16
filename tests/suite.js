@@ -2007,6 +2007,9 @@ async function appForViews(options = {}) {
     profile: () => state.profile,
     hasProfile: () => Boolean(state.profile),
     setProfile: (next) => { state.profile = next; ranked = null; return next; },
+    homeRoute: () => (state.profile ? "/matches" : "/explore"),
+    homeLabel: () => (state.profile
+      ? "Back to my options" : "Back to all careers"),
     hasPreferences: () => Boolean(state.profile),
     persist: () => state,
     navigate: () => {},
@@ -2340,6 +2343,73 @@ test("the direction group does not alter any alignment score", () => {
       assert(before.has(item.careerId), "a career vanished from the ranking");
     }
   }
+});
+
+test("a finished screen returns you where you belong", async () => {
+  /*
+   * Clearing a comparison sent everybody to the Career Explorer. For a visitor
+   * with no profile that is right — it is the only list they have. For somebody
+   * who uploaded a CV it hands back a catalogue of 716 in place of the careers
+   * matched to them.
+   */
+  const { app } = await import("../js/app.js");
+  const saved = app.state.profile;
+  try {
+    app.state.profile = null;
+    equal(app.homeRoute(), "/explore");
+    equal(app.homeLabel(), "Back to all careers");
+
+    app.state.profile = DEMO_PROFILES[1].build();
+    equal(app.homeRoute(), "/matches");
+    equal(app.homeLabel(), "Back to my options");
+  } finally {
+    app.state.profile = saved;
+  }
+});
+
+test("a career page offers the way back that matches the profile", async () => {
+  const withProfile = await appForViews({ profile: DEMO_PROFILES[1].build() });
+  const page = await renderView("career", withProfile, { params: { id: "CP-003" } });
+  const links = [...page.querySelectorAll("a")].map((a) => a.getAttribute("href"));
+  assert(links.includes("#/matches"),
+         "a career page gives somebody with a profile no way back to their options");
+
+  const anonymous = await appForViews();
+  const plain = await renderView("career", anonymous, { params: { id: "CP-003" } });
+  const plainLinks = [...plain.querySelectorAll("a")].map((a) => a.getAttribute("href"));
+  assert(plainLinks.includes("#/explore"),
+         "a visitor with no profile is not offered the explorer");
+});
+
+test("the navigation collapses behind one control on a narrow screen", async () => {
+  /*
+   * Seven links wrapped onto two rows and took roughly a third of a phone
+   * screen before any content.
+   *
+   * The real index.html is parsed rather than a copy in the test page: a menu
+   * button that exists only in the harness would pass this and ship nothing.
+   * The suite cannot resize a viewport, so the stylesheet is checked for the
+   * rules that do the collapsing.
+   */
+  const html = await (await fetch("../index.html")).text();
+  const doc = new DOMParser().parseFromString(html, "text/html");
+
+  const toggle = doc.getElementById("nav-toggle");
+  const nav = doc.getElementById("nav");
+  assert(toggle, "the menu button is missing from index.html");
+  assert(nav, "the navigation is missing from index.html");
+  equal(toggle.getAttribute("aria-controls"), "nav",
+        "the button does not say what it controls");
+  equal(toggle.getAttribute("aria-expanded"), "false",
+        "the menu does not ship closed");
+  assert(toggle.getAttribute("aria-label"), "the button has no accessible name");
+  assert(!nav.className.includes("is-open"), "the navigation ships open");
+
+  const css = await (await fetch("../styles.css")).text();
+  assert(/\.nav-toggle\s*\{\s*display:\s*none/.test(css),
+         "the menu button is not hidden on wide screens");
+  assert(/#nav\.is-open/.test(css),
+         "there is no rule that opens the collapsed navigation");
 });
 
 run();

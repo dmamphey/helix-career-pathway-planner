@@ -1019,3 +1019,56 @@ ul.plain, ol.plain { list-style: none; padding: 0; margin: 0; }
 @media (max-width: 34rem) {
   .explore-controls { grid-template-columns: 1fr; }
 }
+
+/* ------------------------------------------------------- the menu button */
+
+/* Above the breakpoint nothing changes: the links sit in the bar as before, and
+   the button is not rendered at all. */
+.nav-toggle { display: none; }
+
+.nav-toggle-bars {
+  display: flex; flex-direction: column; justify-content: center; gap: 4px;
+  width: 20px; height: 16px;
+}
+.nav-toggle-bars span {
+  display: block; height: 2px; background: currentColor; border-radius: 2px;
+}
+
+@media (max-width: 52rem) {
+  .bar { flex-wrap: nowrap; }
+
+  .nav-toggle {
+    display: inline-flex; align-items: center; justify-content: center;
+    /* 44px square: the size a thumb needs, and the size the rest of the site
+       uses for the same control. */
+    width: 44px; height: 44px; flex: none;
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .5);
+    border-radius: 10px; color: #fff; cursor: pointer;
+  }
+  .nav-toggle:hover { background: rgba(255, 255, 255, .2); }
+  .nav-toggle:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+  /* The links become a panel under the bar. `display: none` rather than a
+     height animation, so a closed menu is genuinely out of the tab order
+     instead of being invisible and still focusable. */
+  #nav {
+    display: none;
+    order: 3;
+    width: 100%;
+    flex-direction: column;
+    gap: 0;
+    margin-top: .7rem;
+    border-top: 1px solid rgba(255, 255, 255, .25);
+    padding-top: .4rem;
+  }
+  #nav.is-open { display: flex; }
+  #nav a {
+    width: 100%;
+    border-radius: 8px;
+    padding: .7rem .75rem;
+    font-size: 1rem;
+    min-height: 48px;
+  }
+  #nav a[aria-current="page"] { background: #fff; color: var(--brand-navy); }
+}

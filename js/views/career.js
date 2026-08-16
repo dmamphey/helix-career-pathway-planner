@@ -141,7 +141,8 @@ function header(app, career, { match, analysis, pay, work, redraw }) {
         onBaseline: (id) => { app.setBaseline(id); redraw(); },
       }),
       savedButton,
-      link("Back to explorer", "#/explore", { class: "btn btn-quiet" }),
+      link(app.homeLabel(), `#${app.homeRoute()}`,
+           { class: "btn btn-quiet" }),
     ]),
 
     match

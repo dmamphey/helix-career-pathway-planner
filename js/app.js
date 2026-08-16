@@ -64,6 +64,27 @@ export const app = {
     return Boolean(this.state.profile);
   },
 
+  /**
+   * Where somebody belongs when a screen is finished with them.
+   *
+   * Several screens sent people to the Career Explorer when they were done —
+   * clearing a comparison, backing out of a career page. For a visitor with no
+   * profile that is right: the Explorer is the only list they have. For somebody
+   * who has uploaded a CV it is a demotion, handing back a catalogue of 716
+   * careers in place of the ones matched to them.
+   *
+   * One helper rather than a conditional at each call site, so a new screen gets
+   * the right answer by default instead of having to remember the rule.
+   */
+  homeRoute() {
+    return this.hasProfile() ? "/matches" : "/explore";
+  },
+
+  /** The words for that destination, so a label cannot drift from its link. */
+  homeLabel() {
+    return this.hasProfile() ? "Back to my options" : "Back to all careers";
+  },
+
   /** Has the user answered any of the career-priority questions? */
   hasPreferences() {
     return hasPreferences(this.state.profile);
@@ -400,6 +421,68 @@ function markActiveNav() {
   }
 }
 
+/* ----------------------------------------------------------- the menu button */
+
+/**
+ * The narrow-screen navigation menu.
+ *
+ * Small enough to be worth writing plainly. The state lives in one class and one
+ * `aria-expanded`, and every way of leaving the menu ends in the same `close()`
+ * — there is no second path that can leave the button saying "expanded" over a
+ * hidden panel.
+ *
+ * Focus returns to the button on Escape, because somebody who dismissed the menu
+ * with a keyboard has nowhere else sensible to be. It is deliberately not a focus
+ * trap: this is seven links under a bar, not a modal, and trapping focus in it
+ * would be a bigger imposition than the problem it solves.
+ */
+function wireMenu() {
+  const toggle = document.getElementById("nav-toggle");
+  const nav = document.getElementById("nav");
+  if (!toggle || !nav) return;
+
+  const isOpen = () => nav.classList.contains("is-open");
+  const close = () => {
+    nav.classList.remove("is-open");
+    toggle.setAttribute("aria-expanded", "false");
+  };
+  const open = () => {
+    nav.classList.add("is-open");
+    toggle.setAttribute("aria-expanded", "true");
+  };
+
+  toggle.addEventListener("click", () => (isOpen() ? close() : open()));
+
+  // Following a link is the commonest way to finish with the menu, and the
+  // route change would otherwise leave it open over the screen just navigated
+  // to.
+  nav.addEventListener("click", (event) => {
+    if (event.target.closest("a")) close();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || !isOpen()) return;
+    close();
+    toggle.focus();
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!isOpen()) return;
+    if (nav.contains(event.target) || toggle.contains(event.target)) return;
+    close();
+  });
+
+  /*
+   * Rotating a phone can cross the breakpoint, at which point the links are laid
+   * out in the bar again and `is-open` means nothing — but `aria-expanded` would
+   * still claim otherwise to a screen reader.
+   */
+  const wide = window.matchMedia("(min-width: 52.0625rem)");
+  const sync = () => { if (wide.matches) close(); };
+  if (wide.addEventListener) wide.addEventListener("change", sync);
+  sync();
+}
+
 /* --------------------------------------------------------------------- tray */
 
 /**
@@ -510,6 +593,7 @@ async function boot() {
 
   router.start();
   renderTray(app);
+  wireMenu();
 }
 
 document.addEventListener("DOMContentLoaded", boot);

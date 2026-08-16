@@ -45,6 +45,25 @@
       </span>
     </a>
 
+    <!--
+      The menu button, and why it is markup rather than script.
+
+      Seven navigation items wrapped onto two crowded rows on a phone and took a
+      third of the screen before any content. The button collapses them behind a
+      single control, matching the rest of the Optymum SS site.
+
+      It ships in the HTML rather than being created by app.js so the header is
+      complete before any module has parsed: a nav that appears a moment after
+      the page would shift the layout under somebody's thumb. It is hidden by CSS
+      above the breakpoint, so on a wide screen the links stay where they were.
+    -->
+    <button id="nav-toggle" class="nav-toggle" type="button"
+            aria-expanded="false" aria-controls="nav" aria-label="Menu">
+      <span class="nav-toggle-bars" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </span>
+    </button>
+
     <nav id="nav" aria-label="Main">
       <a href="#/">Start</a>
       <a href="#/explore">Explore careers</a>
