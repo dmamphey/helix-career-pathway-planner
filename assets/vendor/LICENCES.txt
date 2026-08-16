@@ -1,9 +1,13 @@
-CareerPath self-hosted document libraries - third party notices
+Helix self-hosted document libraries - third party notices
 
 PDF.js 4.6.82                Apache License 2.0
     https://github.com/mozilla/pdf.js/blob/master/LICENSE
 Mammoth 1.8.0                BSD 2-Clause
     https://github.com/mwilliamson/mammoth.js/blob/master/LICENSE
+Tesseract.js 5.1.1           Apache License 2.0
+    https://github.com/naptha/tesseract.js/blob/master/LICENSE
+Tesseract OCR engine + eng data   Apache License 2.0
+    https://github.com/tesseract-ocr/tesseract/blob/main/LICENSE
 
 Both permit redistribution. Keep this file alongside the libraries so the notices
 travel with the files they describe.

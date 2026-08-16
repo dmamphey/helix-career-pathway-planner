@@ -38,7 +38,28 @@ const CDN = {
 };
 
 export class UnsupportedFormatError extends Error {}
-export class UnreadableDocumentError extends Error {}
+
+/**
+ * The document could not be read as text.
+ *
+ * Now carries what was recovered and how many pages there were, because a
+ * caller that can offer OCR needs to know whether this looks like a scan or
+ * like a corrupt file — and, if it does offer OCR, needs the already-parsed PDF
+ * library rather than downloading it a second time.
+ */
+export class UnreadableDocumentError extends Error {
+  constructor(message, detail = {}) {
+    super(message);
+    this.recoveredText = detail.recoveredText || "";
+    this.pageCount = detail.pageCount || 0;
+    this.format = detail.format || "";
+  }
+}
+
+/** The loaded PDF library, for a caller that needs to render pages itself. */
+export function pdfLibrary() {
+  return loadPdfLibrary();
+}
 
 /**
  * Extract text from a user-selected file.
@@ -54,7 +75,8 @@ export async function extractText(file) {
     return finish(await file.text(), "TXT");
   }
   if (ext === "pdf" || file.type === "application/pdf") {
-    return finish(await readPdf(file), "PDF");
+    const { text, pageCount } = await readPdf(file);
+    return finish(text, "PDF", { pageCount });
   }
   if (ext === "docx" || /wordprocessingml/.test(file.type || "")) {
     return finish(await readDocx(file), "DOCX");
@@ -69,16 +91,21 @@ export async function extractText(file) {
     + "and TXT files.");
 }
 
-function finish(text, format) {
+function finish(text, format, detail = {}) {
   const clean = String(text || "").replace(/\r/g, "");
   const density = clean.replace(/[^a-zA-Z]/g, "").length;
   if (density < MIN_USEFUL_CHARS) {
+    // What was recovered and how many pages there were travel with the error,
+    // so a caller can tell a scan from a corrupt file and offer the right
+    // thing. The message stops at the diagnosis; what to do about it is the
+    // caller's to say, because only the caller knows whether OCR is on offer.
     throw new UnreadableDocumentError(
       "We could not reliably read text from this CV. It may be a scanned "
-      + "document. Please upload a text-based PDF or DOCX, or continue by "
-      + "building your profile manually.");
+      + "document.",
+      { recoveredText: clean, pageCount: detail.pageCount || 0, format });
   }
-  return { text: clean, format, characters: clean.length };
+  return { text: clean, format, characters: clean.length,
+           pageCount: detail.pageCount || 0 };
 }
 
 async function readPdf(file) {
@@ -91,9 +118,10 @@ async function readPdf(file) {
     const content = await page.getTextContent();
     pages.push(rebuildLines(content.items));
   }
+  const pageCount = doc.numPages;
   // Release the parsed document promptly: it holds the raw bytes.
   await doc.destroy();
-  return pages.join("\n");
+  return { text: pages.join("\n"), pageCount };
 }
 
 /**

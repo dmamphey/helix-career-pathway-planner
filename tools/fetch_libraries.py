@@ -9,13 +9,15 @@ development works without running this — but a privacy-first tool should not h
 to contact a third-party host in order to read a CV, so a real deployment should
 serve them from its own domain.
 
-About 4 MB is written into ``assets/vendor/``.
+About 20 MB is written into ``assets/vendor/``, most of it the OCR engine
+and its English training data.
 
 Licences of what is fetched, both of which permit redistribution. The notices are
 written to assets/vendor/LICENCES.txt alongside the files:
 
-    PDF.js    Apache License 2.0
-    Mammoth   BSD 2-Clause
+    PDF.js        Apache License 2.0
+    Mammoth       BSD 2-Clause
+    Tesseract.js  Apache License 2.0
 """
 
 from __future__ import annotations
@@ -28,6 +30,9 @@ from pathlib import Path
 
 PDFJS_VERSION = "4.6.82"
 MAMMOTH_VERSION = "1.8.0"
+TESSERACT_VERSION = "5.1.1"
+TESSERACT_CORE_VERSION = "5.1.1"
+TESSDATA_VERSION = "4.0.0"
 
 FILES = {
     "pdf.min.mjs":
@@ -36,6 +41,36 @@ FILES = {
         f"https://cdn.jsdelivr.net/npm/pdfjs-dist@{PDFJS_VERSION}/build/pdf.worker.min.mjs",
     "mammoth.browser.min.js":
         f"https://cdn.jsdelivr.net/npm/mammoth@{MAMMOTH_VERSION}/mammoth.browser.min.js",
+
+    # Text recognition for scanned CVs. Vendoring these is not just politeness:
+    # a Web Worker cannot be created from a cross-origin script, so OCR loaded
+    # straight from a CDN hangs on the first page rather than failing cleanly.
+    # Served from our own origin, it works.
+    "tesseract.min.js":
+        f"https://cdn.jsdelivr.net/npm/tesseract.js@{TESSERACT_VERSION}/dist/tesseract.min.js",
+    "tesseract-worker.min.js":
+        f"https://cdn.jsdelivr.net/npm/tesseract.js@{TESSERACT_VERSION}/dist/worker.min.js",
+    "tesseract-core/tesseract-core.wasm.js":
+        f"https://cdn.jsdelivr.net/npm/tesseract.js-core@{TESSERACT_CORE_VERSION}/tesseract-core.wasm.js",
+    "tesseract-core/tesseract-core-simd.wasm.js":
+        f"https://cdn.jsdelivr.net/npm/tesseract.js-core@{TESSERACT_CORE_VERSION}/tesseract-core-simd.wasm.js",
+    "tesseract-core/tesseract-core.wasm":
+        f"https://cdn.jsdelivr.net/npm/tesseract.js-core@{TESSERACT_CORE_VERSION}/tesseract-core.wasm",
+    "tesseract-core/tesseract-core-simd.wasm":
+        f"https://cdn.jsdelivr.net/npm/tesseract.js-core@{TESSERACT_CORE_VERSION}/tesseract-core-simd.wasm",
+    # The LSTM-only builds. tesseract.js picks one of these at runtime from what
+    # the browser supports, so all four variants have to be present or OCR fails
+    # on whichever machine happens to choose the missing one.
+    "tesseract-core/tesseract-core-lstm.wasm.js":
+        f"https://cdn.jsdelivr.net/npm/tesseract.js-core@{TESSERACT_CORE_VERSION}/tesseract-core-lstm.wasm.js",
+    "tesseract-core/tesseract-core-simd-lstm.wasm.js":
+        f"https://cdn.jsdelivr.net/npm/tesseract.js-core@{TESSERACT_CORE_VERSION}/tesseract-core-simd-lstm.wasm.js",
+    "tesseract-core/tesseract-core-lstm.wasm":
+        f"https://cdn.jsdelivr.net/npm/tesseract.js-core@{TESSERACT_CORE_VERSION}/tesseract-core-lstm.wasm",
+    "tesseract-core/tesseract-core-simd-lstm.wasm":
+        f"https://cdn.jsdelivr.net/npm/tesseract.js-core@{TESSERACT_CORE_VERSION}/tesseract-core-simd-lstm.wasm",
+    "tessdata/eng.traineddata.gz":
+        f"https://tessdata.projectnaptha.com/{TESSDATA_VERSION}/eng.traineddata.gz",
 }
 
 LICENCES = f"""Helix self-hosted document libraries - third party notices
@@ -44,6 +79,10 @@ PDF.js {PDFJS_VERSION}                Apache License 2.0
     https://github.com/mozilla/pdf.js/blob/master/LICENSE
 Mammoth {MAMMOTH_VERSION}                BSD 2-Clause
     https://github.com/mwilliamson/mammoth.js/blob/master/LICENSE
+Tesseract.js {TESSERACT_VERSION}           Apache License 2.0
+    https://github.com/naptha/tesseract.js/blob/master/LICENSE
+Tesseract OCR engine + eng data   Apache License 2.0
+    https://github.com/tesseract-ocr/tesseract/blob/main/LICENSE
 
 Both permit redistribution. Keep this file alongside the libraries so the notices
 travel with the files they describe.

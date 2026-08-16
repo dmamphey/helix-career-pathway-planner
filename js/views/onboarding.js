@@ -6,13 +6,19 @@
  * describes is the only authority on whether it is right.
  */
 
-import { h, panel, button, link, notice, confirmDialog, empty } from "../ui.js";
+import {
+  h, panel, button, link, notice, confirmDialog, empty, progressBar,
+} from "../ui.js";
 import { profileForm, profileSummary, signalChips } from "./profile-form.js";
 import { preferenceForm } from "./preferences.js";
 import {
   extractText, redactPersonalData, ProfileInterpreter, UnsupportedFormatError,
-  UnreadableDocumentError,
+  UnreadableDocumentError, pdfLibrary,
 } from "../cv-parser.js";
+// `looksScanned` is a few lines and is needed to decide whether to *offer* OCR,
+// so it is imported eagerly. The engine itself — several megabytes — is loaded
+// only inside `run()`, after somebody has pressed the button.
+import { looksScanned } from "../ocr.js";
 import {
   INTEREST_OPTIONS, PRIORITY_OPTIONS, normaliseProfile
 } from "../profile.js";
@@ -50,9 +56,9 @@ export async function renderUpload(app) {
         h("label", { for: "cv-file", text: "Choose your CV" }),
         input,
         h("p", { id: "cv-help", class: "hint", text:
-          "Text-based PDF, DOCX or TXT. Scanned documents cannot be read: there "
-          + "is no optical character recognition, and Helix will say so "
-          + "rather than pretend." }),
+          "PDF, DOCX or TXT. If a PDF turns out to be a scan with no text in "
+          + "it, Helix will offer to read it with text recognition — in this "
+          + "browser, with nothing uploaded." }),
       ]),
       status,
       problem,
@@ -105,10 +111,28 @@ async function handleFile(app, file, status, problem) {
   } catch (error) {
     status.textContent = "";
     problem.hidden = false;
+
+    /*
+     * A scanned PDF is not a failure, it is a different job.
+     *
+     * The offer is made rather than taken: OCR downloads several megabytes and
+     * takes a minute or two, and doing that to somebody without asking — on a
+     * phone, on their own data — would be rude. The message says what will
+     * happen and, just as importantly, what will not.
+     */
+    if (error instanceof UnreadableDocumentError
+        && looksScanned(error.recoveredText, error.pageCount)
+        && error.format === "PDF") {
+      problem.appendChild(offerOcr(app, file, error, status, problem));
+      return;
+    }
+
     const recoverable = error instanceof UnsupportedFormatError
       || error instanceof UnreadableDocumentError;
     problem.appendChild(h("div", { class: "callout callout-warn" }, [
       h("p", { text: error.message }),
+      h("p", { class: "hint", text: "Nothing about this file has been sent "
+        + "anywhere. It was read in this browser and has been discarded." }),
       h("div", { class: "card-actions" }, [
         link("Build my profile manually", "#/profile",
              { class: "btn btn-primary" }),
@@ -116,6 +140,110 @@ async function handleFile(app, file, status, problem) {
     ]));
     if (!recoverable) console.error(error);
   }
+}
+
+/**
+ * The offer, and the run.
+ *
+ * Kept in one function because the whole flow is one conversation: here is what
+ * we found, here is what we could do about it, here is it happening, here is how
+ * to stop. Cancellation is a real button wired to an `AbortController` rather
+ * than a spinner somebody has to reload the page to escape.
+ */
+function offerOcr(app, file, error, status, problem) {
+  const host = h("div", { class: "callout callout-info" });
+
+  const draw = (children) => host.replaceChildren(...children);
+
+  const idle = () => draw([
+    h("h3", { class: "callout-title", text: "This CV appears to be scanned" }),
+    h("p", { text: "There is no text layer in this PDF, so it is probably a "
+      + "photograph or a scan of a printed page. Helix can try to read it with "
+      + "text recognition." }),
+    h("p", {}, [
+      h("strong", { text: "This happens in your browser. " }),
+      "The scan is not uploaded, and no text-recognition service is contacted "
+      + "with your document. The engine itself is a few megabytes and is "
+      + "downloaded only if you press the button.",
+    ]),
+    h("p", { class: "hint", text: "Recognition is slower and less accurate than "
+      + "reading a text-based PDF. You will review and correct everything "
+      + "afterwards, as you would with any CV." }),
+    h("div", { class: "card-actions" }, [
+      button("Run text recognition here", run, { variant: "primary" }),
+      link("Build my profile manually", "#/profile", { class: "btn" }),
+    ]),
+  ]);
+
+  let controller = null;
+
+  function progressView(update) {
+    draw([
+      h("h3", { class: "callout-title", text: "Reading your CV" }),
+      progressBar(update.percent || 0, update.message || "Working"),
+      h("p", { "aria-live": "polite", text: update.message || "" }),
+      h("p", { class: "hint", text: "Everything is happening on this device." }),
+      h("div", { class: "card-actions" }, [
+        button("Cancel", () => controller && controller.abort(),
+               { variant: "quiet" }),
+      ]),
+    ]);
+  }
+
+  async function run() {
+    controller = new AbortController();
+    progressView({ percent: 0, message: "Preparing the document" });
+    try {
+      const { readScannedPdf, textQuality } = await import("../ocr.js");
+      const pdfjs = await pdfLibrary();
+      const result = await readScannedPdf(file, {
+        pdfjs, signal: controller.signal, onProgress: progressView,
+      });
+
+      const quality = textQuality(result.text);
+      // Same path as any other CV from here on: redact, parse, then review.
+      // OCR output is a draft like every other extraction, and gets no
+      // shortcuts around the confirmation step.
+      const text = redactPersonalData(result.text);
+      const parsed = ProfileInterpreter.parse(text, { catalogue: app.catalogue });
+
+      app.pending = {
+        profile: parsed.profile,
+        notes: parsed.notes,
+        format: "scanned PDF",
+        signalCount: parsed.signalCount,
+        ocr: {
+          pages: result.pages,
+          truncated: result.truncated,
+          engine: result.engine,
+          quality,
+        },
+      };
+      problem.hidden = true;
+      status.textContent = "";
+      app.navigate("/review");
+    } catch (failure) {
+      const cancelled = failure && failure.name === "OcrCancelledError"
+        || /cancelled/i.test(failure && failure.message || "");
+      draw([
+        h("h3", { class: "callout-title",
+                  text: cancelled ? "Text recognition cancelled"
+                                  : "Text recognition did not work" }),
+        h("p", { text: cancelled
+          ? "Nothing was kept, and nothing was sent anywhere."
+          : (failure && failure.message)
+            || "The scan could not be read on this device." }),
+        h("div", { class: "card-actions" }, [
+          button("Try again", run, { variant: "quiet" }),
+          link("Build my profile manually", "#/profile",
+               { class: "btn btn-primary" }),
+        ]),
+      ]);
+    }
+  }
+
+  idle();
+  return host;
 }
 
 /* ------------------------------------------------------------------- review */
@@ -143,6 +271,34 @@ export async function renderReview(app) {
           `Read from your ${pending.format} by rule-based extraction — not by an `
           + `AI model. It is a draft: correct anything that is wrong, and add `
           + `anything it missed.` }),
+
+        /*
+         * OCR output goes through the same review as any other extraction, but
+         * it does not deserve the same confidence, and the screen says so before
+         * the fields rather than after them. Text recognition misreads names,
+         * dates and abbreviations far more often than it misreads prose — which
+         * is exactly the part of a CV that carries meaning here.
+         */
+        pending.ocr
+          ? h("div", { class: `callout callout-${
+              pending.ocr.quality.key === "fair" ? "info" : "warn"}` }, [
+              h("h3", { class: "callout-title",
+                        text: "This came from text recognition" }),
+              h("p", { text: `${pending.ocr.pages} `
+                + `${pending.ocr.pages === 1 ? "page was" : "pages were"} read `
+                + `with ${pending.ocr.engine}. Recognition quality: `
+                + `${pending.ocr.quality.label.toLowerCase()}.` }),
+              h("p", { text: pending.ocr.quality.message }),
+              pending.ocr.truncated
+                ? h("p", { class: "hint", text: "Only the first few pages were "
+                    + "read. A CV longer than that is unusual, and reading all "
+                    + "of it would have taken minutes." })
+                : null,
+              h("p", { class: "hint", text: "The scan and its recognised text "
+                + "have been discarded. Only the structured profile below "
+                + "remains, and only in this browser." }),
+            ])
+          : null,
         editing
           ? profileForm(draft, { families: app.catalogue.families,
                                  onChange: () => {}, showInterests: false })

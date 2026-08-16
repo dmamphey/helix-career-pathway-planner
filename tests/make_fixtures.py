@@ -18,6 +18,7 @@ search network traffic and localStorage for them and prove they went nowhere.
 
 from __future__ import annotations
 
+import base64
 import shutil
 import subprocess
 import sys
@@ -166,6 +167,48 @@ def print_pdf(browser: str, source: Path, target: Path) -> bool:
     return True
 
 
+def screenshot(browser: str, source: Path, target: Path, height: int = 1400) -> bool:
+    """Render a page to PNG, so a fixture can contain text as pixels."""
+    with tempfile.TemporaryDirectory(prefix="cpshot") as tmp:
+        out = Path(tmp) / "shot.png"
+        result = subprocess.run([
+            browser, "--headless=new", "--disable-gpu", "--no-first-run",
+            "--no-default-browser-check", "--hide-scrollbars",
+            f"--window-size=1000,{height}", "--virtual-time-budget=3000",
+            f"--screenshot={out}", source.as_uri(),
+        ], capture_output=True, text=True, timeout=180)
+        if not out.exists():
+            print(f"  FAILED {target.name}: exit {result.returncode}")
+            print("   ", result.stderr.strip()[:300])
+            return False
+        shutil.copyfile(out, target)
+    print(f"  wrote {target.name} ({target.stat().st_size:,} bytes)")
+    return True
+
+
+def write_ocr_source(browser: str) -> Path | None:
+    """A page whose only content is a *picture of the CV*.
+
+    The old scanned fixture was a grey rectangle. It proved the "we cannot read
+    this" path and nothing else — there was no text in it, so it could never
+    show whether text recognition works. This renders the real CV to an image
+    and puts that image on the page, which is what a scanner produces: a
+    document a human can read and a text extractor cannot.
+    """
+    shot = FIXTURES / "scanned-cv-page.png"
+    if not screenshot(browser, FIXTURES / "fictional-cv.html", shot):
+        return None
+    data = base64.b64encode(shot.read_bytes()).decode("ascii")
+    shot.unlink(missing_ok=True)
+    html = ("<!DOCTYPE html><html lang=\"en-GB\"><head><meta charset=\"utf-8\">"
+            "<title>x</title><style>html,body{margin:0}"
+            "img{width:100%;image-rendering:auto}</style></head><body>"
+            f'<img src="data:image/png;base64,{data}" alt=""></body></html>')
+    path = FIXTURES / "scanned-cv-source.html"
+    path.write_text(html, encoding="utf-8")
+    return path
+
+
 def write_scanned_source() -> Path:
     """A page whose only content is an image, so the PDF has no text layer."""
     # A 2x2 grey PNG, scaled up. Nothing to extract, which is the point.
@@ -190,11 +233,17 @@ def main() -> int:
 
     browser = find_browser()
     if not browser:
-        print("  no Chrome or Edge found: the two PDF fixtures were not built")
+        print("  no Chrome or Edge found: the PDF fixtures were not built")
         return 1
+    # Needs the browser, so it is built after the search rather than before it.
+    ocr_source = write_ocr_source(browser)
     ok = print_pdf(browser, html, FIXTURES / "fictional-cv.pdf")
     ok = print_pdf(browser, scanned, FIXTURES / "scanned-cv.pdf") and ok
     scanned.unlink(missing_ok=True)
+    if ocr_source:
+        ok = print_pdf(browser, ocr_source,
+                       FIXTURES / "scanned-cv-readable.pdf") and ok
+        ocr_source.unlink(missing_ok=True)
     return 0 if ok else 1
 
 

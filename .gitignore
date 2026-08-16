@@ -12,3 +12,9 @@ __pycache__/
 
 # Enrichment pipeline HTTP cache: rebuildable, not source.
 tools/market_data/.cache/
+
+# Vendored OCR engine and training data: ~40 MB of third-party binaries that
+# tools/fetch_libraries.py reproduces exactly. Fetch them at deploy time rather
+# than carrying them in every clone.
+assets/vendor/tesseract*
+assets/vendor/tessdata/

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>Helix OCR check</title>
+<!--
+  A standalone harness for the one thing the browser test suite cannot do.
+
+  Text recognition takes tens of seconds and needs a real page render, a WASM
+  worker and 15 MB of engine and training data. Putting that in `tests/suite.js`
+  would turn a two-second suite into a two-minute one for every developer on
+  every run, and it would fail on a machine with no vendored assets — so it lives
+  here and is run deliberately:
+
+      python tools/serve.py
+      # then open /tests/ocr-check.html, or:
+      python tests/run_ocr_check.py
+
+  It reads the *readable* scanned fixture — a picture of a real CV rather than a
+  grey rectangle — and asserts that recognition recovers the text a person would
+  see, that the profile interpreter can then use it, and that nothing left the
+  device.
+-->
+<style>
+  body { font: 15px/1.6 system-ui, sans-serif; margin: 2rem; max-width: 60rem; }
+  h1 { font-size: 1.3rem; }
+  pre { background: #f4f7fa; padding: .8rem; overflow-x: auto; white-space: pre-wrap; }
+  .pass { color: #17603a; font-weight: 700; }
+  .fail { color: #8a3320; font-weight: 700; }
+  li { margin-bottom: .3rem; }
+</style>
+</head>
+<body>
+<h1>Helix OCR check</h1>
+<p id="status">Running…</p>
+<ul id="results"></ul>
+<h2>Recognised text</h2>
+<pre id="text"></pre>
+
+<script type="module">
+import { pdfLibrary } from "../js/cv-parser.js";
+import { redactPersonalData, ProfileInterpreter } from "../js/cv-parser.js";
+import { readScannedPdf, textQuality, looksScanned } from "../js/ocr.js";
+import { loadCareers } from "../js/career-data.js";
+
+const results = document.getElementById("results");
+const statusEl = document.getElementById("status");
+let failures = 0;
+
+const report = [];
+
+function check(name, ok, detail = "") {
+  if (!ok) failures += 1;
+  report.push({ name, ok, detail });
+  const li = document.createElement("li");
+  li.innerHTML = `<span class="${ok ? "pass" : "fail"}">`
+    + `${ok ? "PASS" : "FAIL"}</span> ${name}`
+    + (detail ? ` <span style="color:#55616f">— ${detail}</span>` : "");
+  results.appendChild(li);
+}
+
+(async () => {
+  const started = performance.now();
+  try {
+    const catalogue = await loadCareers();
+    const pdfjs = await pdfLibrary();
+
+    const blob = await (await fetch("./fixtures/scanned-cv-readable.pdf")).blob();
+    const file = new File([blob], "scan.pdf", { type: "application/pdf" });
+
+    const stages = [];
+    const result = await readScannedPdf(file, {
+      pdfjs, onProgress: (update) => stages.push(update.stage),
+    });
+    const seconds = Math.round((performance.now() - started) / 100) / 10;
+
+    document.getElementById("text").textContent = result.text.slice(0, 1500);
+
+    check("recognition returned text", result.text.length > 400,
+          `${result.text.length} characters in ${seconds}s`);
+    check("progress was reported per page", stages.includes("reading"),
+          stages.join(" → "));
+    check("recovered text no longer looks scanned",
+          !looksScanned(result.text, result.pages));
+
+    const lower = result.text.toLowerCase();
+    // Words that are in the fixture CV. OCR will misread some characters, so
+    // this asks for most of them rather than all — a check that demanded
+    // perfection would fail on a correctly working engine.
+    const expected = ["biomedical", "scientist", "laboratory", "nhs",
+                      "quality", "training", "university"];
+    const found = expected.filter((word) => lower.includes(word));
+    check("the CV's own words were recovered", found.length >= 5,
+          `${found.length} of ${expected.length}: ${found.join(", ")}`);
+
+    const quality = textQuality(result.text);
+    check("quality is assessed and reported", Boolean(quality.key),
+          `${quality.label} (${Math.round(quality.ratio * 100)}% word-like)`);
+
+    const profile = ProfileInterpreter.parse(
+      redactPersonalData(result.text), { catalogue });
+    check("a usable profile came out of it",
+          profile.signalCount > 0,
+          `${profile.signalCount} career signals`);
+
+    statusEl.textContent = failures
+      ? `${failures} check(s) failed.`
+      : `All checks passed in ${seconds}s.`;
+  } catch (error) {
+    check("the run completed", false, String(error && error.message || error));
+    statusEl.textContent = "The run did not complete.";
+  }
+  window.__ocrCheck = { done: true, failures };
+  document.title = failures ? `OCR CHECK FAILED (${failures})` : "OCR CHECK PASSED";
+
+  /*
+   * Tell the runner we are actually finished.
+   *
+   * A DOM dump cannot be used for this: Chrome's virtual time budget
+   * fast-forwards timers but not real WebAssembly work, so it dumps the page
+   * while the engine is still loading. Posting when the work is genuinely done
+   * is the only honest signal.
+   */
+  try {
+    await fetch("/__ocr_result", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        failures, checks: report,
+        summary: statusEl.textContent,
+      }),
+    });
+  } catch (ignored) { /* opened by hand rather than by the runner */ }
+})();
+</script>
+</body>
+</html>
