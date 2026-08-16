@@ -909,3 +909,49 @@ ul.plain, ol.plain { list-style: none; padding: 0; margin: 0; }
 .signal-moderate { color: var(--brand-navy); background: var(--brand-tint); border-color: var(--brand-cyan); }
 .signal-limited { color: var(--warn); background: var(--warn-bg); border-color: var(--warn-line); }
 .signal-insufficient { color: var(--muted); background: #f1f4f7; border-color: var(--line); }
+
+/* The career graph. Shape and label carry meaning; colour is only reinforcement,
+   so the picture survives greyscale and colour blindness. */
+.graph-stage {
+  overflow-x: auto; overflow-y: hidden; border: 1px solid var(--line);
+  border-radius: var(--radius); background: #fbfdfe; padding: .5rem;
+}
+.career-graph {
+  display: block; width: 100%; height: auto;
+  transform-origin: top center;
+}
+.graph-controls {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .6rem;
+  margin-bottom: .6rem;
+}
+.graph-edge { stroke: #9fb3c6; stroke-width: 1.6; }
+.graph-edge-dashed { stroke-dasharray: 6 4; }
+.graph-edge-dotted { stroke-dasharray: 2 4; stroke-width: 2.2; stroke: var(--brand-cyan); }
+.graph-node-holder { width: 100%; height: 100%; display: flex;
+                     align-items: center; justify-content: center; }
+.graph-node {
+  display: flex; align-items: center; gap: .25rem; max-width: 100%;
+  font: inherit; font-size: .78rem; line-height: 1.15; text-align: left;
+  background: #fff; border: 1.5px solid var(--line); border-radius: 8px;
+  padding: .3rem .4rem; cursor: pointer; color: var(--ink);
+  box-shadow: 0 1px 3px rgba(16,39,66,.12);
+}
+.graph-node:hover { border-color: var(--brand-cyan); }
+.graph-node:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.graph-node-title { overflow: hidden; text-overflow: ellipsis;
+                    display: -webkit-box; -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical; }
+.graph-node-shape { flex: none; color: var(--brand-navy); }
+.graph-node-flag { flex: none; font-weight: 700; color: var(--warn); }
+.graph-node-target { border-width: 2.5px; border-color: var(--brand-navy); font-weight: 700; }
+.graph-node-current { border-width: 2.5px; border-color: var(--brand-blue); font-weight: 700; }
+.graph-node-bridge { border-style: dashed; border-color: var(--brand-cyan); }
+.graph-node-regulated { border-left-width: 5px; border-left-color: var(--warn-line); }
+.graph-key { display: inline-block; width: 1.2rem; color: var(--brand-navy); }
+.graph-group { margin-top: 1.2rem; }
+.graph-group h3 { margin-top: 0; }
+.graph-list { list-style: none; margin: 0; padding: 0; }
+.graph-list > li { border-top: 1px solid var(--line); padding: .7rem 0; }
+.graph-list > li:first-child { border-top: 0; }
+.graph-list-head { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.graph-connections { margin: .3rem 0 .2rem; color: var(--muted); font-size: .87rem; }

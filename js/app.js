@@ -37,6 +37,7 @@ import * as savedView from "./views/saved.js";
 import * as planView from "./views/plan.js";
 import * as dataView from "./views/data.js";
 import * as compareView from "./views/compare.js";
+import * as graphView from "./views/graph.js";
 import * as preferencesView from "./views/preferences.js";
 
 /**
@@ -354,6 +355,7 @@ const VIEWS = [
   ["/matches", exploreView.renderMatches],
   ["/career/:id", careerView.render],
   ["/pathway/:id", pathwayView.render],
+  ["/graph/:id", graphView.render],
   ["/saved", savedView.render],
   ["/compare", compareView.render],
   ["/compare/:ids", compareView.render],

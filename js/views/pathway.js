@@ -392,6 +392,7 @@ function footerActions(app, career) {
   return h("div", { class: "card-actions" }, [
     link("Download my career plan", `#/plan/${career.id}`,
          { class: "btn btn-primary" }),
+    link("See the career graph", `#/graph/${career.id}`, { class: "btn" }),
     link("Edit my profile", "#/profile", { class: "btn" }),
     link("Compare saved careers", "#/saved", { class: "btn btn-quiet" }),
   ]);

@@ -131,6 +131,7 @@ function header(app, career, { match, analysis, pay, work, redraw }) {
     h("div", { class: "card-actions" }, [
       link("Build my pathway", `#/pathway/${career.id}`,
            { class: "btn btn-primary" }),
+      link("See the career graph", `#/graph/${career.id}`, { class: "btn" }),
       compareToggle(career, {
         comparing: app.isComparing(career.id),
         onCompare: (id) => { app.toggleCompare(id); redraw(); },
