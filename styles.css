@@ -515,10 +515,11 @@ ul.plain, ol.plain { list-style: none; padding: 0; margin: 0; }
 .node-open {
   background: none;
   border: 0;
-  /* Padding rather than none: this is the milestone's primary control, and it has
-     to clear the 24px minimum target size on a phone. */
-  padding: .25rem 0;
-  min-height: 1.75rem;
+  /* Padding rather than none: this is the milestone's primary control, and it
+     has to be comfortably tappable. 44px is the size a finger actually needs,
+     and the old 28px was clearing a lower bar than a phone deserves. */
+  padding: .5rem 0;
+  min-height: 44px;
   font: inherit;
   font-size: 1.05rem;
   font-weight: 700;
@@ -930,7 +931,10 @@ ul.plain, ol.plain { list-style: none; padding: 0; margin: 0; }
 .graph-node-holder { width: 100%; height: 100%; display: flex;
                      align-items: center; justify-content: center; }
 .graph-node {
-  display: flex; align-items: center; gap: .25rem; max-width: 100%;
+  /* Fills its foreignObject rather than shrink-wrapping the label, so every
+     node clears the 44px tap target a finger needs. */
+  display: flex; align-items: center; gap: .25rem;
+  width: 100%; height: 100%; min-height: 44px;
   font: inherit; font-size: .78rem; line-height: 1.15; text-align: left;
   background: #fff; border: 1.5px solid var(--line); border-radius: 8px;
   padding: .3rem .4rem; cursor: pointer; color: var(--ink);

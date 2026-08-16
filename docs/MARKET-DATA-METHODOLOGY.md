@@ -444,7 +444,106 @@ Helix does not claim ownership of Crown copyright source data.
 
 ---
 
-## 12. Where to look next
+## 12. Salary by region
+
+Helix has no verified career-to-SOC mapping, so it cannot publish an ONS
+occupation earnings figure as a career's headline range. What it *can* say
+honestly is how pay for that kind of work varies across the UK, which is a
+different and much better supported claim.
+
+**The method.** ONS ASHE Table 3 publishes median gross annual pay for full-time
+employees by region for each two-digit SOC group. A region's median divided by
+the UK median for the same group gives a **regional index** — 1.133 for health
+professionals in London, meaning they are paid about 13% more than health
+professionals nationally. Helix applies that index to the career's own UK range.
+The level comes from the career's own evidence; only the regional shape is ONS's.
+
+**Why a coarse occupation mapping is acceptable here and nowhere else.** A ratio
+is far more forgiving of an approximate occupation match than a level is. The
+whole-economy London index is 1.269 against 1.133 for health professionals — so
+choosing the right *broad group* matters a great deal, and choosing the exact
+unit group inside it barely moves the answer. Using the whole-economy figure for
+a nurse would overstate London pay by about twelve percentage points; using a
+neighbouring professional group would not. That is the opposite of the situation
+for salary levels, where a wrong unit group produces a wrong number.
+
+The family-to-group mapping is editorial, lives in
+`data/reference/helix_family_soc_map.json`, and records a reason for every one of
+the sixteen families. Seniority adjusts it: trainee and support grades move to
+the associate professional group, manager and lead grades to corporate managers.
+
+**What is never done.** A derived regional figure is capped at *indicative*
+however good the UK figure was, because no source published a regional range for
+that job. Regions ONS suppressed are absent from the interface rather than
+back-filled with the UK figure. And there are no city-level figures: nothing in
+the evidence distinguishes Manchester from Blackburn.
+
+---
+
+## 13. Salary by sector
+
+This section is mostly an admission.
+
+The question people most want answered — does industry pay more than the NHS for
+this job? — has no honest answer from published data. ASHE splits earnings by
+sector **or** by occupation, never both at once. There is no table of "biomedical
+scientists in pharmaceutical manufacturing".
+
+So Helix publishes exactly two things, both labelled:
+
+1. The **public-sector pay framework** for a career, where a person has curated
+   the mapping. Never inferred from a job title.
+2. The **whole-economy public/private difference** from ASHE Table 25, stated as
+   an all-occupations figure and explicitly not to be applied to the range above
+   it.
+
+The tempting alternative — multiplying a career's range by the average pay of
+everyone employed in an industry, cleaners and directors included — would produce
+an official-looking number that describes nobody.
+
+---
+
+## 14. Labour market signals
+
+**Source.** ONS Faster Indicators, online job advert estimates: a weekly index of
+online job adverts by advertising category, published under the Open Government
+Licence and needing no credential.
+
+**What it can say.** Whether advert volume in a category is rising, flat or
+falling, and where it sits against a February 2020 baseline of 100.
+
+**What it cannot, and therefore what Helix does not show.**
+
+| Not shown | Why |
+|---|---|
+| Vacancy counts | The source is an index, not a count. Converting one to the other means inventing a total nobody published |
+| Regional demand | The dataset publishes a single geography, the United Kingdom |
+| Skills in adverts | Not measured by this source |
+| Named employers | Not measured by this source |
+
+**Categories, not jobs.** Signals are resolved through a career's *family*, so a
+biomedical scientist's figure describes hiring across Healthcare and Social care
+— a category that also covers care work. Careers in the same category read the
+same number, and both the comparison table and the standout summary say so rather
+than presenting one measurement twice as though it distinguished two careers.
+
+**Age lowers the signal.** ONS last released this series in October 2024. A long,
+dense weekly series is a strong measurement *of the period it covers*; if that
+period ended eighteen months ago it is weak evidence about hiring today, so
+strength is capped at "limited" regardless of how much data there is.
+
+**Providers.** `tools/market_data/providers/labour_market.py` defines the
+interface. Adzuna and DWP Find a Job are implemented as credentialed providers
+that return nothing until a key is present in the environment, and say which key
+and where to register when asked why. A stub returning plausible numbers would be
+indistinguishable from a working integration in the published file. The *My data*
+screen publishes the whole provider table.
+
+**Never "no jobs".** A missing file, a failed refresh or an unmapped family all
+produce "Helix has no current signal", which is a statement about Helix's
+evidence and not about the job market.
+
+## 15. Where to look next
 
 - `docs/MARKET-DATA-AUDIT.md` — the current counts: coverage, evidence classes,
   methods, records needing review, stale records
@@ -452,3 +551,5 @@ Helix does not claim ownership of Crown copyright source data.
 - `data/reference/helix_salary_source_registry_uk_v1.json` — the approved source
   list and the priority order
 - The **My data** screen inside Helix — the same figures, in the application
+
+---

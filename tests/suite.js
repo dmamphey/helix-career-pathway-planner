@@ -36,6 +36,17 @@ import * as comparison from "../js/comparison.js";
 import { preferenceFit, FIT_LEVELS, SCORED_PREFERENCE_KEYS }
   from "../js/preference-fit.js";
 import { transitionEffort } from "../js/transition-effort.js";
+import { bridgeRoles } from "../js/bridge-engine.js";
+import { buildGraph, layout, asList, NODE_WIDTH, NODE_HEIGHT }
+  from "../js/career-graph.js";
+import { buildTimeline, HORIZONS, horizonForDate, suggestedDate }
+  from "../js/timeline-engine.js";
+import { delta, shift, change, salaryDelta, differences }
+  from "../js/baseline.js";
+import { whyNotRecommended, standing } from "../js/why-not.js";
+import * as labour from "../js/labour-market.js";
+import { REGIONS, normaliseRegion, isUk } from "../js/regions.js";
+import { looksScanned, textQuality } from "../js/ocr.js";
 import {
   PREFERENCE_FIELDS, PREFERENCE_GROUPS, hasPreferences,
 } from "../js/profile.js";
@@ -1461,5 +1472,485 @@ async function run() {
   window.__results = { passed, failed, total: tests.length, results };
   window.__done = true;
 }
+
+/* ==================================================================
+ * Regional and sector salary
+ * ================================================================== */
+
+test("a regional salary is derived only where ONS publishes the group", () => {
+  const context = market.regionalContext();
+  assert(context, "no regional context was published");
+  for (const career of catalogue.careers.slice(0, 60)) {
+    const available = new Set(market.regionsWithData(career.id));
+    for (const region of REGIONS) {
+      if (isUk(region.key)) continue;
+      const value = market.salaryForRegion(career.id, region.key);
+      if (!available.has(region.key)) {
+        // Either nothing at all, or an explicit refusal with a reason. What it
+        // must never be is a number.
+        assert(!value || value.unavailable,
+               `${career.id} produced a figure for ${region.key} with no ONS data`);
+        continue;
+      }
+      if (!value || value.unavailable) continue;
+      assert(Number.isFinite(value.low) && Number.isFinite(value.high),
+             `${career.id} ${region.key} produced a non-numeric range`);
+      assert(value.high >= value.low, "regional range is inverted");
+    }
+  }
+});
+
+test("the UK region never produces a separate regional figure", () => {
+  // `salary()` already answers for the UK. A second, differently-derived UK
+  // answer could disagree with it, so this returns null by construction.
+  for (const career of catalogue.careers.slice(0, 20)) {
+    equal(market.salaryForRegion(career.id, "uk"), null);
+  }
+});
+
+test("a derived regional figure is never better evidenced than indicative", () => {
+  let checked = 0;
+  for (const career of catalogue.careers) {
+    const base = market.salary(career.id);
+    if (!base || base.evidenceRank > 1) continue;
+    for (const region of market.regionsWithData(career.id)) {
+      const value = market.salaryForRegion(career.id, region);
+      if (!value || value.unavailable) continue;
+      assert(value.evidenceRank >= 2,
+             `${career.id} ${region} claims ${value.evidenceLabel} for a figure `
+             + `no source published`);
+      checked += 1;
+    }
+    if (checked > 200) break;
+  }
+  assert(checked > 0, "no strongly-evidenced career had a regional figure");
+});
+
+test("the regional index moves a salary in the direction ONS measured", () => {
+  const context = market.regionalContext();
+  const career = catalogue.careers.find((item) =>
+    market.regionsWithData(item.id).includes("london"));
+  assert(career, "no career had a London figure");
+  const base = market.salary(career.id);
+  const london = market.salaryForRegion(career.id, "london");
+  const group = context.groups[market.forCareer(career.id).salary.regional_soc_group];
+  const index = group.regions.london;
+  equal(london.high > base.high, index > 1,
+        `London index is ${index} but the range moved the other way`);
+});
+
+test("a stored region preference is normalised", () => {
+  equal(normaliseRegion("london"), "london");
+  equal(normaliseRegion("atlantis"), "uk");
+  equal(normaliseRegion(undefined), "uk");
+});
+
+/* ==================================================================
+ * Bridge roles
+ * ================================================================== */
+
+function bridgeFor(profile, targetId) {
+  const target = catalogue.get(targetId);
+  const match = scoreCareer(profile, target);
+  const gaps = analyseGaps(profile, match, null, catalogue.sources);
+  return bridgeRoles({
+    target, targetGaps: gaps, careers: catalogue.careers,
+    matchFor: (career) => scoreCareer(profile, career), profile,
+  });
+}
+
+test("a bridge role aligns more closely than the destination", () => {
+  const profile = DEMO_PROFILES[1].build();
+  const result = bridgeFor(profile, "CP-272");
+  assert(result.hasBridge, "no bridge was found for a substantial transition");
+  const target = scoreCareer(profile, catalogue.get("CP-272"));
+  for (const bridge of result.bridges) {
+    assert(bridge.match.score > target.score,
+           `${bridge.career.title} does not align better than the destination`);
+    assert(bridge.closesGaps.length > 0,
+           `${bridge.career.title} closes none of the destination's gaps`);
+  }
+});
+
+test("a regulated profession is never offered as a bridge", () => {
+  /*
+   * Clinical Oncologist ranked well as a "bridge" to Clinical Research
+   * Associate for a biomedical scientist: it shares subject matter and its
+   * title carries no seniority word. Reaching it is harder than reaching the
+   * destination, so it is excluded outright rather than scored down.
+   */
+  for (const demo of DEMO_PROFILES) {
+    const profile = demo.build();
+    for (const targetId of ["CP-272", "CP-019"]) {
+      for (const bridge of bridgeFor(profile, targetId).bridges) {
+        if (!bridge.career.derived.regulated) continue;
+        const covered = (profile.registrations || []).some((registration) =>
+          registration.statutory && registration.status === "current"
+          && registration.body === bridge.career.regulator_or_body);
+        assert(covered,
+               `${bridge.career.title} is regulated and was offered as a bridge`);
+      }
+    }
+  }
+});
+
+test("a step down is only offered from a grade Helix actually knows", () => {
+  const profile = DEMO_PROFILES[1].build();
+  assert(profile.currentRole, "this demo should state a current role");
+  const anonymous = { ...profile, currentRole: "" };
+  for (const bridge of bridgeFor(anonymous, "CP-019").bridges) {
+    equal(bridge.stepsDown, false,
+          `${bridge.career.title} was called a step down from an unknown grade`);
+  }
+});
+
+test("every bridge says it is optional", () => {
+  const profile = DEMO_PROFILES[1].build();
+  for (const bridge of bridgeFor(profile, "CP-272").bridges) {
+    assert(/not a required step/i.test(bridge.optional),
+           "a bridge did not state that it is optional");
+  }
+});
+
+test("no bridges are offered without an explanation", () => {
+  const profile = DEMO_PROFILES[1].build();
+  const result = bridgeFor(profile, "CP-003");
+  if (!result.hasBridge) assert(result.reason, "no bridges and no explanation");
+});
+
+/* ==================================================================
+ * The career graph
+ * ================================================================== */
+
+test("the graph is a neighbourhood, not the catalogue", () => {
+  const graph = buildGraph({
+    target: catalogue.get("CP-019"), careers: catalogue.careers,
+  });
+  assert(graph.nodes.length >= 3, "the graph is empty");
+  assert(graph.nodes.length <= 20,
+         `${graph.nodes.length} nodes is a hairball, not a neighbourhood`);
+});
+
+test("every graph edge points at a career in the graph", () => {
+  const graph = buildGraph({
+    target: catalogue.get("CP-019"), current: catalogue.get("CP-003"),
+    careers: catalogue.careers,
+  });
+  const present = new Set(graph.nodes.map((node) => node.id));
+  for (const edge of graph.edges) {
+    assert(present.has(edge.from), `edge from missing node ${edge.from}`);
+    assert(present.has(edge.to), `edge to missing node ${edge.to}`);
+    assert(catalogue.get(edge.from) && catalogue.get(edge.to),
+           "an edge references a career id that is not in the catalogue");
+  }
+});
+
+test("graph nodes never overlap and stay inside the canvas", () => {
+  /*
+   * Concentric rings were the first layout and produced seven overlapping pairs
+   * and a node off the edge at fourteen careers. The layered layout cannot
+   * overlap by construction, and this proves it stays that way.
+   */
+  const graph = buildGraph({
+    target: catalogue.get("CP-272"), current: catalogue.get("CP-003"),
+    careers: catalogue.careers,
+  });
+  const { positions, width, height } = layout(graph);
+  const boxes = [...positions.values()].map((at) => ({
+    x: at.x - NODE_WIDTH / 2, y: at.y - NODE_HEIGHT / 2,
+  }));
+  for (const box of boxes) {
+    assert(box.x >= 0 && box.y >= 0
+           && box.x + NODE_WIDTH <= width && box.y + NODE_HEIGHT <= height,
+           "a node was placed outside the canvas");
+  }
+  for (let i = 0; i < boxes.length; i += 1) {
+    for (let j = i + 1; j < boxes.length; j += 1) {
+      const a = boxes[i];
+      const b = boxes[j];
+      const overlap = a.x < b.x + NODE_WIDTH && b.x < a.x + NODE_WIDTH
+                   && a.y < b.y + NODE_HEIGHT && b.y < a.y + NODE_HEIGHT;
+      assert(!overlap, "two graph nodes overlap");
+    }
+  }
+});
+
+test("the accessible list holds every career the picture does", () => {
+  const graph = buildGraph({
+    target: catalogue.get("CP-272"), current: catalogue.get("CP-003"),
+    careers: catalogue.careers,
+  });
+  const listed = new Set(asList(graph)
+    .flatMap((group) => group.members.map((node) => node.id)));
+  equal(listed.size, graph.nodes.length,
+        "the list and the picture do not hold the same careers");
+});
+
+/* ==================================================================
+ * Baseline comparison
+ * ================================================================== */
+
+test("a numeric delta is only produced from two numbers", () => {
+  assert(delta(10, 20) !== null);
+  equal(delta(10, undefined), null);
+  equal(delta(null, 20), null);
+  equal(delta(NaN, 20), null);
+});
+
+test("a qualitative shift never produces a number", () => {
+  const result = shift("low", "high");
+  equal(result.numeric, false);
+  assert(!/\d/.test(result.label), `"${result.label}" contains a digit`);
+  equal(shift("high", "high").direction, "same");
+  equal(shift("low", "unknown").known, false);
+});
+
+test("an unordered change reports difference, not direction", () => {
+  equal(change("Regulated", "Not regulated").direction, "different");
+  equal(change("Regulated", "Regulated").direction, "same");
+});
+
+test("a salary delta carries the weaker of the two evidence classes", () => {
+  const strong = market.salary("CP-003");
+  const weak = catalogue.careers
+    .map((career) => market.salary(career.id))
+    .find((pay) => pay && pay.evidenceRank === 3);
+  assert(strong && weak, "needed one strong and one weak salary");
+  equal(salaryDelta(strong, weak).weakestEvidence, weak.evidenceLabel);
+});
+
+test("differences never invent a figure for a missing value", () => {
+  const present = { career: catalogue.get("CP-003"),
+                    salary: market.salary("CP-003"),
+                    work: market.workLife("CP-003") };
+  const missing = { career: catalogue.get("CP-019"), salary: null, work: null };
+  for (const row of differences(present, missing)) {
+    if (row.kind !== "numeric") continue;
+    assert(row.value === null || Number.isFinite(row.value.difference),
+           `${row.label} produced a difference from nothing`);
+  }
+});
+
+/* ==================================================================
+ * Why wasn't this recommended
+ * ================================================================== */
+
+test("the explanation is built only from scored components", () => {
+  const profile = DEMO_PROFILES[1].build();
+  const ranked = rankCareers(profile, catalogue.careers);
+  const career = catalogue.get("CP-272");
+  const match = scoreCareer(profile, career);
+  const gaps = analyseGaps(profile, match, null, catalogue.sources);
+  const why = whyNotRecommended(match, gaps, career);
+
+  const labels = new Set(match.components.map((item) => item.label));
+  for (const item of [...why.fits, ...why.reduced]) {
+    assert(labels.has(item.label),
+           `${item.label} is not one of the match components`);
+  }
+  const place = standing(match, ranked);
+  assert(place.rank >= 1 && place.rank <= ranked.length);
+});
+
+test("eligibility is stated separately from alignment", () => {
+  const profile = DEMO_PROFILES[1].build();
+  for (const id of ["CP-019", "CP-272"]) {
+    const career = catalogue.get(id);
+    const match = scoreCareer(profile, career);
+    const gaps = analyseGaps(profile, match, null, catalogue.sources);
+    const why = whyNotRecommended(match, gaps, career);
+    assert(why.eligibility, "no eligibility statement");
+    if (why.eligibility.regulated) {
+      assert(/not evidence of eligibility/i.test(why.eligibility.warning),
+             "a regulated career did not warn against reading alignment as "
+             + "eligibility");
+    }
+    for (const item of why.reduced) {
+      assert(!/ineligible|not qualified|cannot apply/i.test(item.detail),
+             `"${item.detail}" reads as a verdict on eligibility`);
+    }
+  }
+});
+
+/* ==================================================================
+ * Actions and the timeline
+ * ================================================================== */
+
+function analysisParts(profile, careerId) {
+  const career = catalogue.get(careerId);
+  const match = scoreCareer(profile, career);
+  const gaps = analyseGaps(profile, match, null, catalogue.sources);
+  const pathway = buildPathway(profile, match, gaps, null, {});
+  const bridge = bridgeRoles({
+    target: career, targetGaps: gaps, careers: catalogue.careers,
+    matchFor: (item) => scoreCareer(profile, item), profile,
+  });
+  const actions = nextActions(profile, match, gaps, pathway,
+                              { registry: catalogue.sources,
+                                bridges: bridge.bridges });
+  const effort = transitionEffort(profile, match, gaps);
+  return { career, match, gaps, pathway, bridge, actions, effort };
+}
+
+test("every action is operational, not just a category", () => {
+  const profile = DEMO_PROFILES[1].build();
+  const { actions } = analysisParts(profile, "CP-272");
+  equal(actions.length, 3);
+  for (const action of actions) {
+    assert(action.timeframe, `${action.title} has no timeframe`);
+    assert(action.completionCriteria, `${action.title} has no completion test`);
+    assert(action.activities.length, `${action.title} suggests nothing to do`);
+    assert(action.evidenceExamples.length, `${action.title} names no evidence`);
+  }
+});
+
+test("a mandatory requirement still outranks an optional course", () => {
+  for (const demo of DEMO_PROFILES) {
+    const { actions } = analysisParts(demo.build(), "CP-003");
+    const tiers = actions.map((action) => action.tier);
+    equal(tiers.slice().sort((a, b) => a - b).join(","), tiers.join(","),
+          "actions are not in priority order");
+  }
+});
+
+test("the timeline is built from the same actions shown on screen", () => {
+  const profile = DEMO_PROFILES[1].build();
+  const parts = analysisParts(profile, "CP-272");
+  const timeline = buildTimeline({ ...parts, saved: {} });
+  const ids = new Set(timeline.horizons
+    .flatMap((horizon) => horizon.milestones.map((item) => item.id)));
+  for (const action of parts.actions) {
+    assert(ids.has(action.milestoneId),
+           `${action.title} is missing from the timeline`);
+  }
+});
+
+test("all four horizons exist, and an empty one is left empty", () => {
+  const profile = DEMO_PROFILES[0].build();
+  const parts = analysisParts(profile, "CP-003");
+  const timeline = buildTimeline({ ...parts, saved: {} });
+  equal(timeline.horizons.length, HORIZONS.length);
+  const total = timeline.horizons
+    .reduce((sum, horizon) => sum + horizon.milestones.length, 0);
+  equal(total, timeline.counts.total);
+});
+
+test("a user's own edits survive regeneration", () => {
+  const profile = DEMO_PROFILES[1].build();
+  const parts = analysisParts(profile, "CP-272");
+  const first = buildTimeline({ ...parts, saved: {} });
+  const target = first.horizons.flatMap((horizon) => horizon.milestones)[0];
+
+  const saved = { [target.id]: { status: "completed", due: "2027-01-31",
+                                 note: "mine", horizon: "12_months" } };
+  const second = buildTimeline({ ...parts, saved });
+  const edited = second.horizons.flatMap((horizon) => horizon.milestones)
+    .find((item) => item.id === target.id);
+  equal(edited.status, "completed");
+  equal(edited.due, "2027-01-31");
+  equal(edited.note, "mine");
+  equal(edited.horizon, "12_months");
+  equal(edited.edited, true);
+});
+
+test("a date moves a milestone into the window it belongs in", () => {
+  const soon = new Date();
+  soon.setDate(soon.getDate() + 30);
+  equal(horizonForDate(soon.toISOString().slice(0, 10)), "90_days");
+  const later = new Date();
+  later.setDate(later.getDate() + 300);
+  equal(horizonForDate(later.toISOString().slice(0, 10)), "12_months");
+  assert(suggestedDate("90_days") > new Date().toISOString().slice(0, 10));
+});
+
+/* ==================================================================
+ * Labour market
+ * ================================================================== */
+
+test("labour market signals load and carry their provenance", async () => {
+  await labour.loadLabourMarket();
+  const state = labour.status();
+  if (!state.ok) {
+    // A missing file is a legitimate state, but it must say so about Helix
+    // rather than about the job market.
+    assert(!/no jobs|not hiring|no vacancies/i.test(state.message),
+           "the unavailable message reads as a claim about the job market");
+    return;
+  }
+  const signal = labour.demandFor(catalogue.get("CP-003"));
+  assert(signal, "no signal for a mapped family");
+  assert(signal.source && signal.released && signal.licence,
+         "a signal without provenance");
+});
+
+test("no vacancy count is ever invented from an index", async () => {
+  await labour.loadLabourMarket();
+  if (!labour.status().ok) return;
+  for (const career of catalogue.careers.slice(0, 40)) {
+    const signal = labour.demandFor(career);
+    if (!signal) continue;
+    equal(signal.vacancyCount, null,
+          `${career.id} reports a vacancy count the source does not publish`);
+    // null means "not measured"; an empty array would mean "measured, none".
+    equal(signal.topRegions, null,
+          `${career.id} reports regional demand from a UK-wide source`);
+  }
+});
+
+test("a stale signal is capped at a weak strength", async () => {
+  await labour.loadLabourMarket();
+  if (!labour.status().ok) return;
+  const signal = labour.demandFor(catalogue.get("CP-003"));
+  if (!signal || !signal.stale) return;
+  assert(signal.strengthRank >= 2,
+         "a two-year-old series is being reported as a strong signal");
+});
+
+/* ==================================================================
+ * OCR
+ * ================================================================== */
+
+test("a scan is told apart from a document", () => {
+  equal(looksScanned("", 2), true);
+  equal(looksScanned("a".repeat(20), 2), true);
+  equal(looksScanned("word ".repeat(400), 2), false);
+});
+
+test("OCR quality is reported honestly", () => {
+  const good = textQuality("the quick brown fox jumps over the lazy dog "
+    .repeat(12));
+  equal(good.key, "fair");
+  const bad = textQuality("|]{ ~~ 3#@ ".repeat(40));
+  assert(bad.key === "poor" || bad.key === "mixed",
+         `garbled text was rated ${bad.key}`);
+  equal(textQuality("").key, "poor");
+});
+
+/* ==================================================================
+ * Referential integrity
+ * ================================================================== */
+
+test("every career has a market record", async () => {
+  await market.loadMarketData();
+  for (const career of catalogue.careers) {
+    assert(market.forCareer(career.id), `${career.id} has no market record`);
+  }
+});
+
+test("no comparison, plan or baseline can reference an invalid id", () => {
+  const state = storage.emptyState();
+  state.compareCareerIds = ["CP-003", "CP-999999", "not-an-id"];
+  state.baselineCareerId = "CP-999999";
+  state.plans = { "CP-003": { "action-x": { status: "completed" } },
+                  "nope": { "y": { status: "completed" } } };
+  const written = storage.save(state, "1.0");
+  for (const id of written.compareCareerIds) {
+    assert(/^CP-\d{1,5}$/.test(id), `${id} survived normalisation`);
+  }
+  assert(!Object.keys(written.plans).includes("nope"),
+         "a plan under an invalid career id was kept");
+  assert(written.baselineCareerId === null
+         || /^CP-\d{1,5}$/.test(written.baselineCareerId));
+});
 
 run();

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+from collections import Counter
 import os
 import re
 import statistics
@@ -942,6 +943,188 @@ class Validation(unittest.TestCase):
         change_warnings = [w for w in warnings if "change" in str(w).lower()]
         self.assertEqual(change_warnings, [])
 
+
+
+class CanonicalDataset(unittest.TestCase):
+    """The catalogue itself, checked as data rather than assumed.
+
+    Nothing in the application hard-codes how many careers there are. But a
+    silent drop from 716 to 700 would still look like a working application, so
+    the expected figure is pinned in exactly one place where changing it is a
+    deliberate act with a diff attached.
+    """
+
+    CANONICAL_COUNT = 716
+
+    def test_the_canonical_career_count_has_not_moved(self):
+        self.assertEqual(
+            len(BASE["careers"]), self.CANONICAL_COUNT,
+            "the career count has changed — if that was intended, update "
+            "CANONICAL_COUNT and say why in the commit")
+
+    def test_every_career_has_a_unique_id_a_title_and_a_family(self):
+        seen = set()
+        for career in BASE["careers"]:
+            with self.subTest(career=career.get("id")):
+                self.assertRegex(career["id"], r"^CP-\d{1,5}$")
+                self.assertNotIn(career["id"], seen, "duplicate career id")
+                seen.add(career["id"])
+                self.assertTrue(career["title"].strip())
+                self.assertTrue(career["family"].strip())
+
+    def test_every_published_record_names_a_real_career(self):
+        known = {career["id"] for career in BASE["careers"]}
+        for record in PUBLISHED["records"]:
+            self.assertIn(record["career_id"], known,
+                          "a market record refers to a career that is not in "
+                          "the catalogue")
+
+    def test_every_career_has_exactly_one_published_record(self):
+        counts = Counter(record["career_id"] for record in PUBLISHED["records"])
+        self.assertEqual(len(counts), len(BASE["careers"]))
+        duplicated = [cid for cid, count in counts.items() if count > 1]
+        self.assertEqual(duplicated, [], "duplicated market records")
+
+
+class RegionalContext(unittest.TestCase):
+    """The ONS regional index, and the rules for using it."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.context = PUBLISHED.get("regional_context")
+
+    def test_the_regional_context_is_published_with_its_provenance(self):
+        self.assertTrue(self.context, "no regional context was published")
+        for field in ("source", "source_url", "licence", "year", "released",
+                      "measure", "method"):
+            self.assertTrue(self.context.get(field), f"missing {field}")
+        self.assertIn("Open Government Licence", self.context["licence"])
+
+    def test_every_index_is_a_ratio_against_that_group_s_uk_median(self):
+        for group, entry in self.context["groups"].items():
+            with self.subTest(group=group):
+                self.assertGreater(entry["uk_median"], 0)
+                for region, index in entry["regions"].items():
+                    # A regional median between half and double the UK figure.
+                    # Anything outside that is a parsing error, not a real
+                    # regional difference.
+                    self.assertGreater(index, 0.5, f"{region} index looks wrong")
+                    self.assertLess(index, 2.0, f"{region} index looks wrong")
+
+    def test_a_suppressed_region_is_recorded_rather_than_filled_in(self):
+        for group, entry in self.context["groups"].items():
+            with self.subTest(group=group):
+                overlap = set(entry["missing_regions"]) & set(entry["regions"])
+                self.assertEqual(overlap, set(),
+                                 "a region is both present and missing")
+
+    def test_every_career_maps_to_a_group_that_exists_or_to_none(self):
+        groups = set(self.context["groups"])
+        for record in PUBLISHED["records"]:
+            group = record["salary"].get("regional_soc_group")
+            with self.subTest(career=record["career_id"]):
+                if group is None:
+                    # Unmapped is allowed, but it has to say why.
+                    self.assertTrue(record["salary"].get("regional_basis"))
+                else:
+                    self.assertIn(group, groups)
+
+    def test_the_regional_mapping_is_never_used_as_a_salary_source(self):
+        """The mapping picks a ratio. It must never set a level.
+
+        If a career's headline evidence ever came from the regional mapping, a
+        coarse family-level occupation guess would be setting somebody's salary
+        rather than merely shaping its regional variation.
+        """
+        for record in PUBLISHED["records"]:
+            with self.subTest(career=record["career_id"]):
+                self.assertNotEqual(record["salary"].get("estimate_method"),
+                                    "ons_regional_index")
+
+
+class SectorContext(unittest.TestCase):
+
+    def test_sector_figures_are_labelled_as_whole_economy(self):
+        context = PUBLISHED.get("sector_context")
+        if not context:
+            self.skipTest("no sector extract is present")
+        self.assertEqual(context.get("scope"), "whole_economy")
+        self.assertIn("not the pay of any particular occupation",
+                      context.get("note", ""))
+
+    def test_no_career_carries_a_sector_specific_salary(self):
+        # Helix has no source for earnings by occupation *and* sector, so no
+        # record may claim one.
+        for record in PUBLISHED["records"]:
+            with self.subTest(career=record["career_id"]):
+                self.assertNotIn("sectors", record["salary"])
+
+
+class LabourMarketDataset(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        path = ROOT / "data" / "helix_labour_market_uk_v1.json"
+        cls.data = json.loads(path.read_text(encoding="utf-8")) \
+            if path.exists() else None
+
+    def test_every_family_maps_to_a_category_that_has_a_signal(self):
+        if not self.data:
+            self.skipTest("no labour market dataset is present")
+        signals = set(self.data["signals"])
+        families = {career["family"] for career in BASE["careers"]}
+        for family in families:
+            with self.subTest(family=family):
+                category = self.data["family_categories"].get(family)
+                self.assertIsNotNone(category,
+                                     "a career family has no advert category")
+                self.assertIn(category, signals,
+                              "a family maps to a category with no signal")
+
+    def test_no_signal_claims_a_vacancy_count(self):
+        if not self.data:
+            self.skipTest("no labour market dataset is present")
+        for key, signal in self.data["signals"].items():
+            with self.subTest(category=key):
+                self.assertIsNone(signal["vacancy_count"],
+                                  "this source publishes an index, not a count")
+                self.assertIsNone(signal["top_regions"],
+                                  "this source is UK-wide")
+
+    def test_every_signal_carries_its_provenance_and_age(self):
+        if not self.data:
+            self.skipTest("no labour market dataset is present")
+        for key, signal in self.data["signals"].items():
+            with self.subTest(category=key):
+                self.assertTrue(signal["source"])
+                self.assertTrue(signal["released"])
+                self.assertIn("Open Government Licence", signal["licence"])
+                self.assertIn(signal["signal_strength"],
+                              {"strong", "moderate", "limited", "insufficient"})
+                if signal.get("stale"):
+                    self.assertIn(signal["signal_strength"],
+                                  {"limited", "insufficient"},
+                                  "a stale series is reported as a strong "
+                                  "signal")
+
+    def test_the_provider_report_explains_every_unavailable_provider(self):
+        if not self.data:
+            self.skipTest("no labour market dataset is present")
+        for entry in self.data["providers"]:
+            with self.subTest(provider=entry["provider"]):
+                if not entry["available"]:
+                    self.assertTrue(entry["reason"],
+                                    "an unavailable provider with no reason")
+
+    def test_no_credential_is_published_in_the_dataset(self):
+        if not self.data:
+            self.skipTest("no labour market dataset is present")
+        blob = json.dumps(self.data)
+        # The variable names may appear; their values must not.
+        for secret in ("app_id=", "app_key=", "api_key=", "&key="):
+            self.assertNotIn(secret, blob.lower(),
+                             "something that looks like a credential was "
+                             "published")
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

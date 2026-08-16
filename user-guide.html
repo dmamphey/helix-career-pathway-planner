@@ -114,8 +114,15 @@
     <li><a href="#explorer">Career Explorer</a></li>
     <li><a href="#career">Career pages</a></li>
     <li><a href="#salary">Salary and evidence</a></li>
+    <li><a href="#region">Salary by region and sector</a></li>
+    <li><a href="#labour">The current labour market</a></li>
     <li><a href="#compare">Comparing careers</a></li>
+    <li><a href="#baseline">Comparing against your current job</a></li>
+    <li><a href="#whynot">Why wasn't this recommended?</a></li>
     <li><a href="#pathway">Pathway and next actions</a></li>
+    <li><a href="#bridges">Bridge roles</a></li>
+    <li><a href="#graph">The career graph</a></li>
+    <li><a href="#timeline">90 days, 6 months, 12 months</a></li>
     <li><a href="#plan">Your career plan</a></li>
     <li><a href="#saved">Saved careers and My data</a></li>
     <li><a href="#limits">Limitations</a></li>
@@ -181,9 +188,18 @@
 
 <h2 id="profile">4. Building your profile</h2>
 <h3>From a CV</h3>
-<p>Helix reads text-based PDF, DOCX and TXT. There is no optical character
-   recognition, so a scanned document cannot be read — Helix says so plainly
-   rather than producing an empty profile.</p>
+<p>Helix reads PDF, DOCX and TXT.</p>
+<h3>Scanned CVs</h3>
+<p>If a PDF turns out to be a scan — a photograph of a printed page, with no text
+   in it — Helix offers to read it with <strong>text recognition</strong>. That
+   runs <em>in your browser</em>. The scan is not uploaded, and no recognition
+   service is sent your document. The engine is a few megabytes and is downloaded
+   only if you press the button; you can cancel at any point.</p>
+<p>Recognition is slower and less accurate than reading a text-based PDF. It
+   misreads names, dates and abbreviations far more often than it misreads
+   ordinary prose, so the review screen tells you how well the scan read and asks
+   you to check every field. The scan and its recognised text are discarded once
+   your structured profile exists.</p>
 <p>Extraction is a <em>draft</em>. The review screen is not skippable, because the
    person the profile describes is the only authority on whether it is right.
    Correct anything wrong and add anything missed. Helix also lists what it could
@@ -396,7 +412,83 @@
 <p>Full detail is in the
    <a href="docs/MARKET-DATA-METHODOLOGY.md">market data methodology</a>.</p>
 
-<h2 id="compare">11. Comparing careers</h2>
+<h2 id="region">11. Salary by region and sector</h2>
+<h3>By region</h3>
+<p>Every career page carries a <strong>Salary by region</strong> block with a
+   picker for the twelve UK regions and countries. Choosing one restates the
+   salary for that area and tells you how far it sits from the UK figure.</p>
+<p>The method matters, because it determines what the number means. The Office
+   for National Statistics publishes median pay by region for each broad
+   occupation group. Dividing a region's median by the UK median for the same
+   group gives a <em>regional index</em> — health professionals in London are paid
+   about 13% above health professionals nationally. Helix applies that index to
+   the career's own UK range.</p>
+<p>So the <em>level</em> comes from the career's own evidence, and only the
+   regional <em>shape</em> comes from ONS. No source publishes a salary for one
+   job in one region, which is why a regional figure is never labelled better
+   than an <em>indicative estimate</em>, however well evidenced the UK figure is.</p>
+<p>Two things Helix will not do. It does not produce city-level figures: nothing
+   in the evidence distinguishes Manchester from Blackburn, and a number that
+   looks local invites a decision the data cannot support. And where ONS
+   suppressed a region for an occupation group — Northern Ireland, for several of
+   them — that region is simply absent from the picker rather than filled in with
+   the UK figure under a regional heading.</p>
+<p>You can set a preferred region, and it is remembered on this device. It
+   changes which salary figures you see and nothing else. A region is not a
+   qualification, so it never touches alignment, eligibility, or what a regulator
+   requires.</p>
+
+<h3>By sector</h3>
+<p>This section is mostly an admission, and deliberately so. The question people
+   most want answered — <em>does industry pay more than the NHS for this job?</em>
+   — has no honest answer from published data. ONS splits earnings by sector
+   <em>or</em> by occupation, never both at once.</p>
+<p>So Helix shows two things and nothing else. Where somebody has curated a
+   public-sector pay framework for a career, it is shown as context beside the
+   market estimate. And the whole-economy public/private difference is shown,
+   labelled unmistakably as whole-economy — it covers every occupation in the
+   country, including ones nothing like yours, and should not be applied to the
+   range above it.</p>
+<p>What Helix will not do is multiply a career's salary by the average pay of
+   everyone working in pharmaceutical manufacturing — cleaners and directors
+   included — and call the result a scientist's salary in pharma.</p>
+
+<h2 id="labour">12. The current labour market</h2>
+<p>Career pages carry a <strong>Current labour market</strong> panel: the
+   direction of travel for hiring in that kind of work, how strong the signal is,
+   and where the figure came from.</p>
+<p>Read the scope before the number. The published source measures
+   <em>advertising categories</em>, not job titles, so a biomedical scientist's
+   panel describes hiring across Healthcare and Social care — a category that also
+   covers care work and consultant posts. It is the climate around a career
+   family, not demand for one job.</p>
+<table>
+  <thead><tr><th>What you see</th><th>What it means</th></tr></thead>
+  <tbody>
+    <tr><td>Signal strength</td>
+        <td>How much published data sits behind it, lowered when the source
+            release is old.</td></tr>
+    <tr><td>Direction of travel</td>
+        <td>Increasing, broadly stable or decreasing, with the percentage change
+            and the window it was measured over.</td></tr>
+    <tr><td>Advert volume index</td>
+        <td>Advert volume against a February 2020 baseline of 100.</td></tr>
+    <tr><td>Vacancy count</td>
+        <td>Not published by this source, and Helix does not invent one.</td></tr>
+    <tr><td>Demand by region</td>
+        <td>Not published by this source, which is UK-wide.</td></tr>
+  </tbody>
+</table>
+<p><strong>Helix never tells you there are no jobs.</strong> If the data cannot be
+   loaded, or no signal exists for a career family, the panel says Helix has no
+   current signal — which is a statement about Helix's evidence, not about
+   whether anybody is hiring.</p>
+<p>The <em>My data</em> screen lists every labour market provider Helix knows
+   about, what each one is capable of answering, which one supplied the current
+   figures, and precisely what is missing from the others. Nothing in the browser
+   holds an API key, and no page contacts a job board.</p>
+
+<h2 id="compare">13. Comparing careers</h2>
 <p>Comparison is the heart of the middle step: once you have a few plausible
    options, the question stops being "could I do this" and becomes "which of
    these, and what am I trading away".</p>
@@ -475,7 +567,57 @@
    rather than four squeezed columns, and every value names the career it belongs
    to. Nothing is dropped and no figure becomes unreadable.</p>
 
-<h2 id="pathway">12. Pathway and next actions</h2>
+<h2 id="baseline">14. Comparing against your current job</h2>
+<p>A comparison table answers "how do these four differ". Pinning a
+   <strong>baseline</strong> answers a more useful question: "how would each of
+   these differ from what I do now".</p>
+<p>Use <strong>Pin as baseline</strong> on any career card, career page or graph
+   node. If your profile names a current role, the comparison screen suggests the
+   closest career in the catalogue by name — but it is a button, not a default,
+   because a baseline silently reframes every number on the screen.</p>
+<p>Once pinned, every other career in the comparison is restated as a difference
+   from it. There is one rule worth knowing:</p>
+<ul>
+  <li><strong>Figures appear only where figures were measured.</strong> Salary and
+      weekly hours are numbers, so their differences are numbers —
+      <em>+£8,500</em>, <em>+2 hrs</em>.</li>
+  <li><strong>Everything else gets a direction and a word.</strong> Patient
+      contact, travel, laboratory work and remote potential are recorded as low,
+      medium or high — ordered words, not measured quantities. You will see
+      <em>much higher</em> or <em>slightly lower</em>, never "+1 patient contact",
+      because subtracting those words would invent a measurement nobody made.</li>
+  <li><strong>Regulation reports change, not direction.</strong> Regulated and not
+      regulated are not more and less of the same thing.</li>
+  <li><strong>Missing data reads "Not comparable"</strong> rather than being
+      computed against zero.</li>
+</ul>
+<p>Salary differences are compared at the midpoint of each range and carry the
+   weaker of the two evidence classes, which is stated beside the figure.</p>
+
+<h2 id="whynot">15. Why wasn't this recommended?</h2>
+<p>Open a career that did not appear among your strongest options and you will
+   find this question, with the arithmetic behind the answer.</p>
+<p>Helix tells you where the career ranked and what it scored, then breaks the
+   score into three parts:</p>
+<ul>
+  <li><strong>What already fits</strong> — the components that scored well, and
+      what was matched in your profile to produce them.</li>
+  <li><strong>What reduced the match</strong> — the components that scored badly,
+      heaviest first, each stated as a fact about your profile rather than about
+      you. "No exposure to this career's usual sectors is recorded in your
+      profile" is checkable and fixable.</li>
+  <li><strong>What would strengthen it</strong> — only things the components and
+      gaps already name.</li>
+</ul>
+<p>Nothing here is generated. If a reason is not in the score, it does not appear
+   in the text.</p>
+<p><strong>Professional eligibility is answered separately, in its own box.</strong>
+   Whether you may practise a regulated profession is decided by the regulator,
+   not by Helix, and it is a different question from how well your background
+   aligns. A high alignment score is not evidence of eligibility, and a low one is
+   not evidence that you are ineligible.</p>
+
+<h2 id="pathway">16. Pathway and next actions</h2>
 <p>Choosing a target career produces a pathway of milestones from where you are to
    where you want to be, and exactly three next actions — prioritised, and small
    enough to start. Verification of a regulated requirement always comes
@@ -486,18 +628,121 @@
    current official source, it says so and links to the source instead of
    asserting a rule.</p>
 <p>Tick milestones off as you go; progress is saved on your device.</p>
+<h3>What each action tells you</h3>
+<p>An action is meant to be something you could start on Monday, so each one
+   carries more than a title:</p>
+<ul>
+  <li><strong>Why it matters</strong> and <strong>the gap it addresses</strong>.</li>
+  <li><strong>Things you could do</strong> — small, concrete and proposable inside
+      your own team, because the failure mode of career advice is suggesting a
+      project nobody has the authority to start.</li>
+  <li><strong>Evidence you could collect</strong>, and a
+      <strong>suggested timeframe</strong>.</li>
+  <li><strong>Complete when</strong> — how to know you have finished.</li>
+  <li><strong>A bridge role that covers this</strong>, where one does.</li>
+</ul>
+<p>These are Helix's suggestions, not requirements. No employer or regulator has
+   said this is what they screen on.</p>
 
-<h2 id="plan">13. Your career plan</h2>
+<h2 id="bridges">17. Bridge roles</h2>
+<p>Most substantial career changes do not happen in one step. The pathway screen
+   shows the <strong>direct route</strong> and, where one exists, a
+   <strong>bridge route</strong> through an intermediate job — side by side, as
+   equals.</p>
+<p>A career has to earn its place as a bridge on four counts: it aligns more
+   closely with your profile than the destination does, it works in areas the
+   destination needs, it sits next to the destination in the catalogue, and its
+   grade makes sense. A career that is merely <em>similar</em> to your target is
+   not a bridge — that is what "related careers" already shows.</p>
+<p>Each bridge tells you why it helps, what transfers from where you are, what it
+   can give you, which of the destination's gaps it closes, its typical salary,
+   and what would still be left afterwards.</p>
+<p>Two things worth knowing:</p>
+<ul>
+  <li><strong>A bridge is never required.</strong> Nothing here comes from an
+      official entry route, so every bridge says so, every time. Where a regulator
+      sets the route, that is stated separately, and no bridge role substitutes
+      for registration.</li>
+  <li><strong>A step down is labelled as one.</strong> Moving sector sometimes
+      means moving down a grade. That is a legitimate route and plenty of people
+      take it deliberately, but Helix says which way it goes rather than letting a
+      pay cut read as a promotion. A regulated profession is never offered as a
+      bridge to somewhere else, because reaching it is harder than reaching your
+      destination, not easier.</li>
+</ul>
+
+<h2 id="graph">18. The career graph</h2>
+<p><strong>See the career graph</strong>, on any career page, shows the
+   neighbourhood around it: where it leads, what sits beside it, and — if you have
+   pinned a baseline — what sits between the two.</p>
+<p>It deliberately shows about fourteen careers rather than all 716. A graph of
+   the whole catalogue is a hairball: technically complete, practically a
+   decoration. Open any career in the picture to widen it, or centre the graph on
+   it.</p>
+<p>Connections are labelled by what kind of move they are — progression,
+   specialisation, leadership, an industry, research, clinical or commercial
+   transition, or a bridge route. Careers are marked by shape as well as position,
+   and regulated professions carry a border and a marker, so nothing in the
+   picture depends on colour.</p>
+<p><strong>The picture is never the only way in.</strong> Underneath it is the same
+   model as a structured list, carrying the same careers and the same connections.
+   That is not a simplified fallback: it is often the faster way to read it, every
+   node in the picture is a real button you can reach with a keyboard, and the
+   list is what a screen reader uses.</p>
+<p>A connection means two careers share enough subject matter, family or seniority
+   for a move between them to be worth considering. It is not a claim that anybody
+   has made that move, and it is never a statement about eligibility.</p>
+
+<h2 id="timeline">19. 90 days, 6 months, 12 months</h2>
+<p>Below your next three actions, the pathway screen builds a development
+   timeline across four windows: <strong>next 90 days</strong>,
+   <strong>next 6 months</strong>, <strong>next 12 months</strong> and
+   <strong>longer term</strong>.</p>
+<p>It is built from the same actions, gaps and bridge roles as everything above
+   it, so the plan and the screen cannot disagree. A window is a claim about
+   dependency and duration, not a quarter of the items:</p>
+<table>
+  <thead><tr><th>Window</th><th>What lands there</th></tr></thead>
+  <tbody>
+    <tr><td>Next 90 days</td>
+        <td>Anything blocking everything else, and anything costing only time and
+            initiative — confirmations, training, translating your experience,
+            first conversations.</td></tr>
+    <tr><td>Next 6 months</td>
+        <td>Work that needs a real piece of work to attach itself to.</td></tr>
+    <tr><td>Next 12 months</td>
+        <td>The move itself: applying, or stepping into a bridge role.</td></tr>
+    <tr><td>Longer term</td>
+        <td>The destination, and anything gated by a formal programme.</td></tr>
+  </tbody>
+</table>
+<p><strong>An empty window stays empty.</strong> Padding a timeline to look
+   complete is how a plan becomes a horoscope.</p>
+<h3>Making it yours</h3>
+<p>Every milestone can be marked complete, given a target date and annotated with
+   your own notes. Setting a date outside a window moves the milestone into the
+   window it now belongs in, so the timeline keeps telling the truth about when
+   things happen.</p>
+<p>Helix suggests a date but never writes one for you: a stored date should mean
+   somebody decided it. Your edits are kept separately from Helix's suggestions,
+   so regenerating the plan — after you change your profile, say — cannot
+   overwrite your own dates. <strong>Reset my edits</strong> puts a plan back to
+   what Helix suggests, and affects nothing else.</p>
+
+<h2 id="plan">20. Your career plan</h2>
 <p>From a pathway you can produce a printable plan covering your current position,
-   the target career, typical salary and its evidence, working life, the three
-   measures with the reasons behind each, strengths, gaps, requirements to
-   confirm, your next three actions, milestones, other options you were
+   the career you pinned as a baseline, the target career, typical salary and its
+   evidence, working life, the three measures with the reasons behind each,
+   strengths, gaps, requirements to confirm, your next three actions with their
+   timeframes and completion criteria, any bridge roles, the labour market context
+   with the date it was published, all four planning windows exactly as you left
+   them — your dates, your notes, your completion marks — other options you were
    considering, and the sources.</p>
 <p>Use your browser's print dialogue and choose <em>Save as PDF</em>. The document
    contains your structured profile only — never your CV, your name or any contact
    details, because Helix does not hold them.</p>
 
-<h2 id="saved">14. Saved careers and My data</h2>
+<h2 id="saved">21. Saved careers and My data</h2>
 <p><strong>Saved</strong> is a shortlist — come back to this later.
    <strong>Compare</strong> is a working set — hold these side by side while I
    decide. They are deliberately separate, and you never have to save something in
@@ -511,13 +756,34 @@
    Career Dataset and beside the salary data. Figures and wording are still being
    refined, which is part of why the evidence label sits next to every salary.</p>
 
-<h2 id="limits">15. Limitations</h2>
+<h2 id="limits">22. Limitations</h2>
 <ul>
   <li><strong>UK only.</strong> Requirements differ substantially between
       countries.</li>
   <li><strong>Salary figures are estimates.</strong> Most are derived rather than
       published for that exact job, and every one is labelled.</li>
-  <li><strong>No regional breakdown.</strong> All figures are UK-wide.</li>
+  <li><strong>Regional figures are derived, not published.</strong> They apply an
+      official regional pattern for a broad occupation group to a career's UK
+      range. No source publishes a salary for one job in one region, so they are
+      never better evidenced than indicative, and there are no city-level
+      figures at all.</li>
+  <li><strong>There are no sector-specific salaries.</strong> No official source
+      publishes earnings by occupation and sector at the same time, so Helix
+      cannot tell you what this job pays in pharma as opposed to the NHS. What it
+      shows instead is labelled as whole-economy context.</li>
+  <li><strong>Labour market signals describe categories, not jobs.</strong> They
+      measure advert volume across broad advertising categories, carry no vacancy
+      counts and no regional breakdown, and the current source was last released
+      in 2024 — so they are capped at a weak signal strength.</li>
+  <li><strong>Bridge roles are suggestions, not routes.</strong> They come from
+      Helix's own reasoning about overlap and gaps. No official body says you must
+      take one, and none of them substitutes for professional registration.</li>
+  <li><strong>The career graph shows relationships, not evidence of moves.</strong>
+      A connection means two careers share enough for a move to be worth
+      considering. Nobody has verified that anyone has made it.</li>
+  <li><strong>Text recognition is imperfect.</strong> A scanned CV reads less
+      accurately than a text-based one, particularly for names, dates and
+      abbreviations. Check every field.</li>
   <li><strong>Hours and working patterns are not known for every career.</strong>
       Where they are unknown Helix shows "Not yet available" rather than
       estimating.</li>
@@ -545,7 +811,7 @@
       is worth reporting — the last additions came from exactly that.</li>
 </ul>
 
-<h2 id="pdf">16. Saving this guide</h2>
+<h2 id="pdf">23. Saving this guide</h2>
 <p><strong>Download as PDF</strong>, at the top and bottom of this page, opens
    your browser's print dialogue — choose <em>Save as PDF</em>. The result is a
    real, selectable, searchable document with the navigation stripped out.</p>

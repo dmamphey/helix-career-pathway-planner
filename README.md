@@ -52,8 +52,23 @@ Structured career profile         the only thing the engines see
         │
         ├──► Preference fit             stated priorities, scored separately
         │
-        └──► Transition effort          how big the move is, separately again
+        ├──► Transition effort          how big the move is, separately again
+        │
+        ├──► Bridge engine              intermediate roles, and why each helps
+        │
+        ├──► Career graph               a neighbourhood, never all 716
+        │
+        ├──► Timeline engine            90 days / 6 / 12 months / longer
+        │
+        └──► Why-not engine             the arithmetic behind a ranking
 ```
+
+Two external layers feed the engines without being able to break them:
+
+| Layer | Source | If it fails |
+|---|---|---|
+| **Regional salary** | ONS ASHE Table 3, region by two-digit SOC | No regional block; the UK figure stands alone |
+| **Labour market** | ONS online job advert estimates | "Helix has no current signal" — never "no jobs" |
 
 Three measures are reported, and they are deliberately never merged:
 
@@ -90,6 +105,14 @@ helix-career-pathway-planner/
 │   ├── preference-fit.js       stated priorities, scored separately
 │   ├── transition-effort.js    how big a move is, and why
 │   ├── comparison.js           compare selection and "what stands out"
+│   ├── baseline.js             differences from a pinned career
+│   ├── bridge-engine.js        intermediate roles between two careers
+│   ├── career-graph.js         the graph model and its layout
+│   ├── timeline-engine.js      90 day / 6 / 12 month planning
+│   ├── why-not.js              why a career was not recommended
+│   ├── labour-market.js        demand signals, read from a static file
+│   ├── regions.js              UK geographies, no further than the evidence
+│   ├── ocr.js                  local text recognition for scanned CVs
 │   ├── storage.js              localStorage, export and import
 │   ├── ui.js                   shared interface components
 │   └── views/                  one module per screen
@@ -141,11 +164,20 @@ is the only authority on whether it is right, and every field is editable.
 | Format | Reader | Notes |
 |---|---|---|
 | PDF (text-based) | PDF.js | Lines are reconstructed from glyph positions |
+| PDF (scanned) | Tesseract.js | Offered, never automatic; runs locally |
 | DOCX | Mammoth | |
 | TXT | native | |
 
-There is no OCR. A scanned PDF produces a clear message and an offer to build the
-profile manually — never a silently empty profile.
+A scanned PDF is detected and Helix offers to read it with text recognition **in
+the browser**. There is no cloud OCR call anywhere in `js/ocr.js` — not as a
+fallback, not for difficult pages. Each page image is wiped from its canvas as
+soon as it is read, and the recognised text is discarded once the structured
+profile exists. Nothing loads until the user presses the button, and cancellation
+is a real `AbortController`.
+
+The engine must be vendored: a Web Worker cannot be created from a cross-origin
+script, so OCR served from a CDN hangs rather than failing cleanly. Run
+`python tools/fetch_libraries.py` before deploying.
 
 The two libraries are fetched into `assets/vendor/` and served from your own
 domain:
