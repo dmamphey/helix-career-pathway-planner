@@ -1953,4 +1953,204 @@ test("no comparison, plan or baseline can reference an invalid id", () => {
          || /^CP-\d{1,5}$/.test(written.baselineCareerId));
 });
 
+/* ==================================================================
+ * Every screen actually renders
+ * ==================================================================
+ *
+ * The engine tests check that the reasoning is right. Nothing checked that the
+ * views could draw it, and a card list that referenced a variable which was not
+ * in scope shipped to production: "My options" threw `career is not defined` on
+ * its first paint, so the screen showed the error panel instead of nine careers.
+ *
+ * A typo like that is invisible to every unit test and obvious the moment a
+ * screen is rendered once. So each view is rendered here against the real
+ * catalogue, the real market data and a real profile — with a baseline pinned
+ * and careers in the comparison, because those are the branches that were
+ * broken.
+ */
+
+async function appForViews(options = {}) {
+  // A stand-in for js/app.js: the same surface the views actually use, built on
+  // the real modules so a view cannot pass here and fail in the application.
+  const { rankCareers, scoreCareer } = await import("../js/matcher.js");
+  const { analyseGaps } = await import("../js/gap-engine.js");
+  const { buildPathway } = await import("../js/pathway-engine.js");
+  const { nextActions } = await import("../js/action-engine.js");
+  const { transitionEffort, whyThisCareer } =
+    await import("../js/transition-effort.js");
+  const { bridgeRoles } = await import("../js/bridge-engine.js");
+  const { buildTimeline } = await import("../js/timeline-engine.js");
+  const { preferenceFit } = await import("../js/preference-fit.js");
+  const { loadRulePack } = await import("../js/rules.js");
+  const { sourcesFor } = await import("../js/career-data.js");
+
+  const profile = options.profile || null;
+  const state = {
+    profile,
+    targetCareerId: options.target || null,
+    savedCareerIds: options.saved || [],
+    compareCareerIds: options.compare || [],
+    baselineCareerId: options.baseline || null,
+    progress: {},
+    plans: {},
+    settings: { region: options.region || "uk", onboarded: true,
+                jurisdictionAcknowledged: true },
+    datasetVersion: catalogue.meta.version,
+    savedAt: null,
+  };
+
+  let ranked = null;
+  const app = {
+    catalogue, state, market, pending: options.pending || null,
+    effortCache: new Map(), fitCache: new Map(),
+    profile: () => state.profile,
+    hasProfile: () => Boolean(state.profile),
+    hasPreferences: () => Boolean(state.profile),
+    persist: () => state,
+    navigate: () => {},
+    ranked: () => {
+      if (!state.profile) return [];
+      if (!ranked) ranked = rankCareers(state.profile, catalogue.careers);
+      return ranked;
+    },
+    matchFor: (c) => state.profile ? scoreCareer(state.profile, c) : null,
+    fitFor: (c, effort) => state.profile
+      ? preferenceFit(state.profile, c, effort ? { effort } : {}) : null,
+    sourcesFor: (c) => sourcesFor(c, catalogue.sources),
+    isSaved: (id) => state.savedCareerIds.includes(id),
+    toggleSaved: () => true,
+    isComparing: (id) => state.compareCareerIds.includes(id),
+    toggleCompare: () => ({ action: "added" }),
+    clearCompare: () => {},
+    compareIds: () => state.compareCareerIds,
+    baselineId: () => state.baselineCareerId,
+    baselineCareer: () => state.baselineCareerId
+      ? catalogue.get(state.baselineCareerId) : null,
+    isBaseline: (id) => state.baselineCareerId === id,
+    setBaseline: () => null,
+    region: () => state.settings.region,
+    setRegion: () => state.settings.region,
+    planFor: () => ({}),
+    setPlanEntry: () => ({}),
+    resetPlan: () => {},
+    setTarget: () => {},
+    setMilestone: () => {},
+    resetAll: () => {},
+    effortFor: async () => null,
+    allEfforts: async () => app.effortCache,
+    analysisFor: async (careerId) => {
+      const career = catalogue.get(careerId);
+      const pack = await loadRulePack(careerId);
+      const match = app.matchFor(career);
+      if (!match) return { career, pack, match: null };
+      const gaps = analyseGaps(state.profile, match, pack, catalogue.sources);
+      const pathway = buildPathway(state.profile, match, gaps, pack, {});
+      const bridge = bridgeRoles({
+        target: career, targetGaps: gaps, careers: catalogue.careers,
+        matchFor: (item) => app.matchFor(item), profile: state.profile,
+      });
+      const actions = nextActions(state.profile, match, gaps, pathway,
+                                  { registry: catalogue.sources,
+                                    bridges: bridge.bridges });
+      const effort = transitionEffort(state.profile, match, gaps);
+      const why = whyThisCareer(state.profile, match, gaps);
+      const fit = app.fitFor(career, effort);
+      const timeline = buildTimeline({ career, actions, gaps, effort, bridge,
+                                       saved: {} });
+      return { career, pack, match, gaps, pathway, actions, effort, why, fit,
+               bridge, timeline };
+    },
+  };
+  return app;
+}
+
+async function renderView(module, app, context = {}) {
+  const view = await import(`../js/views/${module}.js`);
+  const render = context.render || "render";
+  const node = await view[render](app, { params: context.params || {} });
+  assert(node && node.nodeType === 1, `${module} returned no element`);
+  // A view that renders an empty fragment has not really rendered.
+  assert(node.textContent.trim().length > 0, `${module} rendered no text`);
+  return node;
+}
+
+test("every screen renders for a visitor with no profile", async () => {
+  const app = await appForViews();
+  const screens = [
+    ["home"], ["explore", { render: "renderExplorer" }],
+    ["explore", { render: "renderMatches" }],
+    ["career", { params: { id: "CP-003" } }],
+    ["pathway", { params: { id: "CP-003" } }],
+    ["graph", { params: { id: "CP-003" } }],
+    ["compare"], ["saved"], ["data"], ["preferences"], ["profile-view"],
+    ["onboarding", { render: "renderUpload" }],
+  ];
+  for (const [module, context] of screens) {
+    await renderView(module, app, context);
+  }
+});
+
+test("every screen renders for somebody with a profile", async () => {
+  /*
+   * The case that broke. A profile turns on the personal columns, the match
+   * groups and the decorated cards — code that a profile-less visitor never
+   * reaches, which is why the missing variable survived to production.
+   */
+  const app = await appForViews({ profile: DEMO_PROFILES[1].build() });
+  const screens = [
+    ["home"], ["explore", { render: "renderExplorer" }],
+    ["explore", { render: "renderMatches" }],
+    ["career", { params: { id: "CP-272" } }],
+    ["pathway", { params: { id: "CP-272" } }],
+    ["graph", { params: { id: "CP-272" } }],
+    ["plan", { params: { id: "CP-272" } }],
+    ["saved"], ["data"], ["preferences"], ["profile-view"],
+  ];
+  for (const [module, context] of screens) {
+    await renderView(module, app, context);
+  }
+});
+
+test("My options draws its career cards", async () => {
+  // The specific regression: the screen rendered its headings and then threw
+  // while building the cards, so "no error" was not enough to prove it worked.
+  const app = await appForViews({ profile: DEMO_PROFILES[1].build() });
+  const node = await renderView("explore", app, { render: "renderMatches" });
+  const cards = node.querySelectorAll(".career-card");
+  assert(cards.length > 0, "My options rendered no career cards");
+});
+
+test("every screen renders with a baseline, a comparison and a region set", async () => {
+  const app = await appForViews({
+    profile: DEMO_PROFILES[1].build(),
+    baseline: "CP-003",
+    compare: ["CP-003", "CP-019", "CP-272"],
+    saved: ["CP-019"],
+    target: "CP-272",
+    region: "london",
+  });
+  const screens = [
+    ["home"], ["explore", { render: "renderExplorer" }],
+    ["explore", { render: "renderMatches" }],
+    ["career", { params: { id: "CP-019" } }],
+    ["pathway", { params: { id: "CP-272" } }],
+    ["graph", { params: { id: "CP-272" } }],
+    ["compare", { params: { ids: "CP-003,CP-019,CP-272" } }],
+    ["plan", { params: { id: "CP-272" } }],
+    ["saved"], ["data"],
+  ];
+  for (const [module, context] of screens) {
+    await renderView(module, app, context);
+  }
+});
+
+test("a screen asked for a career that does not exist says so", async () => {
+  const app = await appForViews({ profile: DEMO_PROFILES[1].build() });
+  for (const module of ["career", "pathway", "graph"]) {
+    const node = await renderView(module, app, { params: { id: "CP-999999" } });
+    assert(/not found|no career/i.test(node.textContent),
+           `${module} did not report a missing career`);
+  }
+});
+
 run();

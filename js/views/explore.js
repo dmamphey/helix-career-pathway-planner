@@ -527,7 +527,9 @@ export async function renderMatches(app) {
                     saved: app.isSaved(match.careerId),
                     comparing: app.isComparing(match.careerId),
                     onCompare: (id) => { app.toggleCompare(id); draw(); },
-                    isBaseline: app.isBaseline(career.id),
+                    // `match.careerId`, not `career.id`: this list iterates
+                    // match results, and there is no `career` in scope here.
+                    isBaseline: app.isBaseline(match.careerId),
                     onBaseline: (id) => { app.setBaseline(id); draw(); },
                     onSave: () => { app.toggleSaved(match.careerId); draw(); },
                     extra: link("Build pathway", `#/pathway/${match.careerId}`,
