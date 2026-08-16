@@ -997,3 +997,25 @@ ul.plain, ol.plain { list-style: none; padding: 0; margin: 0; }
   .action-detail { grid-template-columns: 1fr; }
   .action-detail dt { font-weight: 600; margin-top: .4rem; }
 }
+
+/* The explorer's controls. Search and sort sit on one line; everything else is
+   folded away, because a filter is something you reach for after seeing
+   results, not a toll gate in front of them. */
+.explore-controls {
+  display: grid; gap: .5rem 1rem; align-items: end;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+}
+.explore-controls .field { margin: 0; }
+.filter-block { margin: .8rem 0 .4rem; }
+.filter-block > summary {
+  cursor: pointer; font-weight: 600; color: var(--brand-blue-dark);
+  padding: .55rem 0; min-height: 44px; display: flex; align-items: center;
+}
+.filter-block > summary:focus-visible {
+  outline: 3px solid var(--brand-cyan); outline-offset: 2px;
+}
+.filter-block[open] > summary { margin-bottom: .5rem; }
+
+@media (max-width: 34rem) {
+  .explore-controls { grid-template-columns: 1fr; }
+}

@@ -354,45 +354,128 @@ export function rankCareers(profile, careers) {
     .sort((a, b) => b.score - a.score || a.careerId.localeCompare(b.careerId));
 }
 
+/** The domains a profile's stated interests point at. */
+export function interestDomainsFor(profile) {
+  return new Set(((profile && profile.careerInterests) || []).flatMap((id) => {
+    const option = INTEREST_OPTIONS.find((o) => o.id === id);
+    return (option && option.domains) || [];
+  }));
+}
+
 /**
- * Split a ranking into the three groups the explore journey shows.
+ * Split a ranking into the groups the explore journey shows.
  *
  * Bands come from the score, but each group is also capped per family. Without
  * that cap "bigger pivots worth exploring" fills up with twelve variations of the
  * same job, which is the opposite of exploring.
+ *
+ * Why the direction group leads
+ * -----------------------------
+ *
+ * The three bands are ordered by transition cost, so the first thing a person
+ * saw was whatever they could reach most easily. For somebody asking to move —
+ * a biomedical scientist who ticked "digital / data" and said yes to leaving
+ * their sector — that means the screen opens with more biomedical science. It
+ * answers a question they did not ask, and buries the one they did.
+ *
+ * So when a direction has been stated, the careers heading that way come first.
+ * This is a **filter, not a blend**: candidates are those whose own subject
+ * matter overlaps the stated interests, and within that they are still ordered
+ * by background alignment. No score is altered and no measure is merged — the
+ * ranking is the same ranking, cut differently.
+ *
+ * The easy-reach options are not removed. They move down the page, under a
+ * heading that says what they are, which is where they belong for somebody who
+ * has just said they want to go somewhere else.
  */
 export function groupResults(ranked, options = {}) {
   const perGroup = options.perGroup || 12;
-  const closest = pick(ranked, (r) => r.score >= 60, 2, perGroup, new Set());
-  const used = new Set(closest.map((r) => r.careerId));
+  const interestDomains = options.interestDomains
+    || interestDomainsFor(options.profile);
+
+  const used = new Set();
+  const groups = [];
+
+  if (interestDomains.size) {
+    /*
+     * Ordered by how squarely a career sits in the chosen direction, then by
+     * alignment.
+     *
+     * Ordering by alignment alone let a laboratory training role into a
+     * "digital / data" list because it carries one incidental AI tag, while
+     * Healthcare Data Scientist — which matches all four of the digital
+     * domains — sat below it. One shared domain is enough to be a candidate;
+     * it is not enough to lead.
+     *
+     * The family cap is looser here than anywhere else, because a direction is
+     * usually concentrated in one family. Capping it at two, as the score bands
+     * do, forced in unrelated careers to fill the space — which is precisely
+     * the failure this group exists to fix. Four keeps the list varied without
+     * fighting the thing the user asked for.
+     */
+    const scored = ranked
+      .map((item) => ({
+        item,
+        overlap: (item.career.derived.domains || [])
+          .filter((domain) => interestDomains.has(domain)).length,
+      }))
+      .filter((entry) => entry.overlap > 0)
+      .sort((a, b) => b.overlap - a.overlap
+        || b.item.score - a.item.score
+        || a.item.careerId.localeCompare(b.item.careerId));
+
+    const direction = pick(scored.map((entry) => entry.item),
+                           () => true, 4, perGroup, used);
+    for (const item of direction) used.add(item.careerId);
+    groups.push({
+      key: "direction",
+      title: "In the direction you chose",
+      blurb: "Careers whose own subject matter matches the areas you said "
+           + "interest you. The ones that sit most squarely in those areas come "
+           + "first, and among equals the closest match to your background — "
+           + "not the easiest move.",
+      items: direction,
+    });
+  }
+
+  const closest = pick(ranked, (r) => r.score >= 60, 2, perGroup, used);
+  for (const item of closest) used.add(item.careerId);
   const adjacent = pick(ranked, (r) => r.score >= 40 && r.score < 60, 2,
                         perGroup, used);
   for (const item of adjacent) used.add(item.careerId);
   const pivots = pick(ranked, (r) => r.score < 40, 1, perGroup, used);
 
-  return {
-    closest: {
+  groups.push(
+    {
       key: "closest",
       title: "Closest to your current experience",
       blurb: "These use most of what your profile already evidences, so the "
            + "transition cost is lowest.",
       items: closest,
     },
-    adjacent: {
+    {
       key: "adjacent",
       title: "Strong adjacent careers",
       blurb: "These draw on many of your current strengths but expect some new "
            + "development.",
       items: adjacent,
     },
-    pivots: {
+    {
       key: "pivots",
       title: "Bigger pivots worth exploring",
       blurb: "Plausible directions that would need a larger transition. One per "
            + "career family, so the list stays genuinely varied.",
       items: pivots,
-    },
-  };
+    });
+
+  /*
+   * Returned as an ordered list *and* by key. The view walks `order` so the
+   * sequence lives here with the reasoning, rather than being reassembled from
+   * a hard-coded array of names in a template — which is how the direction
+   * group would end up last by accident.
+   */
+  const byKey = Object.fromEntries(groups.map((group) => [group.key, group]));
+  return { ...byKey, order: groups.map((group) => group.key), groups };
 }
 
 function pick(ranked, predicate, perFamily, limit, exclude) {

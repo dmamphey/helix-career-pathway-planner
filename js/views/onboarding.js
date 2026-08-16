@@ -56,9 +56,8 @@ export async function renderUpload(app) {
         h("label", { for: "cv-file", text: "Choose your CV" }),
         input,
         h("p", { id: "cv-help", class: "hint", text:
-          "PDF, DOCX or TXT. If a PDF turns out to be a scan with no text in "
-          + "it, Helix will offer to read it with text recognition — in this "
-          + "browser, with nothing uploaded." }),
+          "Supported formats: PDF, DOCX, and TXT. If a PDF is a scanned image, "
+          + "Helix can extract the text using built-in, text recognition" }),
       ]),
       status,
       problem,

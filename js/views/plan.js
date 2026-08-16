@@ -37,8 +37,19 @@ export async function render(app, context) {
   const { match, gaps, pathway, actions, pack, effort, fit, bridge,
           timeline } = analysis;
   const profile = app.profile();
-  const alternatives = groupResults(app.ranked()).adjacent.items
+  /*
+   * Alternatives for the printed plan.
+   *
+   * The stated direction leads where one exists, for the same reason it leads on
+   * screen: a plan that lists four easy-to-reach careers for somebody who has
+   * said they want to move is offering alternatives to the wrong question.
+   */
+  const grouped = groupResults(app.ranked(), { profile: app.profile() });
+  const alternatives = [...(grouped.direction ? grouped.direction.items : []),
+                        ...grouped.adjacent.items]
     .filter((item) => item.careerId !== careerId)
+    .filter((item, index, all) =>
+      all.findIndex((other) => other.careerId === item.careerId) === index)
     .slice(0, 4);
   const generated = new Date().toLocaleDateString("en-GB",
     { day: "numeric", month: "long", year: "numeric" });

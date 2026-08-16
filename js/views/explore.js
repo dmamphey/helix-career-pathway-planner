@@ -212,6 +212,7 @@ export async function renderExplorer(app) {
     Object.assign(filters, pending);
     await update();
     refreshApply();
+    if (node && node.refreshFilterSummary) node.refreshFilterSummary();
   }, { variant: "primary" });
 
   const applyHint = h("span", { class: "hint apply-hint", role: "status",
@@ -251,33 +252,76 @@ export async function renderExplorer(app) {
       }, meta.label))),
   ]);
 
+  /*
+   * The filters are folded away, and the results come first.
+   *
+   * Eleven dropdowns, an advanced section and an apply row used to sit between
+   * the heading and the first career. On a laptop that is the entire visible
+   * page: somebody arriving here saw a wall of controls and no careers at all,
+   * and reasonably concluded the screen was empty. A filter is a thing you reach
+   * for after seeing results, not a toll gate in front of them.
+   *
+   * Search and sort stay out in the open, because they are the two controls
+   * people actually use and they are one line together. Everything else lives
+   * behind a summary that says how many filters are on — and the block opens
+   * itself when any are, so a filtered list never looks like a broken one.
+   */
+  const filterCount = () => Object.entries(filters).filter(([key, value]) =>
+    !["query", "sort", "shown"].includes(key) && value !== "").length;
+
+  const filterSummary = h("summary", {});
+  const filterBlock = h("details", { class: "filter-block" }, [
+    filterSummary,
+    h("div", { class: "filters" }, primary.map(selectField)),
+    h("details", { class: "advanced-filters" }, [
+      h("summary", { text: "Advanced filters" }),
+      h("p", { class: "hint", text: "Taxonomy controls. Content depth describes "
+        + "how much researched guidance Helix has written for a career, not how "
+        + "good or how senior the career is." }),
+      h("div", { class: "filters" }, advanced.map(selectField)),
+    ]),
+    h("div", { class: "card-actions" }, [
+      applyButton,
+      applyHint,
+      button("Reset filters", () => {
+        resetFilters();
+        Object.assign(pending, filters);
+        search.value = "";
+        for (const select of node.querySelectorAll(".filters select")) {
+          select.value = select.id === "filter-sort" ? "relevance" : "";
+        }
+        refreshApply();
+        draw();
+        if (node && node.refreshFilterSummary) node.refreshFilterSummary();
+      }, { variant: "quiet" }),
+    ]),
+    h("p", { class: "hint", text: "Salary filters describe the published range "
+      + "for a career, not what any individual would be paid. Patient contact, "
+      + "laboratory, research and commercial intensity, remote potential and "
+      + "travel are inferred from each career's subject matter rather than "
+      + "surveyed." }),
+  ]);
+
+  /** Keep the summary honest about what is switched on. */
+  const refreshFilterSummary = () => {
+    const active = filterCount();
+    filterSummary.textContent = active
+      ? `Filters — ${active} on`
+      : "Filter these careers";
+    if (active) filterBlock.open = true;
+  };
+  refreshFilterSummary();
+
   const node = h("div", { class: "stack" }, [
     panel("Career Explorer", [
-      h("div", { class: "field" }, [
-        h("label", { for: "career-search", text: "Search careers" }),
-        search,
-      ]),
-      h("div", { class: "filters" }, [sortField, ...primary.map(selectField)]),
-      h("details", { class: "advanced-filters" }, [
-        h("summary", { text: "Advanced filters" }),
-        h("p", { class: "hint", text: "Taxonomy controls. Content depth describes "
-          + "how much researched guidance Helix has written for a career, not how "
-          + "good or how senior the career is." }),
-        h("div", { class: "filters" }, advanced.map(selectField)),
+      h("div", { class: "explore-controls" }, [
+        h("div", { class: "field" }, [
+          h("label", { for: "career-search", text: "Search careers" }),
+          search,
+        ]),
+        sortField,
       ]),
       h("div", { class: "card-actions" }, [
-        applyButton,
-        applyHint,
-        button("Reset filters", () => {
-          resetFilters();
-          Object.assign(pending, filters);
-          search.value = "";
-          for (const select of node.querySelectorAll(".filters select")) {
-            select.value = select.id === "filter-sort" ? "relevance" : "";
-          }
-          refreshApply();
-          draw();
-        }, { variant: "quiet" }),
         app.hasProfile()
           ? link("See my grouped options", "#/matches", { class: "btn btn-quiet" })
           : link("Build a profile to see alignment", "#/profile",
@@ -286,17 +330,14 @@ export async function renderExplorer(app) {
           ? link("Set my priorities", "#/preferences", { class: "btn btn-quiet" })
           : null,
       ]),
+      filterBlock,
       count,
-      h("p", { class: "hint", text: "Salary filters describe the published range "
-        + "for a career, not what any individual would be paid. Patient contact, "
-        + "laboratory, research and commercial intensity, remote potential and "
-        + "travel are inferred from each career's subject matter rather than "
-        + "surveyed." }),
     ], { id: "explore-heading",
          hint: "Every career in the dataset is searchable here, including those "
              + "whose pathway content is still being expanded." }),
     results,
   ]);
+  node.refreshFilterSummary = refreshFilterSummary;
 
   refreshApply();
   await update();
@@ -464,19 +505,21 @@ export async function renderMatches(app) {
 
   const { groupResults } = await import("../matcher.js");
   const ranked = app.ranked();
-  const groups = groupResults(ranked);
+  // The profile decides both the ranking and the order of the groups: a
+  // stated direction puts the careers heading that way first.
+  const groups = groupResults(ranked, { profile: app.profile() });
   const target = app.state.targetCareerId
     ? app.catalogue.get(app.state.targetCareerId) : null;
 
   const host = h("div", { class: "stack" });
-  const shown = { closest: 4, adjacent: 4, pivots: 4 };
+  const shown = Object.fromEntries(groups.order.map((key) => [key, 4]));
 
   // Effort and the "why" line need the gap analysis, which is async because a rule
   // pack may load. They are computed once for the careers actually on screen
   // rather than for all 716.
   const decorations = new Map();
   const decorate = async () => {
-    const onScreen = ["closest", "adjacent", "pivots"].flatMap(
+    const onScreen = groups.order.flatMap(
       (key) => groups[key].items.slice(0, shown[key]));
     for (const match of onScreen) {
       if (decorations.has(match.careerId)) continue;
@@ -509,7 +552,7 @@ export async function renderMatches(app) {
           link("Edit my profile", "#/profile", { class: "btn btn-quiet" }),
         ]),
       ], { id: "matches-heading" }),
-      ...["closest", "adjacent", "pivots"].map((key) => {
+      ...groups.order.map((key) => {
         const group = groups[key];
         return panel(group.title, [
           h("p", { class: "hint", text: group.blurb }),

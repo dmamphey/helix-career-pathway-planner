@@ -23,7 +23,8 @@ import {
   extractText, redactPersonalData, ProfileInterpreter,
   UnreadableDocumentError, UnsupportedFormatError,
 } from "../js/cv-parser.js";
-import { rankCareers, scoreCareer, groupResults, alignmentLabel, WEIGHTS }
+import { rankCareers, scoreCareer, groupResults, alignmentLabel, WEIGHTS,
+         interestDomainsFor }
   from "../js/matcher.js";
 import { analyseGaps } from "../js/gap-engine.js";
 import { buildPathway } from "../js/pathway-engine.js";
@@ -456,7 +457,7 @@ test("a biomedical scientist's own career ranks near the top", () => {
          `no biomedical scientist role in the top 30: ${top.slice(0, 5)}`);
 });
 
-test("results group into three buckets with family variety", () => {
+test("results group into buckets with family variety", () => {
   const ranked = rankCareers(demoProfile("postdoc"), catalogue.careers);
   const groups = groupResults(ranked);
   for (const key of ["closest", "adjacent", "pivots"]) {
@@ -2218,6 +2219,127 @@ test("reset lives on the start screen, and only when there is something to delet
          "My data still carries its own reset button");
   assert(/start screen/i.test(dataScreen.textContent),
          "My data does not say where reset went");
+});
+
+/* ==================================================================
+ * The direction you chose leads the results
+ * ================================================================== */
+
+function digitalProfile() {
+  const profile = DEMO_PROFILES[1].build();   // experienced biomedical scientist
+  profile.careerGoal = "target";
+  profile.careerInterests = ["digital"];
+  profile.preferences = { ...(profile.preferences || {}),
+                          openToSectorChange: true };
+  return profile;
+}
+
+test("stated interests lead the grouped results", () => {
+  /*
+   * The reported failure. A biomedical scientist who ticked "digital / data"
+   * and said yes to leaving their sector opened the screen on more biomedical
+   * science, because the groups were ordered by transition cost. The careers
+   * heading where somebody said they want to go now come first.
+   */
+  const profile = digitalProfile();
+  const groups = groupResults(rankCareers(profile, catalogue.careers), { profile });
+  equal(groups.order[0], "direction",
+        `the first group was "${groups.order[0]}", not the chosen direction`);
+  assert(groups.direction.items.length >= 4, "the direction group is too thin");
+});
+
+test("the direction group contains the data careers a data answer implies", () => {
+  const profile = digitalProfile();
+  const groups = groupResults(rankCareers(profile, catalogue.careers), { profile });
+  const titles = groups.direction.items.map((item) => item.career.title);
+  const wanted = ["Healthcare Data Scientist", "Clinical Data Scientist"];
+  for (const title of wanted) {
+    assert(titles.includes(title),
+           `${title} is missing from the direction group: ${titles.join(", ")}`);
+  }
+});
+
+test("one incidental tag is not enough to lead the direction group", () => {
+  /*
+   * Laboratory Training Officer carries an AI tag and nothing else digital, and
+   * it was appearing above Healthcare Data Scientist — which matches all four
+   * digital domains. Candidates need one shared domain; leading needs more.
+   */
+  const profile = digitalProfile();
+  const domains = interestDomainsFor(profile);
+  const groups = groupResults(rankCareers(profile, catalogue.careers), { profile });
+  const overlaps = groups.direction.items.map((item) =>
+    (item.career.derived.domains || [])
+      .filter((domain) => domains.has(domain)).length);
+  for (let i = 1; i < overlaps.length; i += 1) {
+    assert(overlaps[i] <= overlaps[i - 1],
+           "the direction group is not ordered by how squarely a career sits "
+           + "in the chosen area");
+  }
+  assert(overlaps[0] >= 2,
+         "the direction group is led by a career sharing a single domain");
+});
+
+test("every direction career genuinely shares a chosen domain", () => {
+  const profile = digitalProfile();
+  const domains = interestDomainsFor(profile);
+  const groups = groupResults(rankCareers(profile, catalogue.careers), { profile });
+  for (const item of groups.direction.items) {
+    assert((item.career.derived.domains || [])
+             .some((domain) => domains.has(domain)),
+           `${item.career.title} does not share any chosen domain`);
+  }
+});
+
+test("no career appears in two groups", () => {
+  const profile = digitalProfile();
+  const groups = groupResults(rankCareers(profile, catalogue.careers), { profile });
+  const seen = new Set();
+  for (const key of groups.order) {
+    for (const item of groups[key].items) {
+      assert(!seen.has(item.careerId),
+             `${item.career.title} appears in more than one group`);
+      seen.add(item.careerId);
+    }
+  }
+});
+
+test("stating no direction leaves the original three groups", () => {
+  // Nothing is imposed on somebody who did not answer: the score bands stand
+  // on their own, in their original order.
+  const profile = DEMO_PROFILES[1].build();
+  profile.careerInterests = [];
+  const groups = groupResults(rankCareers(profile, catalogue.careers), { profile });
+  equal(groups.order.join(","), "closest,adjacent,pivots");
+  equal(groups.direction, undefined);
+});
+
+test("the direction group does not alter any alignment score", () => {
+  /*
+   * The guarantee that keeps the three measures separate. Grouping is a cut of
+   * the ranking, not a reweighting of it — the same career must score the same
+   * whether or not a direction was stated.
+   */
+  const plain = DEMO_PROFILES[1].build();
+  plain.careerInterests = [];
+  const directed = digitalProfile();
+
+  const before = new Map(rankCareers(plain, catalogue.careers)
+    .map((item) => [item.careerId, item.score]));
+  const after = rankCareers(directed, catalogue.careers);
+
+  // Interests are a scored component, so the totals may differ — but the
+  // grouping must not add anything on top of that. Same ranking in, same
+  // scores out.
+  const grouped = groupResults(after, { profile: directed });
+  for (const key of grouped.order) {
+    for (const item of grouped[key].items) {
+      const fresh = after.find((r) => r.careerId === item.careerId);
+      equal(item.score, fresh.score,
+            `${item.career.title} was rescored by grouping`);
+      assert(before.has(item.careerId), "a career vanished from the ranking");
+    }
+  }
 });
 
 run();
