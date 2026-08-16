@@ -955,3 +955,41 @@ ul.plain, ol.plain { list-style: none; padding: 0; margin: 0; }
 .graph-list > li:first-child { border-top: 0; }
 .graph-list-head { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
 .graph-connections { margin: .3rem 0 .2rem; color: var(--muted); font-size: .87rem; }
+
+/* An action, elaborated. The label column is narrow so the content leads. */
+.action-detail {
+  display: grid; grid-template-columns: minmax(8rem, 11rem) 1fr;
+  gap: .25rem .9rem; margin: .6rem 0 .4rem;
+}
+.action-detail dt { color: var(--muted); font-size: .87rem; }
+.action-detail dd { margin: 0; }
+.action-detail ul { margin: 0; padding-left: 1.1rem; }
+.action-detail li { margin-bottom: .2rem; }
+
+/* The development timeline. */
+.horizon { margin-top: 1.4rem; }
+.horizon h3 { margin-top: 0; }
+.milestones { list-style: none; margin: .4rem 0 0; padding: 0; }
+.milestone {
+  border: 1px solid var(--line); border-left: 4px solid var(--brand-cyan);
+  border-radius: 10px; padding: .8rem .9rem; margin-bottom: .7rem;
+}
+.milestone-completed { border-left-color: var(--good-line); background: var(--good-bg); }
+.milestone-head { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.milestone-head h4 { margin: 0; font-size: 1rem; }
+.milestone-controls {
+  display: flex; flex-wrap: wrap; align-items: end; gap: .6rem 1rem;
+  margin: .5rem 0;
+}
+.field-inline { margin: 0; }
+.field-inline label { display: block; font-size: .87rem; color: var(--muted); }
+.milestone input[type="date"], .milestone textarea {
+  font: inherit; padding: .45rem .6rem; border: 1px solid var(--line);
+  border-radius: 8px; min-height: 44px; max-width: 100%;
+}
+.milestone textarea { width: 100%; min-height: 3rem; }
+
+@media (max-width: 34rem) {
+  .action-detail { grid-template-columns: 1fr; }
+  .action-detail dt { font-weight: 600; margin-top: .4rem; }
+}

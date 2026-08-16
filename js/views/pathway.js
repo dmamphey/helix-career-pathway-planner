@@ -7,8 +7,9 @@
 
 import {
   h, panel, button, link, statusPill, milestonePill, sourceList, empty,
-  progressBar, dialog, notice, verificationNote
+  progressBar, dialog, notice, verificationNote, confirmDialog
 } from "../ui.js";
+import { horizonForDate } from "../timeline-engine.js";
 import { MILESTONE_STATUS, evidenceFor } from "../pathway-engine.js";
 import { CATEGORIES, GAP_STATUS, AREAS } from "../gap-engine.js";
 
@@ -40,12 +41,13 @@ export async function render(app, context) {
 
   const draw = async () => {
     const analysis = await app.analysisFor(careerId);
-    const { match, gaps, pathway, actions, pack, bridge } = analysis;
+    const { match, gaps, pathway, actions, pack, bridge, timeline } = analysis;
     host.replaceChildren(
       header(app, career, match, pathway),
       verificationNote(gaps),
       actionsPanel(actions, app),
       mapPanel(app, career, pathway, gaps, draw),
+      timelinePanel(app, career, timeline, draw),
       bridgePanel(app, career, bridge, draw),
       gapsPanel(gaps),
       transitionsPanel(gaps),
@@ -83,14 +85,56 @@ function header(app, career, match, pathway) {
   ]);
 }
 
-/** The next three actions, which is what most people came for. */
+/**
+ * The next three actions, which is what most people came for.
+ *
+ * Still exactly three. What changed is the depth of each one: "improve
+ * leadership experience" is a category, not a task, and somebody reading it on a
+ * Sunday evening still has no idea what to do on Monday. Each action now carries
+ * the gap it addresses, things that could actually be proposed inside a month,
+ * what evidence would look like, and how to know it is finished.
+ */
 function actionsPanel(actions, app) {
   return panel("Your next 3 moves", [
     h("ol", { class: "actions" }, actions.map((action) =>
       h("li", {}, [
         h("h3", { text: action.title }),
         h("p", { text: action.detail }),
-        h("p", { class: "hint", text: `Why this one: ${action.why}` }),
+
+        h("dl", { class: "action-detail" }, [
+          h("dt", { text: "Why it matters" }),
+          h("dd", { text: action.why }),
+
+          h("dt", { text: "Gap it addresses" }),
+          h("dd", { text: action.gapAddressed || action.title }),
+
+          ...(action.activities && action.activities.length ? [
+            h("dt", { text: "Things you could do" }),
+            h("dd", {}, [h("ul", { class: "plain" }, action.activities.map(
+              (line) => h("li", { text: line })))]),
+          ] : []),
+
+          ...(action.evidenceExamples && action.evidenceExamples.length ? [
+            h("dt", { text: "Evidence you could collect" }),
+            h("dd", { text: action.evidenceExamples.join(", ") }),
+          ] : []),
+
+          h("dt", { text: "Suggested timeframe" }),
+          h("dd", { text: action.timeframe || "No fixed timeframe" }),
+
+          h("dt", { text: "Complete when" }),
+          h("dd", { text: action.completionCriteria || "—" }),
+
+          ...(action.relatedBridge ? [
+            h("dt", { text: "A bridge role that covers this" }),
+            h("dd", {}, [
+              link(action.relatedBridge.title,
+                   `#/career/${action.relatedBridge.id}`),
+              ` — ${action.relatedBridge.why}`,
+            ]),
+          ] : []),
+        ]),
+
         action.sourceUrl
           ? h("p", {}, [link("Open the official source", action.sourceUrl,
                              { external: true })])
@@ -100,7 +144,120 @@ function actionsPanel(actions, app) {
       "Three, deliberately. Priority order is: anything verified as mandatory, "
       + "then anything that must be confirmed officially, then your largest "
       + "development gap, then evidence, then people." }),
+    h("p", { class: "hint", text: "The activities and evidence are suggestions "
+      + "from Helix, not requirements. No employer or regulator has said these "
+      + "are what they screen on." }),
   ], { id: "actions-heading" });
+}
+
+/* ------------------------------------------------------------------ timeline */
+
+/**
+ * 90 days, 6 months, 12 months, longer term.
+ *
+ * Built from the same actions, gaps and bridges as everything above it, so the
+ * plan and the screen cannot disagree. An empty horizon stays empty — padding a
+ * timeline to look complete is how a plan becomes a horoscope.
+ *
+ * Every milestone is editable, and edits are stored apart from Helix's own
+ * suggestions so that regenerating the plan never overwrites somebody's dates.
+ */
+function timelinePanel(app, career, timeline, redraw) {
+  return panel("Your development timeline", [
+    progressBar(timeline.counts.percent,
+      `${timeline.counts.done} of ${timeline.counts.total} milestones marked `
+      + `complete.`),
+    timeline.note ? h("p", { class: "hint", text: timeline.note }) : null,
+
+    ...timeline.horizons.map((horizon) => h("section", { class: "horizon" }, [
+      h("h3", { text: horizon.label }),
+      h("p", { class: "hint", text: horizon.lede }),
+      horizon.milestones.length
+        ? h("ul", { class: "milestones" }, horizon.milestones.map((milestone) =>
+            milestoneItem(app, career, milestone, redraw)))
+        : h("p", { class: "empty", text: "Nothing falls in this window. That is "
+            + "a real answer, not a gap in the plan." }),
+    ])),
+
+    h("div", { class: "card-actions" }, [
+      button("Reset my edits to this plan", async () => {
+        const proceed = await confirmDialog(
+          "Reset this plan?",
+          "Your dates, notes and completion marks for this career will be "
+          + "removed, and the plan will go back to what Helix suggests. Your "
+          + "profile and saved careers are not affected.",
+          "Reset the plan");
+        if (!proceed) return;
+        app.resetPlan(career.id);
+        notice("This plan has been reset to Helix's suggestions.", "info");
+        redraw();
+      }, { variant: "quiet" }),
+      link("Download my career plan", `#/plan/${career.id}`, { class: "btn" }),
+    ]),
+  ], { id: "timeline-heading" });
+}
+
+function milestoneItem(app, career, milestone, redraw) {
+  const done = milestone.status === "completed";
+  const inputId = `due-${milestone.id}`;
+  const noteId = `note-${milestone.id}`;
+
+  return h("li", { class: `milestone milestone-${milestone.status}` }, [
+    h("div", { class: "milestone-head" }, [
+      h("h4", { text: milestone.title }),
+      milestone.edited
+        ? h("span", { class: "chip", text: "Edited by you" }) : null,
+    ]),
+    h("p", { text: milestone.detail }),
+    milestone.completionCriteria
+      ? h("p", { class: "hint", text: `Complete when: `
+          + milestone.completionCriteria })
+      : null,
+
+    h("div", { class: "milestone-controls" }, [
+      button(done ? "Completed ✓" : "Mark complete", () => {
+        app.setPlanEntry(career.id, milestone.id,
+                         { status: done ? null : "completed" });
+        redraw();
+      }, { variant: "quiet", pressed: done }),
+
+      h("div", { class: "field field-inline" }, [
+        h("label", { for: inputId, text: "Target date" }),
+        h("input", {
+          type: "date", id: inputId, value: milestone.due || "",
+          // The suggestion is a placeholder, never written on the user's
+          // behalf: a stored date should mean somebody decided it.
+          placeholder: milestone.suggestedDue,
+          onChange: (event) => {
+            const value = event.target.value;
+            app.setPlanEntry(career.id, milestone.id, {
+              due: value || null,
+              // Moving a date past its window moves the milestone, so the
+              // timeline keeps telling the truth about when things happen.
+              horizon: value ? horizonForDate(value) : null,
+            });
+            redraw();
+          },
+        }),
+        h("span", { class: "hint", text: milestone.due
+          ? "" : `Helix suggests ${milestone.suggestedDue}` }),
+      ]),
+    ]),
+
+    h("div", { class: "field" }, [
+      h("label", { for: noteId, text: "Your notes" }),
+      h("textarea", {
+        id: noteId, rows: "2", maxlength: "500",
+        placeholder: "Anything you want to remember about this step",
+        value: milestone.note || "",
+        onChange: (event) => {
+          app.setPlanEntry(career.id, milestone.id,
+                           { note: event.target.value || null });
+          redraw();
+        },
+      }),
+    ]),
+  ]);
 }
 
 /**

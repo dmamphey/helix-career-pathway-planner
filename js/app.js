@@ -22,6 +22,7 @@ import { buildPathway } from "./pathway-engine.js";
 import { nextActions } from "./action-engine.js";
 import { transitionEffort, whyThisCareer } from "./transition-effort.js";
 import { bridgeRoles } from "./bridge-engine.js";
+import { buildTimeline } from "./timeline-engine.js";
 import { loadRulePack } from "./rules.js";
 import {
   clear, errorPanel, clearNotice, notice, button, h, link, datasetLabel,
@@ -135,18 +136,9 @@ export const app = {
                              this.catalogue.sources);
     const pathway = buildPathway(this.state.profile, match, gaps, pack,
                                  this.state.progress[careerId] || {});
-    const actions = nextActions(this.state.profile, match, gaps, pathway,
-                                { registry: this.catalogue.sources });
-    // Effort and the explanation are derived from the same match and gap objects,
-    // so they can never contradict what the rest of the screen shows.
-    const effort = transitionEffort(this.state.profile, match, gaps);
-    const why = whyThisCareer(this.state.profile, match, gaps);
-    // Preference fit is computed with the effort in hand, so retraining
-    // tolerance can be one of its dimensions.
-    const fit = this.fitFor(career, effort);
-    // Bridge roles need the target's gaps, so they are built here rather than in
-    // the view: the same gap objects that produced the actions produce the
-    // bridges, and the two cannot describe different gaps.
+    // Bridges are built before the actions so an action can name the bridge
+    // that covers its own gap. Same gap objects throughout, so the action, the
+    // bridge card and the timeline cannot describe different gaps.
     const bridge = bridgeRoles({
       target: career,
       targetGaps: gaps,
@@ -154,7 +146,22 @@ export const app = {
       matchFor: (item) => this.matchFor(item),
       profile: this.state.profile,
     });
-    return { career, pack, match, gaps, pathway, actions, effort, why, fit, bridge };
+    const actions = nextActions(this.state.profile, match, gaps, pathway,
+                                { registry: this.catalogue.sources,
+                                  bridges: bridge.bridges });
+    // Effort and the explanation are derived from the same match and gap objects,
+    // so they can never contradict what the rest of the screen shows.
+    const effort = transitionEffort(this.state.profile, match, gaps);
+    const why = whyThisCareer(this.state.profile, match, gaps);
+    // Preference fit is computed with the effort in hand, so retraining
+    // tolerance can be one of its dimensions.
+    const fit = this.fitFor(career, effort);
+    const timeline = buildTimeline({
+      career, actions, gaps, effort, bridge,
+      saved: this.planFor(careerId),
+    });
+    return { career, pack, match, gaps, pathway, actions, effort, why, fit,
+             bridge, timeline };
   },
 
   /**

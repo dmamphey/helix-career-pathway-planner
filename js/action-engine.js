@@ -104,6 +104,8 @@ export function nextActions(profile, match, gaps, pathway, options = {}) {
          + "can act on directly.",
       sourceCode: item.sourceCode || "",
       area: item.area,
+      domain: item.domain || "",
+      gapLabel: label,
       weightHint: item.category === "usually_expected" ? 1 : 0,
       order: Number.isInteger(item.order) ? item.order : 99,
       fromPack: Boolean(item.fromPack),
@@ -224,28 +226,181 @@ export function nextActions(profile, match, gaps, pathway, options = {}) {
     if (chosen.some((item) => item.id === candidate.id)) continue;
     chosen.push(candidate);
   }
-  return chosen.slice(0, 3).map((action, index) => ({
-    ...action, position: index + 1,
-  }));
+  return chosen.slice(0, 3).map((action, index) =>
+    elaborate({ ...action, position: index + 1 }, career, options));
 }
 
+/* --------------------------------------------------------------- elaboration */
+
 /**
- * Three and six-to-twelve month priorities for the PDF plan.
+ * Turn a chosen action into something operational.
  *
- * Derived from the same candidate list rather than invented separately, so the
- * document cannot contradict the screen.
+ * The old output was a title, a sentence and a reason. That is enough to agree
+ * with and not enough to do: "improve leadership experience" is a category, not
+ * a task, and a person reading it on a Sunday evening still has no idea what to
+ * do on Monday.
+ *
+ * Everything added here is derived from the tier and the area the action already
+ * carries. Nothing consults an external source, and nothing claims a requirement
+ * — the completion criteria describe evidence somebody could show, not a
+ * standard any employer or regulator has set.
  */
-export function developmentHorizon(actions, gaps) {
-  const shortTerm = actions.map((action) => action.title);
-  const remaining = gaps.items
-    .filter((item) => item.status === "action_required")
-    .map((item) => item.title)
-    .filter((title) => !shortTerm.includes(title));
+function elaborate(action, career, options) {
+  const shape = ACTION_SHAPES[action.tier];
+  const activities = ACTIVITIES[action.area] || ACTIVITIES.default;
+  const evidence = EVIDENCE_BY_AREA[action.area] || EVIDENCE_BY_AREA.default;
+  const bridge = (options.bridges || [])
+    .find((item) => (item.coveredDomains || []).includes(action.domain));
+
   return {
-    threeMonth: shortTerm,
-    sixToTwelveMonth: [
-      ...remaining.slice(0, 3),
-      "Review your profile and pathway again once the actions above are done",
-    ],
+    ...action,
+    timeframe: shape.timeframe,
+    horizon: shape.horizon,
+    gapAddressed: action.gapLabel || action.title,
+    activities: activities.map((line) =>
+      line.replace("{career}", career.title.toLowerCase())),
+    evidenceExamples: evidence,
+    completionCriteria: shape.completion,
+    /*
+     * A bridge role is mentioned only when it covers this exact gap. Attaching
+     * the nearest bridge to every action would make the connection meaningless
+     * and imply the job is a step towards something it does not help with.
+     */
+    relatedBridge: bridge
+      ? { id: bridge.career.id, title: bridge.career.title,
+          why: `A spell as a ${bridge.career.title.toLowerCase()} would cover `
+             + `this alongside other gaps.` }
+      : null,
+    milestoneId: `action-${action.id}`,
   };
 }
+
+/** How urgent a tier is, and what "done" looks like for it. */
+const ACTION_SHAPES = {
+  [TIER.verified_blocker]: {
+    timeframe: "Start now — everything else depends on it",
+    horizon: "90_days",
+    completion: "You hold, or have formally started, the requirement itself and "
+              + "can point to the evidence.",
+  },
+  [TIER.official_confirmation]: {
+    timeframe: "Next 2 to 4 weeks",
+    horizon: "90_days",
+    completion: "You have a written answer from the official body about which "
+              + "route applies to you, and have recorded the date you asked.",
+  },
+  [TIER.development]: {
+    timeframe: "Next 3 to 6 months",
+    horizon: "6_months",
+    completion: "You can describe one piece of real work in this area, your own "
+              + "contribution to it, and what came of it.",
+  },
+  [TIER.evidence]: {
+    timeframe: "Next 4 to 8 weeks",
+    horizon: "90_days",
+    completion: "The evidence exists as something you could attach to an "
+              + "application or hand to an interviewer.",
+  },
+  [TIER.exploration]: {
+    timeframe: "Next 4 weeks",
+    horizon: "90_days",
+    completion: "You have spoken to somebody doing the work and written down "
+              + "what surprised you.",
+  },
+};
+
+/**
+ * Concrete things somebody could actually do, by area.
+ *
+ * Deliberately mundane and small. The failure mode of career advice is
+ * suggesting a project nobody has the authority to start; every line here is
+ * something a person can propose in their own team within a month.
+ */
+const ACTIVITIES = {
+  leadership: [
+    "Lead one small improvement project from start to finish.",
+    "Take responsibility for a defined workstream with a deadline.",
+    "Supervise, mentor or train one colleague or student.",
+    "Present an outcome to your team or department.",
+  ],
+  quality_regulatory: [
+    "Take part in an audit, from planning through to the report.",
+    "Write or revise one standard operating procedure.",
+    "Own a deviation, CAPA or non-conformance through to closure.",
+    "Sit in on an inspection or accreditation visit if you can.",
+  ],
+  research: [
+    "Contribute to a protocol, a proposal or an ethics submission.",
+    "Take a defined analysis and write up the method and result.",
+    "Present at a departmental meeting or a poster session.",
+    "Offer to review or second-check somebody else's analysis.",
+  ],
+  clinical_research: [
+    "Shadow trial coordination or monitoring for a few days.",
+    "Complete recognised Good Clinical Practice training.",
+    "Help maintain a trial master file or a site file.",
+    "Attend a site initiation or monitoring visit as an observer.",
+  ],
+  data_digital: [
+    "Automate one manual reporting task in your own work.",
+    "Complete a structured course in the tool your field actually uses.",
+    "Build one small analysis somebody else uses to make a decision.",
+    "Document a data flow in your department end to end.",
+  ],
+  commercial: [
+    "Sit in on a supplier, procurement or contract discussion.",
+    "Prepare a short business case for something you want changed.",
+    "Present scientific work to a non-scientific audience.",
+    "Ask to be involved in one customer or stakeholder meeting.",
+  ],
+  training: [
+    "Deliver one teaching session and collect feedback on it.",
+    "Write a training package or competency assessment.",
+    "Take a recognised teaching or assessing qualification.",
+  ],
+  technical: [
+    "Take on a technique or platform nobody else in the team owns.",
+    "Validate or verify one method and write the report.",
+    "Troubleshoot a recurring problem and document the fix.",
+  ],
+  communication: [
+    "Rewrite your two strongest examples in this career's vocabulary.",
+    "Check them against two live {career} adverts.",
+    "Ask somebody in the field whether the wording lands.",
+  ],
+  education: [
+    "Confirm exactly which qualifications the route requires.",
+    "Find two approved programmes and note the entry requirements.",
+    "Check whether prior learning can be recognised.",
+  ],
+  default: [
+    "Find one piece of real work in this area and volunteer for it.",
+    "Ask your manager what would count as evidence in your organisation.",
+    "Write down what you did and what came of it while it is fresh.",
+  ],
+};
+
+/** What "I can show this" looks like, by area. */
+const EVIDENCE_BY_AREA = {
+  leadership: ["A project summary with your role stated", "Manager feedback",
+               "Meeting notes or terms of reference", "Outcome measures"],
+  quality_regulatory: ["An audit report naming you", "A signed SOP you authored",
+                       "A closed CAPA record", "Training records"],
+  research: ["A protocol or proposal", "An analysis write-up", "A poster or slides",
+             "An acknowledgement or authorship"],
+  clinical_research: ["A GCP certificate", "A file note or delegation log entry",
+                      "A monitoring visit report you contributed to"],
+  data_digital: ["A repository or notebook", "A dashboard somebody uses",
+                 "A course certificate", "A documented data flow"],
+  commercial: ["A business case", "Slides from a non-technical presentation",
+               "Notes from a stakeholder meeting"],
+  training: ["Session materials", "Feedback forms", "A teaching qualification"],
+  technical: ["A validation or verification report", "A method file",
+              "A troubleshooting record"],
+  communication: ["A rewritten CV section", "Two annotated job adverts",
+                  "Written feedback from somebody in the field"],
+  education: ["A written answer from the awarding body",
+              "Programme entry requirements", "A prior-learning decision"],
+  default: ["A written record of what you did", "Something with your name on it",
+            "An outcome somebody else can confirm"],
+};

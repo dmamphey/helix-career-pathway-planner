@@ -13,10 +13,11 @@
 
 import { h, panel, button, link, empty, datasetLabel } from "../ui.js";
 import { MILESTONE_STATUS } from "../pathway-engine.js";
-import { developmentHorizon } from "../action-engine.js";
 import { describeProfile } from "../profile.js";
 import { groupResults } from "../matcher.js";
 import * as market from "../market-data.js";
+import * as labour from "../labour-market.js";
+import { salaryDelta } from "../baseline.js";
 import { lowerLabel } from "../ontology.js";
 
 export async function render(app, context) {
@@ -33,9 +34,9 @@ export async function render(app, context) {
   }
 
   const analysis = await app.analysisFor(careerId);
-  const { match, gaps, pathway, actions, pack, effort, fit } = analysis;
+  const { match, gaps, pathway, actions, pack, effort, fit, bridge,
+          timeline } = analysis;
   const profile = app.profile();
-  const horizon = developmentHorizon(actions, gaps);
   const alternatives = groupResults(app.ranked()).adjacent.items
     .filter((item) => item.careerId !== careerId)
     .slice(0, 4);
@@ -76,6 +77,11 @@ export async function render(app, context) {
         h("p", { class: "plan-meta", text: `Generated ${generated} · Helix Career Pathway Planner `
           + `· dataset ${datasetLabel(app.catalogue.meta)}` }),
       ]),
+
+      // The baseline, when one was pinned. It is the thing every comparison on
+      // screen was measured against, so a plan that omitted it would be a
+      // record of conclusions without their reference point.
+      baselineSection(app, career),
 
       planSection("Current career position", [
         h("p", { text: describeProfile(profile) }),
@@ -243,11 +249,51 @@ export async function render(app, context) {
       ]),
 
       planSection("Your next 3 actions", [
-        h("ol", {}, actions.map((action) => h("li", {}, [
+        h("ol", { class: "plan-actions" }, actions.map((action) => h("li", {}, [
           h("strong", { text: `${action.title}. ` }),
           h("span", { text: action.detail }),
+          /*
+           * The printed version carries the timeframe and the completion
+           * criteria but not the full activity list. A printed plan is read
+           * away from the screen and has to stay skimmable — what is missing
+           * here is one click away, and what is here is what somebody needs to
+           * know they are done.
+           */
+          h("p", { class: "plan-action-meta", text:
+            `${action.timeframe || ""}`
+            + (action.completionCriteria
+                ? ` · Complete when: ${action.completionCriteria}` : "") }),
+          action.relatedBridge
+            ? h("p", { class: "plan-action-meta", text:
+                `Bridge role that covers this: ${action.relatedBridge.title}.` })
+            : null,
         ]))),
       ]),
+
+      /*
+       * Bridge roles. Printed with the sentence that says they are optional,
+       * every time — a plan that survives on paper for a year must not lose the
+       * caveat that made it honest on screen.
+       */
+      bridge && bridge.hasBridge
+        ? planSection("Possible bridge roles", [
+            h("ul", {}, bridge.bridges.map((item) => h("li", {}, [
+              h("strong", { text: `${item.career.title}. ` }),
+              h("span", { text: item.whyItHelps }),
+              item.gradeNote
+                ? h("p", { class: "plan-action-meta", text: item.gradeNote })
+                : null,
+            ]))),
+            h("p", { class: "plan-action-meta", text: "None of these is a "
+              + "required step. Nothing official says you must do one of these "
+              + "jobs first." }),
+          ])
+        : null,
+
+      // What the market was doing when this was printed, with its age attached
+      // — a printed document outlives its data, so the date has to travel with
+      // the figure rather than sitting in a footer.
+      labourSection(career),
 
       planSection("Pathway milestones", [
         h("ol", { class: "plan-milestones" }, pathway.nodes.map((node) =>
@@ -255,14 +301,31 @@ export async function render(app, context) {
             + `${node.title}` }))),
       ]),
 
-      planSection("Next three months", [
-        h("ul", {}, horizon.threeMonth.map((item) => h("li", { text: item }))),
-      ]),
-
-      planSection("Six to twelve months", [
-        h("ul", {}, horizon.sixToTwelveMonth.map((item) =>
-          h("li", { text: item }))),
-      ]),
+      /*
+       * The four horizons, printed as the person left them.
+       *
+       * Their own dates, notes and completion marks are included, because the
+       * document is a record of their plan rather than of Helix's suggestion.
+       * An empty horizon prints as empty for the same reason it displays that
+       * way: padding it would make the plan look fuller than it is.
+       */
+      ...timeline.horizons.map((window) => planSection(window.label, [
+        window.milestones.length
+          ? h("ul", { class: "plan-milestones" }, window.milestones.map((item) =>
+              h("li", {}, [
+                h("strong", { text: item.status === "completed"
+                  ? `[done] ${item.title}` : item.title }),
+                item.due ? h("span", { text: ` — target ${item.due}` }) : null,
+                item.completionCriteria
+                  ? h("p", { class: "plan-action-meta",
+                      text: `Complete when: ${item.completionCriteria}` })
+                  : null,
+                item.note
+                  ? h("p", { class: "plan-note", text: `Your note: ${item.note}` })
+                  : null,
+              ])))
+          : h("p", { class: "hint", text: "Nothing falls in this window." }),
+      ])),
 
       /*
        * The shortlist, if there is one. Kept to a line each: the point is to
@@ -364,4 +427,38 @@ function describeFit(fit) {
   if (fit >= 0.85) return "strong";
   if (fit >= 0.6) return "good";
   return "partial";
+}
+
+/** The baseline career this plan's comparisons were measured against. */
+function baselineSection(app, career) {
+  const baseline = app.baselineCareer();
+  if (!baseline || baseline.id === career.id) return null;
+  const basePay = market.salary(baseline.id);
+  const targetPay = market.salary(career.id);
+  const delta = salaryDelta(basePay, targetPay);
+  return planSection("Compared against", [
+    h("p", {}, [
+      h("strong", { text: baseline.title }),
+      ` (${baseline.family}) was pinned as the baseline, so the comparisons `
+      + `behind this plan were stated as differences from it.`,
+    ]),
+    delta
+      ? h("p", { text: `Typical salary difference at the midpoint of each `
+          + `range: ${delta.label}. ${delta.caveat}` })
+      : null,
+  ]);
+}
+
+/** The hiring climate at the moment of printing, with its age. */
+function labourSection(career) {
+  const signal = labour.demandFor(career);
+  if (!signal) return null;
+  return planSection("Labour market context", [
+    h("p", { text: `Measured across ${signal.categoryLabel}, not this job `
+      + `title. Direction of travel: ${signal.trendLabel.toLowerCase()}. `
+      + `Signal strength: ${signal.strengthLabel.toLowerCase()}.` }),
+    h("p", { class: "plan-action-meta", text: `${signal.source}, released `
+      + `${signal.released}. This is an index of advert volume, not a count of `
+      + `vacancies. Check the current position before relying on it.` }),
+  ]);
 }
