@@ -2005,6 +2005,7 @@ async function appForViews(options = {}) {
     effortCache: new Map(), fitCache: new Map(),
     profile: () => state.profile,
     hasProfile: () => Boolean(state.profile),
+    setProfile: (next) => { state.profile = next; ranked = null; return next; },
     hasPreferences: () => Boolean(state.profile),
     persist: () => state,
     navigate: () => {},
@@ -2150,6 +2151,35 @@ test("a screen asked for a career that does not exist says so", async () => {
     const node = await renderView(module, app, { params: { id: "CP-999999" } });
     assert(/not found|no career/i.test(node.textContent),
            `${module} did not report a missing career`);
+  }
+});
+
+test("finishing onboarding always lands on the matches screen", async () => {
+  /*
+   * The destination used to depend on the career-goal answer, and somebody who
+   * said they had a target in mind was sent to the Career Explorer — a page of
+   * filter dropdowns with the results below them. After uploading a CV that
+   * reads as nothing having happened, and it is the one screen that does not use
+   * the profile just built.
+   *
+   * Driven through the real questions view rather than by reading the source, so
+   * the test fails if the branch comes back in any form.
+   */
+  const onboarding = await import("../js/views/onboarding.js");
+  for (const goal of ["target", "explore", null]) {
+    const profile = { ...DEMO_PROFILES[1].build(), careerGoal: goal };
+    const routes = [];
+    const app = await appForViews({ profile });
+    app.navigate = (route) => routes.push(route);
+    app.pending = { profile, notes: [], format: "PDF", signalCount: 8 };
+
+    const node = await onboarding.renderQuestions(app, { params: {} });
+    const go = [...node.querySelectorAll("button")]
+      .find((b) => /Show my career options/i.test(b.textContent));
+    assert(go, `no options button for goal ${goal}`);
+    go.click();
+    equal(routes[routes.length - 1], "/matches",
+          `career goal "${goal}" did not land on the matches screen`);
   }
 });
 

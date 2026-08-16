@@ -448,11 +448,30 @@ export async function renderQuestions(app) {
       ]),
 
       h("div", { class: "card-actions" }, [
+        /*
+         * Always the matches screen.
+         *
+         * This used to branch: somebody who said they had a target career in
+         * mind was sent to the Career Explorer instead, on the theory that
+         * searching all 716 is more useful than grouped matches when you
+         * already know where you are going.
+         *
+         * It was wrong twice over. The button says "Show my career options",
+         * and the Explorer shows a page of filter controls with the results
+         * below them — so the reward for uploading a CV was a wall of dropdowns
+         * and no visible careers, which reads as nothing having happened. And
+         * the branch threw away the work: matches is the only screen that uses
+         * the profile just built.
+         *
+         * Nothing is lost. The matches screen carries "I know where I want to
+         * go — search all careers" as its first action, so the Explorer is one
+         * click away for exactly the people who were being sent there.
+         */
         button("Show my career options", () => {
           app.setProfile(draft);
           app.state.settings.onboarded = true;
           app.persist();
-          app.navigate(draft.careerGoal === "target" ? "/explore" : "/matches");
+          app.navigate("/matches");
         }, { variant: "primary" }),
         link("Skip for now", "#/matches", { class: "btn btn-quiet" }),
       ]),
