@@ -542,6 +542,7 @@ export async function renderMatches(app) {
           + "by how good a career it is. Alignment describes the overlap between "
           + "your profile and the career — it is not a prediction about "
           + "recruitment." }),
+        matchSummary(app, groups),
         target
           ? h("p", {}, ["Your current target: ",
               link(target.title, `#/pathway/${target.id}`), " "])
@@ -555,6 +556,16 @@ export async function renderMatches(app) {
       ...groups.order.map((key) => {
         const group = groups[key];
         return panel(group.title, [
+          // The full count, not the number of cards. Each list is capped, so
+          // "4 careers" would be reporting the size of the cap.
+          h("p", { class: "group-count" }, [
+            h("strong", { text: `${group.total} `
+              + `${group.total === 1 ? "career" : "careers"}` }),
+            group.total > Math.min(shown[key], group.items.length)
+              ? h("span", { class: "hint", text: ` · showing `
+                  + `${Math.min(shown[key], group.items.length)}` })
+              : null,
+          ]),
           h("p", { class: "hint", text: group.blurb }),
           group.items.length
             ? h("div", { class: "grid grid-3" },
@@ -614,5 +625,46 @@ function summary(ranked) {
       + "score and shown separately on each career, so a high alignment can "
       + "never hide a registration requirement.",
     ]),
+  ]);
+}
+
+
+/**
+ * How many careers ended up where.
+ *
+ * The question this answers is "how many options do I actually have", and the
+ * honest answer is not the number of cards on screen: every list is capped at
+ * twelve, and shows four at a time. So these are the full counts, and each
+ * group heading repeats its own alongside "showing 4".
+ *
+ * The four add up to every career scored, because they come from the same
+ * partition the groups use — a career in the chosen direction is not counted
+ * again as an adjacent one. That is worth the arithmetic: a breakdown that did
+ * not sum to the total would look like a mistake even when every figure in it
+ * was right.
+ */
+function matchSummary(app, groups) {
+  const total = groups.scored;
+  const rows = groups.order
+    .map((key) => ({ key, group: groups[key] }))
+    .filter((entry) => entry.group.total > 0);
+
+  return h("div", { class: "match-summary" }, [
+    h("p", { class: "match-total" }, [
+      "Helix scored your profile against all ",
+      h("strong", { text: `${total} careers` }),
+      " in the dataset. Every one of them is placed in exactly one of these "
+      + "groups:",
+    ]),
+    h("ul", { class: "match-breakdown" }, rows.map((entry) =>
+      h("li", {}, [
+        h("strong", { text: String(entry.group.total) }),
+        " ",
+        h("span", { text: lowerLabel(entry.group.title) }),
+      ]))),
+    h("p", { class: "hint", text: "Each group below shows its closest few "
+      + "first — use View more to see the rest. A career appearing in a bigger "
+      + "pivot group has not been rejected; it is a larger move, which is a "
+      + "fact about the distance rather than about you." }),
   ]);
 }

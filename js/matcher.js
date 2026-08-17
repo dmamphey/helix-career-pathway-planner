@@ -396,6 +396,30 @@ export function groupResults(ranked, options = {}) {
   const used = new Set();
   const groups = [];
 
+  /*
+   * How many careers fall in each category, before any cap.
+   *
+   * Two different numbers could answer "how many options do I have", and only
+   * one of them is useful. The lists below are capped — twelve a group, and no
+   * more than two or four from one family — so counting what is displayed would
+   * report the size of the cap rather than the size of the answer.
+   *
+   * These are counted with the same partition the groups use, so a career is in
+   * exactly one of them and the four add up to every career scored. A career
+   * counted under the chosen direction is not also counted as an adjacent one.
+   */
+  const totals = {};
+  const counted = new Set();
+  const countInto = (key, predicate) => {
+    let count = 0;
+    for (const item of ranked) {
+      if (counted.has(item.careerId) || !predicate(item)) continue;
+      counted.add(item.careerId);
+      count += 1;
+    }
+    totals[key] = count;
+  };
+
   if (interestDomains.size) {
     /*
      * Ordered by how squarely a career sits in the chosen direction, then by
@@ -424,6 +448,10 @@ export function groupResults(ranked, options = {}) {
         || b.item.score - a.item.score
         || a.item.careerId.localeCompare(b.item.careerId));
 
+    countInto("direction", (item) =>
+      (item.career.derived.domains || [])
+        .some((domain) => interestDomains.has(domain)));
+
     const direction = pick(scored.map((entry) => entry.item),
                            () => true, 4, perGroup, used);
     for (const item of direction) used.add(item.careerId);
@@ -437,6 +465,10 @@ export function groupResults(ranked, options = {}) {
       items: direction,
     });
   }
+
+  countInto("closest", (item) => item.score >= 60);
+  countInto("adjacent", (item) => item.score >= 40 && item.score < 60);
+  countInto("pivots", (item) => item.score < 40);
 
   const closest = pick(ranked, (r) => r.score >= 60, 2, perGroup, used);
   for (const item of closest) used.add(item.careerId);
@@ -474,8 +506,18 @@ export function groupResults(ranked, options = {}) {
    * a hard-coded array of names in a template — which is how the direction
    * group would end up last by accident.
    */
+  // Each group carries its own full count alongside the capped list, so a
+  // heading can say "showing 4 of 62" without the view recomputing anything.
+  for (const group of groups) group.total = totals[group.key] || 0;
+
   const byKey = Object.fromEntries(groups.map((group) => [group.key, group]));
-  return { ...byKey, order: groups.map((group) => group.key), groups };
+  return {
+    ...byKey,
+    order: groups.map((group) => group.key),
+    groups,
+    totals,
+    scored: ranked.length,
+  };
 }
 
 function pick(ranked, predicate, perFamily, limit, exclude) {

@@ -1072,3 +1072,27 @@ ul.plain, ol.plain { list-style: none; padding: 0; margin: 0; }
   }
   #nav a[aria-current="page"] { background: #fff; color: var(--brand-navy); }
 }
+
+/* How many careers landed where. The figures are the full counts, not the
+   number of cards on screen — every list below is capped. */
+.match-summary {
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--brand-tint); padding: .9rem 1.1rem; margin: .9rem 0;
+}
+.match-total { margin: 0 0 .6rem; }
+.match-breakdown {
+  list-style: none; margin: 0 0 .6rem; padding: 0;
+  display: grid; gap: .35rem .9rem;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+.match-breakdown li {
+  display: flex; align-items: baseline; gap: .45rem;
+  padding: .3rem .1rem; border-top: 1px solid var(--line);
+}
+.match-breakdown li strong {
+  font-size: 1.25rem; color: var(--brand-navy);
+  font-variant-numeric: tabular-nums; min-width: 2.5rem;
+}
+.match-summary .hint { margin: 0; }
+.group-count { margin: 0 0 .2rem; }
+.group-count strong { color: var(--brand-navy); }

@@ -2412,4 +2412,46 @@ test("the navigation collapses behind one control on a narrow screen", async () 
          "there is no rule that opens the collapsed navigation");
 });
 
+test("the group counts account for every career, exactly once", () => {
+  /*
+   * The breakdown on My options is only trustworthy if it adds up. A career
+   * counted both as "in the direction you chose" and as "adjacent" would make
+   * the parts exceed the whole, and a reader would rightly stop believing any
+   * of it.
+   */
+  for (const demo of DEMO_PROFILES) {
+    const profile = demo.build();
+    profile.careerInterests = ["digital"];
+    const groups = groupResults(rankCareers(profile, catalogue.careers),
+                                { profile });
+    const sum = groups.order.reduce((total, key) => total + groups[key].total, 0);
+    equal(sum, groups.scored,
+          `the group totals sum to ${sum}, not ${groups.scored}`);
+    equal(groups.scored, catalogue.count);
+  }
+});
+
+test("a group's count is the full total, not the number of cards", () => {
+  // The lists are capped at twelve and show four at a time, so counting what is
+  // displayed would report the size of the cap rather than the size of the
+  // answer.
+  const profile = DEMO_PROFILES[1].build();
+  profile.careerInterests = ["digital"];
+  const groups = groupResults(rankCareers(profile, catalogue.careers), { profile });
+  const big = groups.order
+    .map((key) => groups[key])
+    .find((group) => group.total > group.items.length);
+  assert(big, "no group had more careers than it displays");
+  assert(big.total > big.items.length);
+});
+
+test("stating no direction still produces totals that add up", () => {
+  const profile = DEMO_PROFILES[0].build();
+  profile.careerInterests = [];
+  const groups = groupResults(rankCareers(profile, catalogue.careers), { profile });
+  equal(groups.order.length, 3);
+  const sum = groups.order.reduce((total, key) => total + groups[key].total, 0);
+  equal(sum, groups.scored);
+});
+
 run();
