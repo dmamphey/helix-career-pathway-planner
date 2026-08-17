@@ -24,7 +24,7 @@ import {
   UnreadableDocumentError, UnsupportedFormatError,
 } from "../js/cv-parser.js";
 import { rankCareers, scoreCareer, groupResults, alignmentLabel, WEIGHTS,
-         interestDomainsFor }
+         interestDomainsFor, CLOSEST_FROM, ADJACENT_FROM }
   from "../js/matcher.js";
 import { analyseGaps } from "../js/gap-engine.js";
 import { buildPathway } from "../js/pathway-engine.js";
@@ -2452,6 +2452,55 @@ test("stating no direction still produces totals that add up", () => {
   equal(groups.order.length, 3);
   const sum = groups.order.reduce((total, key) => total + groups[key].total, 0);
   equal(sum, groups.scored);
+});
+
+test("a card's alignment badge never contradicts the group it sits in", () => {
+  /*
+   * The group boundaries used to be 60 and 40 while the badges changed at 55 and
+   * 35, so a career scoring 58 wore a "Good alignment" badge inside a group that
+   * began at 60, and one scoring 42 wore "Worth exploring" inside a group
+   * calling itself strong. The first boundary is now the same number as the
+   * badge, so the two always agree.
+   */
+  equal(CLOSEST_FROM, 55, "the first group no longer starts where Good alignment does");
+  for (const demo of DEMO_PROFILES) {
+    const profile = demo.build();
+    const groups = groupResults(rankCareers(profile, catalogue.careers), { profile });
+    for (const item of groups.closest.items) {
+      const band = alignmentLabel(item.score);
+      assert(["strong", "good"].includes(band.key),
+             `${item.career.title} scored ${item.score} and is in the closest `
+             + `group wearing a "${band.label}" badge`);
+    }
+  }
+});
+
+test("the middle group is a shortlist, not most of the catalogue", () => {
+  // It held about seventy per cent of the catalogue before the band narrowed,
+  // which is what made the label indefensible once the count was shown.
+  for (const demo of DEMO_PROFILES) {
+    const profile = demo.build();
+    const groups = groupResults(rankCareers(profile, catalogue.careers), { profile });
+    const share = groups.adjacent.total / groups.scored;
+    assert(share < 0.5,
+           `adjacent holds ${Math.round(share * 100)}% of the catalogue`);
+  }
+  assert(ADJACENT_FROM > 40, "the adjacent band was not narrowed");
+});
+
+test("no group promises more than it delivers", () => {
+  // "Strong adjacent careers" described a band starting at 40. A group title
+  // must not claim a strength the band does not support.
+  const profile = DEMO_PROFILES[1].build();
+  const groups = groupResults(rankCareers(profile, catalogue.careers), { profile });
+  for (const key of groups.order) {
+    const group = groups[key];
+    if (!/strong/i.test(group.title)) continue;
+    for (const item of group.items) {
+      assert(alignmentLabel(item.score).key === "strong",
+             `"${group.title}" contains ${item.career.title} at ${item.score}`);
+    }
+  }
 });
 
 run();

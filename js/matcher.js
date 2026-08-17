@@ -354,6 +354,30 @@ export function rankCareers(profile, careers) {
     .sort((a, b) => b.score - a.score || a.careerId.localeCompare(b.careerId));
 }
 
+/**
+ * Where one group ends and the next begins.
+ *
+ * These were 60 and 40, and the middle group swallowed about seventy per cent of
+ * the catalogue — 515 careers filed under "Strong adjacent careers" for a
+ * typical profile. Nobody saw that until the counts were put on the screen.
+ *
+ * Two things were wrong. The band was too wide, and 60/40 did not line up with
+ * the alignment labels on the cards inside it: BANDS calls 55 "Good alignment",
+ * so a career scoring 58 wore a Good alignment badge while sitting in a group
+ * that started at 60, and one scoring 42 wore a "Worth exploring" badge inside a
+ * group calling itself strong.
+ *
+ * `CLOSEST_FROM` is now 55, the same threshold as "Good alignment", so a career
+ * in the first group always carries a badge that agrees with it. `ADJACENT_FROM`
+ * is 45, which keeps the middle group a genuine shortlist rather than a
+ * dumping ground.
+ *
+ * Changing these changes only which group a career appears in. No score moves,
+ * and the badge on a card is computed from BANDS exactly as before.
+ */
+export const CLOSEST_FROM = 55;
+export const ADJACENT_FROM = 45;
+
 /** The domains a profile's stated interests point at. */
 export function interestDomainsFor(profile) {
   return new Set(((profile && profile.careerInterests) || []).flatMap((id) => {
@@ -466,16 +490,17 @@ export function groupResults(ranked, options = {}) {
     });
   }
 
-  countInto("closest", (item) => item.score >= 60);
-  countInto("adjacent", (item) => item.score >= 40 && item.score < 60);
-  countInto("pivots", (item) => item.score < 40);
+  countInto("closest", (item) => item.score >= CLOSEST_FROM);
+  countInto("adjacent", (item) => item.score >= ADJACENT_FROM
+                               && item.score < CLOSEST_FROM);
+  countInto("pivots", (item) => item.score < ADJACENT_FROM);
 
-  const closest = pick(ranked, (r) => r.score >= 60, 2, perGroup, used);
+  const closest = pick(ranked, (r) => r.score >= CLOSEST_FROM, 2, perGroup, used);
   for (const item of closest) used.add(item.careerId);
-  const adjacent = pick(ranked, (r) => r.score >= 40 && r.score < 60, 2,
-                        perGroup, used);
+  const adjacent = pick(ranked, (r) => r.score >= ADJACENT_FROM
+                                    && r.score < CLOSEST_FROM, 2, perGroup, used);
   for (const item of adjacent) used.add(item.careerId);
-  const pivots = pick(ranked, (r) => r.score < 40, 1, perGroup, used);
+  const pivots = pick(ranked, (r) => r.score < ADJACENT_FROM, 1, perGroup, used);
 
   groups.push(
     {
@@ -487,16 +512,19 @@ export function groupResults(ranked, options = {}) {
     },
     {
       key: "adjacent",
-      title: "Strong adjacent careers",
-      blurb: "These draw on many of your current strengths but expect some new "
-           + "development.",
+      title: "Adjacent careers",
+      blurb: "These draw on some of your current strengths and expect real "
+           + "development on top. A shortlist rather than everything that "
+           + "shares a little overlap.",
       items: adjacent,
     },
     {
       key: "pivots",
       title: "Bigger pivots worth exploring",
-      blurb: "Plausible directions that would need a larger transition. One per "
-           + "career family, so the list stays genuinely varied.",
+      blurb: "Careers whose subject matter your profile does not currently "
+           + "evidence much of. That is a statement about the size of the move, "
+           + "not about whether you could make it. One per career family, so "
+           + "the list stays genuinely varied.",
       items: pivots,
     });
 

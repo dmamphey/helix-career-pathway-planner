@@ -662,9 +662,12 @@ function matchSummary(app, groups) {
         " ",
         h("span", { text: lowerLabel(entry.group.title) }),
       ]))),
-    h("p", { class: "hint", text: "Each group below shows its closest few "
-      + "first — use View more to see the rest. A career appearing in a bigger "
-      + "pivot group has not been rejected; it is a larger move, which is a "
-      + "fact about the distance rather than about you." }),
+    h("p", { class: "hint", text: "The numbers above are how many careers are "
+      + "in each group. Each group shows its best few to begin with — use View "
+      + "more to see further down the list." }),
+    h("p", { class: "hint", text: "A career in the pivots group has not been "
+      + "rejected. It means your profile does not currently evidence much of "
+      + "that career's subject matter, which describes the size of the move "
+      + "rather than your ability to make it." }),
   ]);
 }
