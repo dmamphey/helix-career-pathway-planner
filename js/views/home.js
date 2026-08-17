@@ -107,17 +107,36 @@ function currentProfileCard(app) {
   ], { id: "saved-profile-heading" });
 }
 
+/**
+ * The six steps became seven.
+ *
+ * The old list went straight from "explore possibilities" to "compare your
+ * shortlist", with nothing in between to explain how several hundred options
+ * become a shortlist. Narrowing is now a real step in the product, so it is a
+ * real step here — and stating it up front is part of the promise: this is a
+ * tool for choosing, not a search engine that hands back everything it has.
+ */
 function howItWorks() {
   const steps = [
-    ["Build your profile", "From your CV, or by hand."],
-    ["Explore career possibilities",
-     "Matched against our full UK career database."],
+    ["Build your profile", "From your CV, or by hand. Scanned CVs are read in "
+      + "your browser."],
+    ["See your career options",
+     "Every career in the UK database, scored against your profile and grouped "
+     + "by how big a move each would be — led by the areas you say interest "
+     + "you."],
+    ["Narrow them down",
+     "Set your priorities and Helix sets aside the careers that do not fit "
+     + "them. Your answers decide this, and it says how many each choice would "
+     + "leave before you make it."],
     ["Compare your shortlist",
      "Side-by-side comparison of up to four careers — salary, working life, "
-     + "professional requirements and how big a move each would be."],
+     + "professional requirements and how big a move each would be. Pin your "
+     + "current job as a baseline to see the differences."],
     ["Choose a destination", "Select one career to plan against."],
-    ["See your gaps and pathway", "What you have, what you would need."],
-    ["Take your next 3 actions", "Prioritised, and small enough to start."],
+    ["See your gaps and pathway", "What you have, what you would need, and any "
+      + "bridge roles that would make the move smaller."],
+    ["Take your next 3 actions", "Prioritised, and small enough to start, with "
+      + "a plan across 90 days, 6 months and 12 months."],
   ];
   return panel("How it works", [
     h("ol", { class: "steps" }, steps.map(([title, detail]) =>
