@@ -464,9 +464,12 @@ test("results group into buckets with family variety", () => {
     assert(groups[key].items.length >= 4,
            `${key} produced only ${groups[key].items.length} careers`);
   }
-  const families = new Set(groups.pivots.items.map((m) => m.career.family));
-  equal(families.size, groups.pivots.items.length,
-        "the pivots group repeats a career family");
+  // The list now holds the whole band, so families necessarily repeat further
+  // down. Variety is a property of what you see first: the pivots group deals
+  // one per family per round, so the opening run must be all different.
+  const opening = groups.pivots.items.slice(0, 8).map((m) => m.career.family);
+  equal(new Set(opening).size, opening.length,
+        "the top of the pivots group repeats a career family");
 });
 
 test("labels never claim a probability", () => {
@@ -2271,16 +2274,16 @@ test("one incidental tag is not enough to lead the direction group", () => {
   const profile = digitalProfile();
   const domains = interestDomainsFor(profile);
   const groups = groupResults(rankCareers(profile, catalogue.careers), { profile });
-  const overlaps = groups.direction.items.map((item) =>
+  // Only the opening matters here. The list is dealt in rounds so that one
+  // family cannot fill the top, which means overlap counts restart further
+  // down — by design, and not what this test is about.
+  const overlaps = groups.direction.items.slice(0, 6).map((item) =>
     (item.career.derived.domains || [])
       .filter((domain) => domains.has(domain)).length);
-  for (let i = 1; i < overlaps.length; i += 1) {
-    assert(overlaps[i] <= overlaps[i - 1],
-           "the direction group is not ordered by how squarely a career sits "
-           + "in the chosen area");
-  }
   assert(overlaps[0] >= 2,
          "the direction group is led by a career sharing a single domain");
+  assert(Math.min(...overlaps) >= 1,
+         "a career with no shared domain reached the top of the direction group");
 });
 
 test("every direction career genuinely shares a chosen domain", () => {
@@ -2438,11 +2441,15 @@ test("a group's count is the full total, not the number of cards", () => {
   const profile = DEMO_PROFILES[1].build();
   profile.careerInterests = ["digital"];
   const groups = groupResults(rankCareers(profile, catalogue.careers), { profile });
+  // The list now holds every career in the band, so the count to compare
+  // against is the number of cards a group shows at once, not the list length.
+  const GROUP_PAGE = 6;
   const big = groups.order
     .map((key) => groups[key])
-    .find((group) => group.total > group.items.length);
-  assert(big, "no group had more careers than it displays");
-  assert(big.total > big.items.length);
+    .find((group) => group.total > GROUP_PAGE);
+  assert(big, "no group held more careers than one page of cards");
+  equal(big.items.length, big.total,
+        "the list does not hold every career the heading counts");
 });
 
 test("stating no direction still produces totals that add up", () => {
@@ -2500,6 +2507,74 @@ test("no group promises more than it delivers", () => {
       assert(alignmentLabel(item.score).key === "strong",
              `"${group.title}" contains ${item.career.title} at ${item.score}`);
     }
+  }
+});
+
+test("every career counted in a group can actually be reached", () => {
+  /*
+   * The lists used to stop at twelve. Once the headings started stating a total,
+   * a group saying "259 careers" whose list held twelve was making a promise
+   * View more could not keep — the count and the list have to describe the same
+   * set of careers.
+   */
+  for (const demo of DEMO_PROFILES) {
+    const profile = demo.build();
+    profile.careerInterests = ["digital"];
+    const groups = groupResults(rankCareers(profile, catalogue.careers), { profile });
+    for (const key of groups.order) {
+      equal(groups[key].items.length, groups[key].total,
+            `${groups[key].title} lists ${groups[key].items.length} careers but `
+            + `claims ${groups[key].total}`);
+    }
+  }
+});
+
+test("the family limit varies the top of a list without hiding anything", () => {
+  const profile = DEMO_PROFILES[1].build();
+  const groups = groupResults(rankCareers(profile, catalogue.careers), { profile });
+  const group = groups.closest;
+  if (group.items.length < 6) return;
+
+  /*
+   * At most two from one family among the first six — unless the band simply
+   * does not contain three families. For an experienced biomedical scientist
+   * every career scoring 55 or more is in one family, and showing six of them
+   * is the only honest answer available.
+   */
+  const inBand = new Set(group.items.map((item) => item.career.family));
+  const families = new Map();
+  for (const item of group.items.slice(0, 6)) {
+    families.set(item.career.family, (families.get(item.career.family) || 0) + 1);
+  }
+  if (inBand.size >= 3) {
+    for (const [family, count] of families) {
+      assert(count <= 2, `${count} careers from ${family} in the first six`);
+    }
+  }
+
+  /*
+   * And the displaced ones are still there, further down — checked across every
+   * group rather than this one. A career belongs to exactly one group, so a
+   * high-scoring career that also matches the stated direction is filed under
+   * the direction and is legitimately absent from here.
+   */
+  const listed = new Set(groups.order
+    .flatMap((key) => groups[key].items.map((item) => item.careerId)));
+  for (const item of rankCareers(profile, catalogue.careers)) {
+    assert(listed.has(item.careerId),
+           `${item.career.title} was scored but appears in no group`);
+  }
+});
+
+test("the head of a list is ordered best-first", () => {
+  const profile = DEMO_PROFILES[1].build();
+  const groups = groupResults(rankCareers(profile, catalogue.careers), { profile });
+  // Within the varied head the scores descend; the appended remainder starts
+  // over, which is expected and is why only the head is checked.
+  const head = groups.closest.items.slice(0, 6).map((item) => item.score);
+  for (let i = 1; i < head.length; i += 1) {
+    assert(head[i] <= head[i - 1],
+           `scores out of order at the top of the list: ${head}`);
   }
 });
 

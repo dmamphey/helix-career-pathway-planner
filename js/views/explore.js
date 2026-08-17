@@ -16,6 +16,18 @@ import * as market from "../market-data.js";
 const PAGE = 24;
 
 /**
+ * How many careers a group on My options shows at once.
+ *
+ * Six fills two rows of the three-column grid on a laptop and three rows of two
+ * on a tablet, so a group reads as a set of options rather than a sample. Four
+ * left a ragged single row on most screens.
+ *
+ * Module scope because the summary paragraph quotes the number, and a summary
+ * that said four while the lists showed six would be worse than not saying it.
+ */
+const GROUP_PAGE = 6;
+
+/**
  * Salary filter rungs.
  *
  * The label is deliberately about the career, not the person: "typical salary
@@ -512,7 +524,8 @@ export async function renderMatches(app) {
     ? app.catalogue.get(app.state.targetCareerId) : null;
 
   const host = h("div", { class: "stack" });
-  const shown = Object.fromEntries(groups.order.map((key) => [key, 4]));
+  const shown = Object.fromEntries(
+    groups.order.map((key) => [key, GROUP_PAGE]));
 
   // Effort and the "why" line need the gap analysis, which is async because a rule
   // pack may load. They are computed once for the careers actually on screen
@@ -592,11 +605,14 @@ export async function renderMatches(app) {
             : empty("Nothing fell into this group for your profile."),
           group.items.length > shown[key]
             ? h("div", { class: "card-actions center" }, [
-                button("View more", async () => {
-                  shown[key] += 4;
-                  await decorate();
-                  draw();
-                }, { variant: "quiet" }),
+                // Naming the remainder, because a bare "View more" beside a
+                // heading that says 259 gives no sense of how far the list runs.
+                button(`View more (${group.items.length - shown[key]} left)`,
+                  async () => {
+                    shown[key] += GROUP_PAGE;
+                    await decorate();
+                    draw();
+                  }, { variant: "quiet" }),
               ])
             : null,
         ], { id: `${key}-heading` });
@@ -662,9 +678,15 @@ function matchSummary(app, groups) {
         " ",
         h("span", { text: lowerLabel(entry.group.title) }),
       ]))),
-    h("p", { class: "hint", text: "The numbers above are how many careers are "
-      + "in each group. Each group shows its best few to begin with — use View "
-      + "more to see further down the list." }),
+    h("p", { class: "hint", text: `The numbers above are how many careers are in `
+      + `each group. Each group shows the ${GROUP_PAGE} closest first and reveals `
+      + `${GROUP_PAGE} more each time you press View more, so every career `
+      + `counted above can be reached.` }),
+    h("p", { class: "hint", text: "Within a group the closest match to your "
+      + "profile comes first. No more than two careers from the same career "
+      + "family appear at the top of a list — otherwise one family could fill "
+      + "it with variations of a single job — and the rest of that family "
+      + "follows further down." }),
     h("p", { class: "hint", text: "A career in the pivots group has not been "
       + "rejected. It means your profile does not currently evidence much of "
       + "that career's subject matter, which describes the size of the move "

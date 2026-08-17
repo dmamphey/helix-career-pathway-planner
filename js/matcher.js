@@ -413,7 +413,6 @@ export function interestDomainsFor(profile) {
  * has just said they want to go somewhere else.
  */
 export function groupResults(ranked, options = {}) {
-  const perGroup = options.perGroup || 12;
   const interestDomains = options.interestDomains
     || interestDomainsFor(options.profile);
 
@@ -477,7 +476,7 @@ export function groupResults(ranked, options = {}) {
         .some((domain) => interestDomains.has(domain)));
 
     const direction = pick(scored.map((entry) => entry.item),
-                           () => true, 4, perGroup, used);
+                           () => true, 4, used);
     for (const item of direction) used.add(item.careerId);
     groups.push({
       key: "direction",
@@ -495,12 +494,12 @@ export function groupResults(ranked, options = {}) {
                                && item.score < CLOSEST_FROM);
   countInto("pivots", (item) => item.score < ADJACENT_FROM);
 
-  const closest = pick(ranked, (r) => r.score >= CLOSEST_FROM, 2, perGroup, used);
+  const closest = pick(ranked, (r) => r.score >= CLOSEST_FROM, 2, used);
   for (const item of closest) used.add(item.careerId);
   const adjacent = pick(ranked, (r) => r.score >= ADJACENT_FROM
-                                    && r.score < CLOSEST_FROM, 2, perGroup, used);
+                                    && r.score < CLOSEST_FROM, 2, used);
   for (const item of adjacent) used.add(item.careerId);
-  const pivots = pick(ranked, (r) => r.score < ADJACENT_FROM, 1, perGroup, used);
+  const pivots = pick(ranked, (r) => r.score < ADJACENT_FROM, 1, used);
 
   groups.push(
     {
@@ -548,17 +547,57 @@ export function groupResults(ranked, options = {}) {
   };
 }
 
-function pick(ranked, predicate, perFamily, limit, exclude) {
-  const counts = new Map();
-  const out = [];
+/**
+ * Order a band so it stays varied all the way down.
+ *
+ * `ranked` arrives best-first, so the strongest careers lead. The problem this
+ * solves is monotony: without a family limit, "Closest to your current
+ * experience" opens for a biomedical scientist with Biomedical Scientist, Senior
+ * Biomedical Scientist, Lead Biomedical Scientist, Specialist Biomedical
+ * Scientist — which looks like plenty of choice and offers one.
+ *
+ * The careers are dealt out in rounds. Each round takes up to `perFamily` from
+ * every family that still has some, families ordered by where their best career
+ * came in the ranking. So the top of the list holds at most two from any one
+ * family, then two from the next, and the ones displaced appear a round later
+ * rather than being dropped.
+ *
+ * A first attempt built a varied head and appended the remainder behind it. That
+ * is fine while the head is long, and fails exactly when it is short: if an
+ * earlier group has already taken most other families, the head can be two
+ * careers and the sixth row of the grid is back to four variations of the same
+ * job. Rounds have no such edge — the density is bounded everywhere in the list,
+ * not just at the start.
+ *
+ * Every career in the band is returned. The limit decides the order, never
+ * membership, which is what lets a group heading state a total that View more
+ * can actually reach.
+ */
+function pick(ranked, predicate, perFamily, exclude) {
+  const byFamily = new Map();
   for (const item of ranked) {
-    if (out.length >= limit) break;
     if (exclude.has(item.careerId) || !predicate(item)) continue;
-    const family = item.career.family;
-    const seen = counts.get(family) || 0;
-    if (seen >= perFamily) continue;
-    counts.set(family, seen + 1);
-    out.push(item);
+    if (!byFamily.has(item.career.family)) byFamily.set(item.career.family, []);
+    byFamily.get(item.career.family).push(item);
+  }
+
+  /*
+   * Families in the order their best career appeared, rather than by score.
+   * The direction group hands in a list sorted by how squarely each career sits
+   * in the chosen areas, and sorting on score here would quietly undo that.
+   */
+  const families = [...byFamily.values()];
+
+  const out = [];
+  for (let round = 0; ; round += 1) {
+    let dealt = false;
+    for (const list of families) {
+      const slice = list.slice(round * perFamily, (round + 1) * perFamily);
+      if (!slice.length) continue;
+      out.push(...slice);
+      dealt = true;
+    }
+    if (!dealt) break;
   }
   return out;
 }
