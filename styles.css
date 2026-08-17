@@ -1096,3 +1096,17 @@ ul.plain, ol.plain { list-style: none; padding: 0; margin: 0; }
 .match-summary .hint { margin: 0; }
 .group-count { margin: 0 0 .2rem; }
 .group-count strong { color: var(--brand-navy); }
+
+/* Narrowing the options down. Presented as a decision the user makes, with the
+   consequence of each choice stated before they make it. */
+.narrow-panel {
+  border: 1px solid var(--brand-cyan); border-radius: var(--radius);
+  background: var(--panel); padding: .9rem 1.1rem; margin: .9rem 0;
+}
+.narrow-panel > p:first-child { margin-bottom: .6rem; }
+.narrow-options { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .6rem; }
+.narrow-panel .hint { margin: 0 0 .5rem; }
+
+/* A page at a time, so a long group never becomes a wall of cards. */
+.page-controls { align-items: center; gap: .6rem 1rem; }
+.page-position { font-variant-numeric: tabular-nums; }

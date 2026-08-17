@@ -516,24 +516,59 @@ export async function renderMatches(app) {
   }
 
   const { groupResults } = await import("../matcher.js");
-  const ranked = app.ranked();
-  // The profile decides both the ranking and the order of the groups: a
-  // stated direction puts the careers heading that way first.
-  const groups = groupResults(ranked, { profile: app.profile() });
+  const everything = app.ranked();
+
+  /*
+   * Narrowing, when the user has asked for it.
+   *
+   * The point of the tool is to help somebody choose, and handing back three
+   * hundred options in a group does the opposite. Stated priorities are the
+   * honest way to cut that down: they are the user's own answers about what they
+   * want from a job, so filtering on them removes careers *they* have ruled out
+   * rather than ones Helix has decided against.
+   *
+   * It filters, and never rescores. A career's alignment is what it always was;
+   * this decides whether it is listed. The three measures stay separate, which
+   * is the whole reason preference fit exists as its own thing.
+   */
   const target = app.state.targetCareerId
     ? app.catalogue.get(app.state.targetCareerId) : null;
-
   const host = h("div", { class: "stack" });
-  const shown = Object.fromEntries(
-    groups.order.map((key) => [key, GROUP_PAGE]));
+
+  /*
+   * Narrowing changes the ranking, which changes the groups, which changes the
+   * pages. So it is recomputed here rather than captured once: a narrow control
+   * that redrew the same groups would move the buttons and nothing else.
+   */
+  let narrowTo = "";
+  let ranked = everything;
+  let groups = null;
+  let page = {};
+
+  const regroup = () => {
+    narrowTo = app.hasPreferences() ? app.narrowTo() : "";
+    ranked = narrowTo
+      ? everything.filter((item) => {
+          const fit = app.fitFor(item.career);
+          return fit && fit.scored && FIT_RANK[fit.key] <= FIT_RANK[narrowTo];
+        })
+      : everything;
+    // The profile decides both the ranking and the order of the groups: a
+    // stated direction puts the careers heading that way first.
+    groups = groupResults(ranked, { profile: app.profile() });
+    // A page number per group rather than a growing count: the user asked to
+    // see the next six, not six more on top of the last six. Narrowing resets
+    // them, because page 7 of the old list means nothing in the new one.
+    page = Object.fromEntries(groups.order.map((key) => [key, 0]));
+  };
+  regroup();
 
   // Effort and the "why" line need the gap analysis, which is async because a rule
   // pack may load. They are computed once for the careers actually on screen
   // rather than for all 716.
   const decorations = new Map();
   const decorate = async () => {
-    const onScreen = groups.order.flatMap(
-      (key) => groups[key].items.slice(0, shown[key]));
+    const onScreen = groups.order.flatMap((key) => pageOf(groups[key], page[key]));
     for (const match of onScreen) {
       if (decorations.has(match.careerId)) continue;
       const analysis = await app.analysisFor(match.careerId);
@@ -555,7 +590,12 @@ export async function renderMatches(app) {
           + "by how good a career it is. Alignment describes the overlap between "
           + "your profile and the career — it is not a prediction about "
           + "recruitment." }),
-        matchSummary(app, groups),
+        matchSummary(app, groups, narrowTo, everything.length),
+        narrowPanel(app, groups, narrowTo, everything.length, async () => {
+          regroup();
+          await decorate();
+          draw();
+        }),
         target
           ? h("p", {}, ["Your current target: ",
               link(target.title, `#/pathway/${target.id}`), " "])
@@ -574,15 +614,15 @@ export async function renderMatches(app) {
           h("p", { class: "group-count" }, [
             h("strong", { text: `${group.total} `
               + `${group.total === 1 ? "career" : "careers"}` }),
-            group.total > Math.min(shown[key], group.items.length)
+            group.total > GROUP_PAGE
               ? h("span", { class: "hint", text: ` · showing `
-                  + `${Math.min(shown[key], group.items.length)}` })
+                  + `${rangeLabel(group, page[key])}` })
               : null,
           ]),
           h("p", { class: "hint", text: group.blurb }),
           group.items.length
             ? h("div", { class: "grid grid-3" },
-                group.items.slice(0, shown[key]).map((match) =>
+                pageOf(group, page[key]).map((match) =>
                   careerCard(match.career, {
                     match,
                     fit: decorations.get(match.careerId)
@@ -603,18 +643,11 @@ export async function renderMatches(app) {
                                 { class: "btn btn-quiet" }),
                   })))
             : empty("Nothing fell into this group for your profile."),
-          group.items.length > shown[key]
-            ? h("div", { class: "card-actions center" }, [
-                // Naming the remainder, because a bare "View more" beside a
-                // heading that says 259 gives no sense of how far the list runs.
-                button(`View more (${group.items.length - shown[key]} left)`,
-                  async () => {
-                    shown[key] += GROUP_PAGE;
-                    await decorate();
-                    draw();
-                  }, { variant: "quiet" }),
-              ])
-            : null,
+          pageControls(group, page[key], async (next) => {
+            page[key] = next;
+            await decorate();
+            draw();
+          }),
         ], { id: `${key}-heading` });
       }),
       summary(ranked),
@@ -659,19 +692,21 @@ function summary(ranked) {
  * not sum to the total would look like a mistake even when every figure in it
  * was right.
  */
-function matchSummary(app, groups) {
+function matchSummary(app, groups, narrowTo, totalScored) {
   const total = groups.scored;
   const rows = groups.order
     .map((key) => ({ key, group: groups[key] }))
     .filter((entry) => entry.group.total > 0);
 
   return h("div", { class: "match-summary" }, [
-    h("p", { class: "match-total" }, [
-      "Helix scored your profile against all ",
-      h("strong", { text: `${total} careers` }),
-      " in the dataset. Every one of them is placed in exactly one of these "
-      + "groups:",
-    ]),
+    h("p", { class: "match-total" }, narrowTo
+      ? ["Narrowed to your priorities: ",
+         h("strong", { text: `${total} of ${totalScored} careers` }),
+         ", placed in exactly one of these groups:"]
+      : ["Helix scored your profile against all ",
+         h("strong", { text: `${total} careers` }),
+         " in the dataset. Every one of them is placed in exactly one of these "
+         + "groups:"]),
     h("ul", { class: "match-breakdown" }, rows.map((entry) =>
       h("li", {}, [
         h("strong", { text: String(entry.group.total) }),
@@ -693,3 +728,121 @@ function matchSummary(app, groups) {
       + "rather than your ability to make it." }),
   ]);
 }
+
+/* --------------------------------------------------- paging within a group */
+
+/** Preference-fit levels, strongest first, for the narrowing control. */
+const FIT_RANK = { very_strong: 0, strong: 1, mixed: 2, low: 3, unknown: 4 };
+
+/** The careers on one page of a group. */
+function pageOf(group, index) {
+  const start = index * GROUP_PAGE;
+  return group.items.slice(start, start + GROUP_PAGE);
+}
+
+function pageCount(group) {
+  return Math.max(1, Math.ceil(group.items.length / GROUP_PAGE));
+}
+
+/** "7 to 12 of 259" — where you are, not how much you have accumulated. */
+function rangeLabel(group, index) {
+  const start = index * GROUP_PAGE + 1;
+  const end = Math.min(group.items.length, (index + 1) * GROUP_PAGE);
+  return `${start} to ${end}`;
+}
+
+/**
+ * Previous and next, rather than a button that keeps adding rows.
+ *
+ * Showing six more each time meant a group could grow to ninety cards, and the
+ * only way back to the top was scrolling past all of them. A page at a time
+ * keeps the screen the same size however deep into a list somebody goes.
+ */
+function pageControls(group, index, onChange) {
+  const pages = pageCount(group);
+  if (pages <= 1) return null;
+  return h("div", { class: "card-actions center page-controls" }, [
+    button("← Previous", () => onChange(index - 1),
+           { variant: "quiet", disabled: index === 0 }),
+    h("span", { class: "hint page-position", role: "status", "aria-live": "polite",
+                text: `Page ${index + 1} of ${pages}` }),
+    button("Next →", () => onChange(index + 1),
+           { variant: "quiet", disabled: index >= pages - 1 }),
+  ]);
+}
+
+/* ------------------------------------------------------------- narrowing */
+
+/**
+ * Cutting the list down to what somebody actually wants.
+ *
+ * A career tool that answers "what are my options" with three hundred of them
+ * has not helped anybody choose. The honest way to cut that down is the user's
+ * own stated priorities: filtering on those removes careers *they* have ruled
+ * out, rather than ones Helix has quietly decided against.
+ *
+ * It is off until asked for, and every level says how many careers it would
+ * leave before it is chosen — so nobody narrows themselves into four options
+ * without seeing it coming. Alignment scores are untouched throughout; this
+ * decides what is listed, never what anything is worth.
+ */
+function narrowPanel(app, groups, narrowTo, totalScored, redraw) {
+  const shownNow = groups.order.reduce((sum, key) => sum + groups[key].total, 0);
+
+  if (!app.hasPreferences()) {
+    return h("div", { class: "narrow-panel" }, [
+      h("p", {}, [
+        h("strong", { text: `${totalScored} careers is a lot to weigh up. ` }),
+        "Answering a few questions about what you want from a job lets Helix "
+        + "set aside the ones that do not fit — your answers, not its opinion.",
+      ]),
+      h("div", { class: "card-actions" }, [
+        link("Set priorities to reduce these numbers", "#/preferences",
+             { class: "btn btn-primary" }),
+      ]),
+    ]);
+  }
+
+  /*
+   * How many survive each level, worked out before anything is chosen.
+   *
+   * Offering "very strong fit only" without saying it leaves eleven careers
+   * would be a trap. The counts cost one pass over the ranking, which is
+   * already in memory.
+   */
+  const survivors = (level) => app.ranked().filter((item) => {
+    const fit = app.fitFor(item.career);
+    return fit && fit.scored && FIT_RANK[fit.key] <= FIT_RANK[level];
+  }).length;
+
+  const options = [
+    ["", "Show everything", totalScored],
+    ["mixed", "Mixed fit or better", survivors("mixed")],
+    ["strong", "Strong fit or better", survivors("strong")],
+    ["very_strong", "Very strong fit only", survivors("very_strong")],
+  ];
+
+  return h("div", { class: "narrow-panel" }, [
+    h("p", {}, [
+      h("strong", { text: "Narrow these down to what you want. " }),
+      "Your priorities decide this, so a career set aside here is one you have "
+      + "ruled out rather than one Helix has.",
+    ]),
+    h("div", { class: "narrow-options" }, options.map(([value, label, count]) =>
+      button(`${label} (${count})`, () => {
+        app.setNarrowTo(value);
+        redraw();
+      }, { variant: narrowTo === value ? "primary" : "quiet",
+           pressed: narrowTo === value,
+           disabled: count === 0 && value !== "" }))),
+    narrowTo
+      ? h("p", { class: "hint", text: `Showing ${shownNow} of ${totalScored} `
+          + `careers. The rest are still there — widen this or use the Career `
+          + `Explorer to see them. No alignment score has changed.` })
+      : h("p", { class: "hint", text: "Nothing is hidden at the moment." }),
+    h("div", { class: "card-actions" }, [
+      link("Change my priorities", "#/preferences", { class: "btn btn-quiet" }),
+    ]),
+  ]);
+}
+

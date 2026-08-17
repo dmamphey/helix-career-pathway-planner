@@ -57,6 +57,16 @@ export function emptyState() {
       // shown, and nothing else: a region is not a qualification, so it must
       // never touch alignment, eligibility or what a regulator requires.
       region: "uk",
+      /*
+       * How tightly My options is narrowed by the user's stated priorities.
+       *
+       * "" means show everything, which is the default: a screen that quietly
+       * hid two thirds of somebody's options the moment they answered a
+       * preference question would be deciding for them. Otherwise it is a
+       * preference-fit level, and only careers at that level or better are
+       * listed.
+       */
+      narrowTo: "",
     },
   };
 }
@@ -207,6 +217,9 @@ function coerce(input) {
     settings.jurisdictionAcknowledged === true;
   base.settings.onboarded = settings.onboarded === true;
   base.settings.region = normaliseRegion(settings.region);
+  base.settings.narrowTo =
+    ["very_strong", "strong", "mixed"].includes(settings.narrowTo)
+      ? settings.narrowTo : "";
   base.baselineCareerId = isCareerId(input.baselineCareerId)
     ? input.baselineCareerId : null;
   return base;

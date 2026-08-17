@@ -320,6 +320,18 @@ export const app = {
     return this.state.settings.region || "uk";
   },
 
+  /** How tightly My options is narrowed by stated priorities. "" = not at all. */
+  narrowTo() {
+    return this.state.settings.narrowTo || "";
+  },
+
+  setNarrowTo(level) {
+    this.state.settings.narrowTo =
+      ["very_strong", "strong", "mixed"].includes(level) ? level : "";
+    this.persist();
+    return this.state.settings.narrowTo;
+  },
+
   setRegion(key) {
     this.state.settings.region = normaliseRegion(key);
     this.persist();

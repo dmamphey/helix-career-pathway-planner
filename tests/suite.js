@@ -1998,7 +1998,8 @@ async function appForViews(options = {}) {
     progress: {},
     plans: {},
     settings: { region: options.region || "uk", onboarded: true,
-                jurisdictionAcknowledged: true },
+                jurisdictionAcknowledged: true,
+                narrowTo: options.narrowTo || "" },
     datasetVersion: catalogue.meta.version,
     savedAt: null,
   };
@@ -2013,7 +2014,9 @@ async function appForViews(options = {}) {
     homeRoute: () => (state.profile ? "/matches" : "/explore"),
     homeLabel: () => (state.profile
       ? "Back to my options" : "Back to all careers"),
-    hasPreferences: () => Boolean(state.profile),
+    // The real predicate, not "has a profile" — the narrowing panel shows a
+    // different thing when no priority question has been answered.
+    hasPreferences: () => hasPreferences(state.profile),
     persist: () => state,
     navigate: () => {},
     ranked: () => {
@@ -2038,6 +2041,12 @@ async function appForViews(options = {}) {
     setBaseline: () => null,
     region: () => state.settings.region,
     setRegion: () => state.settings.region,
+    narrowTo: () => state.settings.narrowTo || "",
+    setNarrowTo: (level) => {
+      state.settings.narrowTo =
+        ["very_strong", "strong", "mixed"].includes(level) ? level : "";
+      return state.settings.narrowTo;
+    },
     planFor: () => ({}),
     setPlanEntry: () => ({}),
     resetPlan: () => {},
@@ -2576,6 +2585,94 @@ test("the head of a list is ordered best-first", () => {
     assert(head[i] <= head[i - 1],
            `scores out of order at the top of the list: ${head}`);
   }
+});
+
+function narrowableProfile() {
+  const profile = DEMO_PROFILES[1].build();
+  profile.preferences = {
+    ...(profile.preferences || {}),
+    patientContact: "avoid", laboratoryWork: "seek", researchWork: "some",
+    remoteWorking: "seek", travelTolerance: "avoid", unsocialHours: "avoid",
+    commercialWork: "avoid", leadershipWork: "some", workLifeBalance: "seek",
+  };
+  return profile;
+}
+
+test("stated priorities can cut the options down to a shortlist", async () => {
+  /*
+   * The point of the feature. Answering "what are my options" with three
+   * hundred of them has not helped anybody choose, and the honest way to cut
+   * that down is the user's own answers — a career set aside is one they ruled
+   * out, not one Helix decided against.
+   */
+  const app = await appForViews({ profile: narrowableProfile() });
+  const levels = ["mixed", "strong", "very_strong"];
+  const counts = levels.map((level) => app.catalogue.careers.filter((career) => {
+    const fit = app.fitFor(career);
+    const rank = { very_strong: 0, strong: 1, mixed: 2, low: 3 };
+    return fit && fit.scored && rank[fit.key] <= rank[level];
+  }).length);
+
+  // Each step is stricter than the last, and the strictest is a real shortlist.
+  for (let i = 1; i < counts.length; i += 1) {
+    assert(counts[i] <= counts[i - 1], `narrowing widened at ${levels[i]}`);
+  }
+  assert(counts[counts.length - 1] < catalogue.count / 2,
+         `the strictest level still leaves ${counts[counts.length - 1]} careers`);
+  assert(counts[counts.length - 1] > 0, "the strictest level leaves nothing");
+});
+
+test("narrowing filters, and never rescores", () => {
+  // The three measures stay separate. Preference fit decides what is listed;
+  // it must not move a single alignment score.
+  const profile = narrowableProfile();
+  const before = new Map(rankCareers(profile, catalogue.careers)
+    .map((item) => [item.careerId, item.score]));
+
+  const narrowed = rankCareers(profile, catalogue.careers)
+    .filter((item) => {
+      const fit = preferenceFit(profile, item.career);
+      return fit && fit.scored && fit.key === "very_strong";
+    });
+  assert(narrowed.length > 0, "nothing survived narrowing");
+
+  const groups = groupResults(narrowed, { profile });
+  for (const key of groups.order) {
+    for (const item of groups[key].items) {
+      equal(item.score, before.get(item.careerId),
+            `${item.career.title} was rescored by narrowing`);
+    }
+  }
+});
+
+test("My options offers a way to narrow, and says what it would cost", async () => {
+  const app = await appForViews({ profile: narrowableProfile() });
+  const node = await renderView("explore", app, { render: "renderMatches" });
+  const panel = node.querySelector(".narrow-panel");
+  assert(panel, "the narrowing panel is missing");
+
+  const labels = [...panel.querySelectorAll("button")].map((b) => b.textContent);
+  assert(labels.some((label) => /Show everything/.test(label)),
+         "no way back to the full list");
+  // Every option states the number it would leave, so nobody narrows themselves
+  // down to four careers without seeing it coming.
+  for (const label of labels) {
+    assert(/\(\d+\)/.test(label), `"${label}" does not say how many it leaves`);
+  }
+});
+
+test("somebody with no priorities is invited to set them", async () => {
+  const profile = DEMO_PROFILES[1].build();
+  profile.preferences = {};
+  const app = await appForViews({ profile });
+  const node = await renderView("explore", app, { render: "renderMatches" });
+  const panel = node.querySelector(".narrow-panel");
+  assert(panel, "no prompt to set priorities");
+  assert(/Set priorities to reduce these numbers/.test(panel.textContent),
+         "the prompt does not offer to set priorities");
+  const link = [...panel.querySelectorAll("a")]
+    .find((a) => a.getAttribute("href") === "#/preferences");
+  assert(link, "the prompt does not lead to the priorities screen");
 });
 
 run();
