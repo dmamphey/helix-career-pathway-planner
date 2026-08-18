@@ -32,6 +32,7 @@ import { developmentIndicators } from "../matcher.js";
 import { lowerLabel } from "../ontology.js";
 import { REGIONS, regionLabel, isUk } from "../regions.js";
 import { whyNotRecommended, standing } from "../why-not.js";
+import { trackHelixEventOnce, EVENTS } from "../analytics.js";
 import * as labour from "../labour-market.js";
 
 export async function render(app, context) {
@@ -403,7 +404,20 @@ function whyNotCard(app, career, analysis) {
       + `${lowerLabel(place.label)}.`,
     ]),
 
-    h("details", { class: "why-not" }, [
+    /*
+     * Reported when it is opened, not when it is rendered.
+     *
+     * The card is on every career that did not make the top results, so its
+     * presence measures nothing. Opening the disclosure is the deliberate act —
+     * somebody asking Helix to justify itself — and that is the thing worth
+     * knowing. Closing it again is not a second viewing.
+     *
+     * Neither the career nor any part of the reasoning is reported.
+     */
+    h("details", { class: "why-not",
+      onToggle: (event) => {
+        if (event.target.open) trackHelixEventOnce(EVENTS.WHY_NOT_RECOMMENDED_VIEWED);
+      } }, [
       h("summary", { text: "Show me the reasoning" }),
 
       h("div", { class: "stack" }, [

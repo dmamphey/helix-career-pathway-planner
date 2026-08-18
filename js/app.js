@@ -24,6 +24,9 @@ import { transitionEffort, whyThisCareer } from "./transition-effort.js";
 import { bridgeRoles } from "./bridge-engine.js";
 import { buildTimeline } from "./timeline-engine.js";
 import { loadRulePack } from "./rules.js";
+import * as analytics from "./analytics.js";
+import { EVENTS } from "./analytics.js";
+import { mountConsentBanner } from "./consent-ui.js";
 import {
   clear, errorPanel, clearNotice, notice, button, h, link, datasetLabel,
 } from "./ui.js";
@@ -278,6 +281,11 @@ export const app = {
     this.state.baselineCareerId = next;
     this.persist();
     renderTray(this);
+    // Pinning only. The same control unpins, and clearing a baseline is not an
+    // occurrence of the thing being measured.
+    if (next && this.state.baselineCareerId === next) {
+      analytics.trackHelixEvent(EVENTS.BASELINE_PINNED);
+    }
     return next;
   },
 
@@ -354,7 +362,17 @@ export const app = {
       return false;
     } else list.push(careerId);
     this.persist();
-    return at < 0;
+    const added = at < 0;
+    /*
+     * Reported from the state that came back out of storage, not from the fact
+     * that the button was pressed. `persist` coerces what it writes, so a career
+     * that failed to round-trip is one the user has not actually saved — and an
+     * unsave is a different action, which this event does not describe.
+     */
+    if (added && this.state.savedCareerIds.includes(careerId)) {
+      analytics.trackHelixEvent(EVENTS.CAREER_SAVED);
+    }
+    return added;
   },
 
   setTarget(careerId) {
@@ -364,11 +382,18 @@ export const app = {
 
   setMilestone(careerId, milestoneId, status) {
     const forCareer = this.state.progress[careerId] || {};
+    // Read before the write, so "became complete" can be told apart from
+    // "was already complete and the screen redrew".
+    const was = forCareer[milestoneId];
     if (status) forCareer[milestoneId] = status;
     else delete forCareer[milestoneId];
     if (Object.keys(forCareer).length) this.state.progress[careerId] = forCareer;
     else delete this.state.progress[careerId];
     this.persist();
+    const saved = (this.state.progress[careerId] || {})[milestoneId];
+    if (status === "completed" && was !== "completed" && saved === "completed") {
+      analytics.trackHelixEvent(EVENTS.MILESTONE_COMPLETED);
+    }
   },
 
   resetAll() {
@@ -406,6 +431,12 @@ const VIEWS = [
 async function show(view, context) {
   const host = document.getElementById("view");
   clearNotice();
+  /*
+   * A new screen starts here, which is what lets the once-per-screen events
+   * below fire again on a genuine second visit while staying silent through the
+   * redraws that happen within one.
+   */
+  analytics.beginView();
   try {
     const node = await view(app, context);
     clear(host);
@@ -422,6 +453,12 @@ async function show(view, context) {
   document.getElementById("main").focus({ preventScroll: true });
   window.scrollTo({ top: 0, behavior: "instant" });
   markActiveNav();
+  /*
+   * After the swap rather than before it, so the page view describes a screen
+   * that is actually on the display. It reports the sanitised name for the
+   * route — never the hash, which on half these routes carries a career id.
+   */
+  analytics.trackHelixPageView();
 }
 
 function markActiveNav() {
@@ -603,9 +640,23 @@ async function boot() {
     [button("Back to start", () => router.navigate("/"), { variant: "primary" })]),
     {}));
 
+  /*
+   * Analytics start before the router so a returning visitor who has already
+   * agreed gets the page view for the screen they arrived on. Both calls are
+   * no-ops off the production host and no-ops without consent, so this line
+   * does nothing at all in development.
+   */
+  analytics.initAnalytics();
+
   router.start();
   renderTray(app);
   wireMenu();
+
+  /*
+   * Asked last, and never before the app is usable. Somebody who lands on Helix
+   * should see Helix, not a question about measurement over an empty page.
+   */
+  mountConsentBanner(() => analytics.beginView());
 }
 
 document.addEventListener("DOMContentLoaded", boot);

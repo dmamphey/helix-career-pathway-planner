@@ -12,6 +12,7 @@ import {
 import { horizonForDate } from "../timeline-engine.js";
 import { MILESTONE_STATUS, evidenceFor } from "../pathway-engine.js";
 import { CATEGORIES, GAP_STATUS, AREAS } from "../gap-engine.js";
+import { trackHelixEventOnce, EVENTS } from "../analytics.js";
 
 export async function render(app, context) {
   const careerId = context.params.id;
@@ -430,6 +431,17 @@ function transitionsPanel(gaps) {
  */
 function bridgePanel(app, career, bridge, redraw) {
   if (!bridge) return null;
+
+  /*
+   * Only when a route was actually found. The panel renders either way — the
+   * direct route is always shown — but `hasBridge` false means the engine
+   * looked and came back with nothing, and reporting that as a bridge viewing
+   * would count every pathway screen in Helix.
+   *
+   * Which careers form the route is not reported: not the destination, not the
+   * bridge, and not where the person is starting from.
+   */
+  if (bridge.hasBridge) trackHelixEventOnce(EVENTS.BRIDGE_ROUTE_VIEWED);
 
   return panel("Getting there: direct, or by way of another role", [
     h("div", { class: "route-pair" }, [

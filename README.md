@@ -333,6 +333,109 @@ injected fields cannot survive a save.
 Export and import use a plain JSON file. Reset deletes everything after a
 confirmation dialogue.
 
+The one thing that can leave the device is usage analytics, and only if the user
+allows it. It carries no profile, no career and nothing from the CV — see
+[Analytics](#analytics).
+
+## Analytics
+
+Google Analytics 4, property `G-L962W0939Q`, behind four gates in
+`js/analytics.js`. Nothing anywhere else in the codebase touches `gtag`,
+`dataLayer` or the Google tag host, and the test suite enforces that by reading
+the source of every module.
+
+**1. Host.** `ANALYTICS_ALLOWED_HOSTS` contains `tools.optymumss.com` and nothing
+else. Every entry point re-reads the gate, so a local copy, a preview build, a
+LAN address or a test runner sends nothing whatever the stored consent says. Add
+a second production hostname to that set if one ever exists.
+
+**2. Consent.** `gtag.js` is not requested until somebody has allowed it. There
+is no consent-denied event, no consent-mode ping and no tag on the page before
+the answer. The decision lives in its own `localStorage` key,
+`helix_analytics_consent`, holding `granted` or `denied`; anything else reads as
+unset and falls back to asking. It is deliberately outside `careerpath.v1`, so an
+export never carries it and "Reset Helix" never silently re-consents anybody.
+
+**3. Shape.** `trackHelixEvent(name)` takes one argument. There is no parameter
+object, so no call site can attach a career, a profile, a gap, a salary or an
+error message. Event names are validated against a frozen list of thirteen.
+
+**4. Route.** Helix is hash-routed, so `send_page_view` is `false` and page views
+are sent by hand. `getSafeHelixRouteName()` reads the *first path segment only*
+and looks it up in a fixed table — the segments carrying career ids are never
+read, not escaped or filtered but discarded. `#/career/CP-0123` reports
+`career_detail`; `#/compare/CP-001,CP-002` reports `compare`. The function cannot
+return a string that is not in the table.
+
+Google Signals and ad personalisation are switched off in the `config` call.
+There is no Google Ads, remarketing, Enhanced Conversions or User-ID.
+
+### Events
+
+Thirteen, each fired once at the point the underlying operation has actually
+succeeded — never on a button press that might still fail:
+
+| Event | Fires in | At |
+|---|---|---|
+| `profile_created_from_cv` | `views/onboarding.js` | `confirm()`, after the reviewed profile is saved |
+| `profile_created_manually` | `views/profile-view.js` | first save only, after the usability guard |
+| `recommendations_generated` | `views/explore.js` | `renderMatches`, after ranking and render |
+| `career_saved` | `app.js` | `toggleSaved`, verified against persisted state |
+| `career_comparison_viewed` | `views/compare.js` | after the dashboard is built |
+| `baseline_pinned` | `app.js` | `setBaseline`, on pin only, not unpin |
+| `bridge_route_viewed` | `views/pathway.js` | `bridgePanel`, only when `hasBridge` |
+| `career_graph_opened` | `views/graph.js` | after the graph is drawn |
+| `career_plan_generated` | `views/plan.js` | after the plan document is built |
+| `career_plan_exported` | `views/plan.js` | after `window.print()` returns without throwing |
+| `ocr_completed` | `views/onboarding.js` | after recognition produces parseable text |
+| `why_not_recommended_viewed` | `views/career.js` | on the disclosure's `toggle`, when opened |
+| `milestone_completed` | `app.js` | `setMilestone`, incomplete → complete, persisted |
+
+`career_plan_exported` is the one event that cannot be fully verified. Export is
+the browser's own print dialogue — Helix carries no PDF library — and a page is
+not told whether the user pressed Save or Cancel. It therefore reports a
+successfully *started* export and never claims a file was produced.
+
+### Deduplication
+
+`trackHelixEventOnce()` sends at most once per visit to a screen. `app.js` calls
+`analytics.beginView()` on every resolved route, which clears the set. This is
+what keeps redraws quiet: regrouping My options, paging, pinning a baseline in
+Compare, expanding a graph node and zooming all call `draw()` again, and none of
+them is a new occurrence. Leaving a screen and coming back is a genuine second
+visit and does report again. Page views are separately deduplicated on
+`lastTrackedRoute`.
+
+### Testing it
+
+The suite runs on `localhost`, which is the point: the host gate is permanently
+shut there, so every "nothing is sent" assertion is made in live conditions. The
+gates, the sanitiser, the payload builder, consent round-tripping, the banner's
+accessibility and the source-level guarantees are all covered. To prove the tests
+bite rather than pass vacuously, temporarily add `"localhost"` to
+`ANALYTICS_ALLOWED_HOSTS` and re-run — six tests should go red, including "no
+Google tag is ever added to this page". Remove it again.
+
+The far side of the gate cannot be tested anywhere but production. To check it
+live:
+
+1. Open <https://tools.optymumss.com/helix-career-pathway-planner/> in a private
+   window and allow analytics.
+2. Open **GA4 → Reports → Realtime**, or **Admin → DebugView**.
+3. Walk the funnel and watch the event names appear.
+4. In the browser's Network panel, filter for `google-analytics.com/g/collect`
+   and read the payloads: `en=` carries the event name, `dp`/`dl` the sanitised
+   route. Nothing else should be recognisable.
+
+### GA4 admin, which the code cannot do
+
+- **Enhanced Measurement → page changes based on browser history events** should
+  be **off**. Helix sends its own page views; leaving that on double-counts them.
+- **Internal traffic** filtering is the way to exclude your own visits. Do not
+  hard-code an IP address into the app.
+- Consider marking `recommendations_generated`, `career_comparison_viewed`,
+  `career_plan_generated` and `career_plan_exported` as **Key Events**.
+
 ## Running locally
 
 ```bash

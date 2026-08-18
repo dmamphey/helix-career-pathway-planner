@@ -23,6 +23,7 @@ import {
   INTEREST_OPTIONS, PRIORITY_OPTIONS, normaliseProfile
 } from "../profile.js";
 import * as storage from "../storage.js";
+import { trackHelixEvent, EVENTS } from "../analytics.js";
 
 /* ------------------------------------------------------------------- upload */
 
@@ -220,6 +221,15 @@ function offerOcr(app, file, error, status, problem) {
       };
       problem.hidden = true;
       status.textContent = "";
+      /*
+       * Recognition worked and produced text Helix could parse. Not when the
+       * engine loaded, not when the first page rendered, and not on the cancel
+       * or failure paths below — those land in the catch.
+       *
+       * Nothing about the scan is reported: not the page count, not the
+       * confidence, not the engine, and obviously not the text.
+       */
+      trackHelixEvent(EVENTS.OCR_COMPLETED);
       app.navigate("/review");
     } catch (failure) {
       const cancelled = failure && failure.name === "OcrCancelledError"
@@ -335,6 +345,15 @@ function confirm(app, draft) {
   app.setProfile(draft);
   app.pending = null; // the parsed draft, and with it the last of the CV, is done
   notice("Profile confirmed. The document itself was not stored.", "good");
+  /*
+   * The CV became a profile here and nowhere earlier.
+   *
+   * Choosing a file, parsing a PDF and running text recognition are all steps
+   * that can end in nothing. This line runs only once the reader has produced a
+   * draft, the person has looked at it and the profile has been saved — which
+   * is the point at which Helix actually has what the event claims.
+   */
+  trackHelixEvent(EVENTS.PROFILE_CREATED_FROM_CV);
   app.navigate("/questions");
 }
 

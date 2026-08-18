@@ -19,6 +19,8 @@ import * as market from "../market-data.js";
 import * as labour from "../labour-market.js";
 import { salaryDelta } from "../baseline.js";
 import { lowerLabel } from "../ontology.js";
+import { trackHelixEvent, trackHelixEventOnce, EVENTS }
+  from "../analytics.js";
 
 export async function render(app, context) {
   const careerId = context.params.id;
@@ -65,14 +67,13 @@ export async function render(app, context) {
     .map((id) => app.catalogue.get(id))
     .filter(Boolean);
 
-  return h("div", { class: "stack" }, [
+  const planDocument = h("div", { class: "stack" }, [
     h("div", { class: "no-print" }, [
       panel("Your career plan", [
         h("p", { text: "Everything below prints as “My Career Pathway Plan”. Use "
           + "your browser's print dialogue and choose Save as PDF." }),
         h("div", { class: "card-actions" }, [
-          button("Print or save as PDF", () => window.print(),
-                 { variant: "primary" }),
+          button("Print or save as PDF", () => exportPlan(), { variant: "primary" }),
           link("Back to the pathway", `#/pathway/${careerId}`, { class: "btn" }),
         ]),
         h("p", { class: "hint", text:
@@ -419,6 +420,42 @@ export async function render(app, context) {
       ]),
     ]),
   ]);
+
+  /*
+   * The plan exists. Everything above it can fail — no profile, no career, an
+   * analysis that throws — and none of those paths reach this line: the two
+   * early returns hand back an empty-state panel instead, and a thrown error is
+   * caught by the router and replaced with the error screen.
+   *
+   * Once per visit, so scrolling and printing do not each count as another
+   * plan. Coming back after editing a profile does count again, which is right:
+   * the document is rebuilt from the new profile and is a different plan.
+   */
+  trackHelixEventOnce(EVENTS.CAREER_PLAN_GENERATED);
+  return planDocument;
+}
+
+/**
+ * Hand the plan to the browser's print dialogue.
+ *
+ * Helix has no PDF library and does not want one, so "export" means opening the
+ * print dialogue with a print stylesheet behind it. That bounds what can
+ * honestly be measured: the browser will not tell a page whether somebody
+ * pressed Save or pressed Cancel, so this reports that the export was
+ * successfully started, and never claims a file was produced.
+ *
+ * `window.print()` can throw — a sandboxed frame, a browser with printing
+ * disabled by policy — and in that case nothing was started and nothing is
+ * reported.
+ */
+function exportPlan() {
+  try {
+    window.print();
+  } catch (ignored) {
+    return false;
+  }
+  trackHelixEvent(EVENTS.CAREER_PLAN_EXPORTED);
+  return true;
 }
 
 function planSection(title, children) {

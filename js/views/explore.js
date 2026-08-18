@@ -12,6 +12,7 @@ import {
 } from "../ui.js";
 import { ORIENTATIONS, lowerLabel } from "../ontology.js";
 import * as market from "../market-data.js";
+import { trackHelixEventOnce, EVENTS } from "../analytics.js";
 
 const PAGE = 24;
 
@@ -655,6 +656,18 @@ export async function renderMatches(app) {
   };
   await decorate();
   draw();
+  /*
+   * The activation event, reported here because here is where all three
+   * conditions are true at once: the ranking finished, it produced careers, and
+   * the screen that shows them has been built. Anywhere earlier and it would be
+   * claiming a result that had not been reached yet.
+   *
+   * Once per visit to the screen. Narrowing and paging both call `draw()` again
+   * with the same profile, and neither is a second set of recommendations.
+   */
+  if (everything.length) {
+    trackHelixEventOnce(EVENTS.RECOMMENDATIONS_GENERATED);
+  }
   return host;
 }
 

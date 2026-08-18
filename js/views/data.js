@@ -10,6 +10,7 @@ import * as labour from "../labour-market.js";
 import { describeProfile, signalLabels } from "../profile.js";
 import { FIT_LEVELS } from "../preference-fit.js";
 import { LEVELS as EFFORT_LEVELS } from "../transition-effort.js";
+import { analyticsSettingsPanel } from "../consent-ui.js";
 
 export async function render(app) {
   const state = app.state;
@@ -55,6 +56,15 @@ export async function render(app) {
         ]),
       ]),
     ], { id: "data-heading" }),
+
+    /*
+     * Second on the screen, directly under what is stored locally.
+     *
+     * Analytics are the only thing in Helix that leaves the device, so the
+     * control for them belongs with the account of what stays on it, not
+     * buried under the import buttons and the source registry.
+     */
+    analyticsSettingsPanel(),
 
     panel("Export and import", [
       h("p", { text: "An export is a plain JSON file containing the same "

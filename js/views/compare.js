@@ -23,6 +23,7 @@ import {
 import { loadRulePack } from "../rules.js";
 import { differences } from "../baseline.js";
 import * as labour from "../labour-market.js";
+import { trackHelixEventOnce, EVENTS } from "../analytics.js";
 import { lowerLabel } from "../ontology.js";
 
 export async function render(app, context) {
@@ -86,6 +87,16 @@ export async function render(app, context) {
     evidencePanel(entries),
   );
   redraw();
+  /*
+   * Two or more real careers, their salary, fit, route and working-life data all
+   * resolved, and the dashboard built from it. The two early returns above catch
+   * the cases that get this far without a comparison — too few careers selected,
+   * or ids that are not in the dataset — and neither reaches this line.
+   *
+   * Once per visit. `redraw()` runs again whenever the baseline is pinned or
+   * changed, and re-measuring the same comparison is not a second viewing.
+   */
+  trackHelixEventOnce(EVENTS.CAREER_COMPARISON_VIEWED);
   return host;
 }
 

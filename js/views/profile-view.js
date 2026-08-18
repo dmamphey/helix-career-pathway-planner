@@ -3,6 +3,7 @@
 import { h, panel, button, link, notice } from "../ui.js";
 import { profileForm, profileSummary, signalChips } from "./profile-form.js";
 import { emptyProfile, normaliseProfile, isUsableProfile } from "../profile.js";
+import { trackHelixEvent, EVENTS } from "../analytics.js";
 
 export async function render(app) {
   const existing = app.profile();
@@ -34,6 +35,15 @@ export async function render(app) {
           }
           app.setProfile(draft);
           notice("Profile saved on this device.", "good");
+          /*
+           * Only a first profile, and only once it is usable. This screen is
+           * also the editor: somebody correcting their job title later is not
+           * creating a profile, and the guard above has already turned back
+           * anything too thin to match against.
+           */
+          if (isNew && app.hasProfile()) {
+            trackHelixEvent(EVENTS.PROFILE_CREATED_MANUALLY);
+          }
           app.navigate(draft.careerGoal === "target" ? "/explore" : "/matches");
         }, { variant: "primary" }),
         existing ? link("See career options", "#/matches", { class: "btn" }) : null,

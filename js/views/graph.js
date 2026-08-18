@@ -27,6 +27,7 @@ import {
   buildGraph, layout, asList, NODE_KINDS, EXPANSION_STEP,
   NODE_WIDTH, NODE_HEIGHT,
 } from "../career-graph.js";
+import { trackHelixEventOnce, EVENTS } from "../analytics.js";
 
 export async function render(app, context) {
   const target = app.catalogue.get(context.params.id);
@@ -65,6 +66,13 @@ export async function render(app, context) {
     );
   };
   draw();
+  /*
+   * The graph is built and on screen. Zooming, panning and opening a node all
+   * call `draw()` again, and none of them is another opening of the graph —
+   * once per visit keeps this a measure of whether people use the thing at all
+   * rather than a measure of how much they fidget with it.
+   */
+  trackHelixEventOnce(EVENTS.CAREER_GRAPH_OPENED);
   return host;
 }
 

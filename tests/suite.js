@@ -48,6 +48,8 @@ import { whyNotRecommended, standing } from "../js/why-not.js";
 import * as labour from "../js/labour-market.js";
 import { REGIONS, normaliseRegion, isUk } from "../js/regions.js";
 import { looksScanned, textQuality } from "../js/ocr.js";
+import * as analytics from "../js/analytics.js";
+import * as consentUi from "../js/consent-ui.js";
 import {
   PREFERENCE_FIELDS, PREFERENCE_GROUPS, hasPreferences,
 } from "../js/profile.js";
@@ -2673,6 +2675,392 @@ test("somebody with no priorities is invited to set them", async () => {
   const link = [...panel.querySelectorAll("a")]
     .find((a) => a.getAttribute("href") === "#/preferences");
   assert(link, "the prompt does not lead to the priorities screen");
+});
+
+/* ================================================================ analytics */
+
+/**
+ * These tests run on localhost, which is the point.
+ *
+ * The production-host gate is the outermost of the four, so a suite that runs
+ * anywhere else is sitting permanently in the case that matters most: every
+ * assertion below that "nothing is sent" is being made in exactly the
+ * circumstances a developer's machine is in. The gate cannot be quietly removed
+ * without turning most of this section red.
+ *
+ * What these cannot cover is the far side of the gate — that a real event
+ * reaches Google correctly from tools.optymumss.com. Nothing short of the
+ * production host can prove that, so it is verified by inspecting the network
+ * on the live site instead, and the payload builder is tested here so the shape
+ * being sent is known before it goes.
+ */
+
+test("analytics allows the production host and nothing else", () => {
+  assert(analytics.isAnalyticsHost("tools.optymumss.com"),
+         "the production host is not allowed");
+  // Case is not something a hostname should be able to smuggle past a check.
+  assert(analytics.isAnalyticsHost("TOOLS.OPTYMUMSS.COM"),
+         "the host check is case-sensitive");
+  for (const host of ["localhost", "127.0.0.1", "0.0.0.0", "",
+                      "dmamphey.github.io", "tools.optymumss.com.evil.test",
+                      "optymumss.com", "www.optymumss.com", "192.168.1.40",
+                      "staging.tools.optymumss.com"]) {
+    assert(!analytics.isAnalyticsHost(host), `${host || "(empty)"} was allowed`);
+  }
+});
+
+test("this test run is on a host where analytics cannot fire", () => {
+  assert(!analytics.isAnalyticsHost(window.location.hostname),
+         "the test suite is running on the production host, so every "
+         + "negative assertion below would be vacuous");
+});
+
+test("every Helix route maps to a fixed screen name", () => {
+  const expected = [
+    ["/", "start"],
+    ["", "start"],
+    ["/upload", "upload"],
+    ["/review", "cv_review"],
+    ["/questions", "questions"],
+    ["/profile", "profile"],
+    ["/preferences", "priorities"],
+    ["/explore", "explore"],
+    ["/matches", "recommendations"],
+    ["/saved", "saved"],
+    ["/data", "data"],
+    ["/compare", "compare"],
+    ["/career/CP-001", "career_detail"],
+    ["/pathway/CP-001", "pathway"],
+    ["/graph/CP-001", "career_graph"],
+    ["/plan/CP-001", "plan"],
+    ["/compare/CP-001,CP-002,CP-003", "compare"],
+    ["/nonsense", "not_found"],
+  ];
+  for (const [path, name] of expected) {
+    equal(analytics.getSafeHelixRouteName(path), name,
+          `${path} produced the wrong screen name`);
+  }
+});
+
+/**
+ * The sanitiser is not a filter, it is a lookup.
+ *
+ * A filter can be defeated by an input its author did not imagine. This asserts
+ * the stronger property: whatever goes in, what comes out is one of a fixed
+ * list of fifteen strings, so there is no input at all — hostile, encoded or
+ * merely unexpected — that can cause any part of it to be transmitted.
+ */
+test("no route, however hostile, escapes the screen-name allowlist", () => {
+  const nasty = [
+    "/career/CP-001",
+    "/career/Clinical%20Scientist",
+    "/career/Jane%20Example",
+    "/compare/CP-001,CP-002",
+    "/plan/CP-003?note=jane.example@example.test",
+    "/pathway/CP-001#jane",
+    "/matches?employer=Example%20Diagnostics",
+    "/../../etc/passwd",
+    "//evil.test/",
+    "/CAREER/CP-001",
+    "/career",
+    "/" + "a".repeat(5000),
+    "/‮gnitekram",
+    ...CV_PII.map((value) => `/career/${encodeURIComponent(value)}`),
+  ];
+  for (const path of nasty) {
+    const name = analytics.getSafeHelixRouteName(path);
+    assert(analytics.SAFE_SCREEN_NAMES.includes(name),
+           `"${path}" produced "${name}", which is not an allowed screen name`);
+  }
+});
+
+test("a page view payload carries no career id and no personal data", () => {
+  for (const name of analytics.SAFE_SCREEN_NAMES) {
+    const payload = analytics.pageViewPayload(name);
+    const serialised = JSON.stringify(payload);
+    assert(!/CP-\d+/i.test(serialised),
+           `a career id reached the payload for ${name}`);
+    for (const value of CV_PII) {
+      assert(!serialised.includes(value), `"${value}" reached a page view`);
+    }
+    equal(payload.page_title, `Helix | ${name}`, "wrong page title");
+    assert(payload.page_location.endsWith(`#/${name}`),
+           `page_location does not end with the sanitised route: `
+           + payload.page_location);
+    // The real hash is never the source of the reported location.
+    assert(!payload.page_location.includes("?"),
+           "a query string reached page_location");
+  }
+});
+
+test("an unrecognised screen name cannot reach a payload", () => {
+  const payload = analytics.pageViewPayload("CP-001");
+  assert(!payload.page_location.includes("CP-001"),
+         "an unallowed name was used verbatim");
+  equal(payload.page_title, "Helix | not_found", "it was not replaced");
+});
+
+test("the event vocabulary is exactly the thirteen agreed events", () => {
+  const expected = [
+    "baseline_pinned", "bridge_route_viewed", "career_comparison_viewed",
+    "career_graph_opened", "career_plan_exported", "career_plan_generated",
+    "career_saved", "milestone_completed", "ocr_completed",
+    "profile_created_from_cv", "profile_created_manually",
+    "recommendations_generated", "why_not_recommended_viewed",
+  ];
+  equal(Object.values(analytics.EVENTS).slice().sort().join(","),
+        expected.join(","), "the event list has drifted");
+});
+
+/**
+ * The shape gate, asserted rather than described.
+ *
+ * `trackHelixEvent` declares one parameter. That is what makes it impossible
+ * for a call site to attach a career, a profile or an error message: there is
+ * nowhere to put one. A later edit adding a payload argument would break this.
+ */
+test("the event sender accepts a name and nothing else", () => {
+  equal(analytics.trackHelixEvent.length, 1,
+        "trackHelixEvent takes more than an event name");
+  equal(analytics.trackHelixEventOnce.length, 1,
+        "trackHelixEventOnce takes more than an event name");
+});
+
+test("no module outside analytics.js calls gtag or dataLayer directly", async () => {
+  const modules = [
+    "app.js", "router.js", "storage.js", "ui.js", "consent-ui.js", "ocr.js",
+    "matcher.js", "profile.js", "cv-parser.js",
+    ...["home", "explore", "career", "pathway", "plan", "compare", "graph",
+        "saved", "data", "onboarding", "preferences", "profile-form",
+        "profile-view"].map((name) => `views/${name}.js`),
+  ];
+  for (const name of modules) {
+    const response = await fetch(new URL(`../js/${name}`, import.meta.url));
+    assert(response.ok, `could not read js/${name}`);
+    const source = await response.text();
+    assert(!/\bgtag\s*\(/.test(source),
+           `js/${name} calls gtag directly instead of going through analytics.js`);
+    assert(!/\bdataLayer\b/.test(source),
+           `js/${name} touches dataLayer directly`);
+    assert(!/googletagmanager/.test(source),
+           `js/${name} references the Google tag host directly`);
+  }
+});
+
+/**
+ * Every call site, checked by reading them.
+ *
+ * The one-parameter signature already makes a payload impossible, but a call
+ * written as `trackHelixEvent(name, career)` would be silently accepted by
+ * JavaScript and silently ignored — which would look like it worked. This reads
+ * the source and requires every call to pass a single `EVENTS.` constant, so a
+ * literal string, a template or a second argument fails the suite.
+ */
+test("every event call site passes one EVENTS constant and no payload", async () => {
+  const modules = ["app.js",
+    ...["explore", "career", "pathway", "plan", "compare", "graph",
+        "onboarding", "profile-view"].map((name) => `views/${name}.js`)];
+  let found = 0;
+  for (const name of modules) {
+    const response = await fetch(new URL(`../js/${name}`, import.meta.url));
+    const source = await response.text();
+    const calls = source.match(/trackHelixEvent(?:Once)?\s*\([^)]*\)/g) || [];
+    for (const call of calls) {
+      found += 1;
+      assert(/^trackHelixEvent(Once)?\(EVENTS\.[A-Z_]+\)$/.test(call),
+             `js/${name} has a call that is not a bare EVENTS constant: ${call}`);
+    }
+  }
+  assert(found >= 13, `expected at least 13 call sites, found ${found}`);
+});
+
+test("consent is unset until a choice is made, and round-trips", () => {
+  const original = window.localStorage.getItem("helix_analytics_consent");
+  try {
+    window.localStorage.removeItem("helix_analytics_consent");
+    equal(analytics.consentState(), "unset", "a fresh browser is not unset");
+    assert(!analytics.consentDecided(), "an unanswered choice reads as decided");
+    assert(!analytics.userHasGrantedAnalyticsConsent(), "unset granted consent");
+
+    analytics.setAnalyticsConsent(analytics.DENIED);
+    equal(analytics.consentState(), "denied", "declining did not persist");
+    assert(analytics.consentDecided(), "declining did not count as a decision");
+    assert(!analytics.userHasGrantedAnalyticsConsent(), "declining granted consent");
+
+    analytics.setAnalyticsConsent(analytics.GRANTED);
+    equal(analytics.consentState(), "granted", "allowing did not persist");
+    assert(analytics.userHasGrantedAnalyticsConsent(), "allowing did not grant");
+
+    // Anything else is not a decision, so it fails towards asking again.
+    window.localStorage.setItem("helix_analytics_consent", "yes please");
+    equal(analytics.consentState(), "unset", "a junk value was trusted");
+  } finally {
+    if (original === null) {
+      window.localStorage.removeItem("helix_analytics_consent");
+    } else {
+      window.localStorage.setItem("helix_analytics_consent", original);
+    }
+  }
+});
+
+/**
+ * The whole point, in one test.
+ *
+ * Consent granted, the tag faked as present and callable, and a spy in place of
+ * gtag — every gate open except the host. Nothing may be sent, and the spy must
+ * never be touched.
+ */
+test("consent alone cannot send anything from a non-production host", () => {
+  const original = window.localStorage.getItem("helix_analytics_consent");
+  const hadFlag = window.__helixGaLoaded;
+  const hadGtag = window.gtag;
+  const calls = [];
+  try {
+    window.localStorage.setItem("helix_analytics_consent", "granted");
+    window.__helixGaLoaded = true;
+    window.gtag = (...args) => calls.push(args);
+    analytics.resetTrackingStateForTests();
+
+    assert(!analytics.canUseAnalytics(), "the host gate opened on localhost");
+    equal(analytics.initAnalytics(), false, "initAnalytics ran off production");
+    equal(analytics.loadGoogleAnalytics(), false, "the tag loader ran");
+    equal(analytics.trackHelixPageView(), false, "a page view was sent");
+    for (const name of Object.values(analytics.EVENTS)) {
+      equal(analytics.trackHelixEvent(name), false, `${name} was sent`);
+      equal(analytics.trackHelixEventOnce(name), false, `${name} was sent once`);
+    }
+    equal(calls.length, 0,
+          `gtag was called ${calls.length} times: ${JSON.stringify(calls)}`);
+  } finally {
+    window.__helixGaLoaded = hadFlag;
+    if (hadGtag === undefined) delete window.gtag; else window.gtag = hadGtag;
+    if (original === null) {
+      window.localStorage.removeItem("helix_analytics_consent");
+    } else {
+      window.localStorage.setItem("helix_analytics_consent", original);
+    }
+    analytics.resetTrackingStateForTests();
+  }
+});
+
+test("no Google tag is ever added to this page", () => {
+  const sources = [...document.querySelectorAll("script[src]")]
+    .map((node) => node.src);
+  for (const src of sources) {
+    assert(!/googletagmanager|google-analytics|gtag/i.test(src),
+           `a Google script was loaded: ${src}`);
+  }
+  assert(!window.__helixGaLoaded, "the tag reported itself as loaded");
+});
+
+test("an unknown event name is refused", () => {
+  for (const name of ["", null, undefined, "page_view", "purchase",
+                      "career_saved ", "CAREER_SAVED", "custom_thing"]) {
+    equal(analytics.trackHelixEvent(name), false, `${name} was accepted`);
+  }
+});
+
+test("a repeated screen is not reported twice", () => {
+  analytics.resetTrackingStateForTests();
+  // Nothing has been reported, so no name is a duplicate yet.
+  for (const name of analytics.SAFE_SCREEN_NAMES) {
+    assert(!analytics.isDuplicatePageView(name),
+           `${name} counted as a duplicate before anything was sent`);
+  }
+});
+
+/* ------------------------------------------------------- the consent banner */
+
+test("the consent banner is not offered on a non-production host", () => {
+  const original = window.localStorage.getItem("helix_analytics_consent");
+  try {
+    window.localStorage.removeItem("helix_analytics_consent");
+    equal(consentUi.mountConsentBanner(), false,
+          "the banner was mounted off production");
+    assert(!document.getElementById("analytics-consent"),
+           "the banner reached the page");
+  } finally {
+    if (original !== null) {
+      window.localStorage.setItem("helix_analytics_consent", original);
+    }
+  }
+});
+
+test("the consent banner is keyboard-operable and names itself", () => {
+  const banner = consentUi.consentBannerNode();
+  equal(banner.getAttribute("role"), "region", "the banner is not a region");
+  const labelledBy = banner.getAttribute("aria-labelledby");
+  assert(labelledBy, "the banner has no accessible name");
+  assert(banner.querySelector(`#${labelledBy}`),
+         "the banner's accessible name points at nothing");
+
+  const buttons = [...banner.querySelectorAll("button")];
+  equal(buttons.length, 2, "the banner does not offer exactly two answers");
+  const labels = buttons.map((b) => b.textContent);
+  assert(labels.some((l) => /allow/i.test(l)), "no way to allow analytics");
+  assert(labels.some((l) => /decline/i.test(l)), "no way to decline");
+  for (const control of buttons) {
+    equal(control.tagName, "BUTTON", "an answer is not a real button");
+    equal(control.getAttribute("type"), "button", "a button could submit a form");
+    assert(control.className.includes("btn-tap"),
+           "an answer does not carry the enlarged tap target");
+  }
+  // Nothing may be disabled, hidden from assistive technology, or a link.
+  assert(!banner.querySelector("[aria-hidden='true'] button"),
+         "an answer is hidden from assistive technology");
+});
+
+test("declining from the banner stores the choice and removes the banner", () => {
+  const original = window.localStorage.getItem("helix_analytics_consent");
+  try {
+    window.localStorage.removeItem("helix_analytics_consent");
+    const banner = consentUi.forceShowConsentBanner();
+    assert(document.getElementById("analytics-consent"), "the banner did not mount");
+    const decline = [...banner.querySelectorAll("button")]
+      .find((b) => /decline/i.test(b.textContent));
+    decline.click();
+    equal(analytics.consentState(), "denied", "the choice was not stored");
+    assert(!document.getElementById("analytics-consent"),
+           "the banner stayed after answering");
+    assert(!document.body.classList.contains("has-consent"),
+           "the page kept reserving space for a banner that has gone");
+  } finally {
+    if (original === null) {
+      window.localStorage.removeItem("helix_analytics_consent");
+    } else {
+      window.localStorage.setItem("helix_analytics_consent", original);
+    }
+    consentUi.dismissConsentBanner();
+  }
+});
+
+test("the analytics settings panel is on My data, on every host", async () => {
+  const app = await appForViews({ profile: DEMO_PROFILES[0].build() });
+  const node = await renderView("data", app);
+  const heading = [...node.querySelectorAll("h2")]
+    .find((h2) => /privacy and analytics/i.test(h2.textContent));
+  assert(heading, "My data has no analytics settings panel");
+
+  const panel = heading.closest("section");
+  const buttons = [...panel.querySelectorAll("button")].map((b) => b.textContent);
+  assert(buttons.some((l) => /allow analytics/i.test(l)), "no way to allow");
+  assert(buttons.some((l) => /decline analytics/i.test(l)), "no way to decline");
+  // Off production it must say so rather than implying analytics are running.
+  assert(/only on tools\.optymumss\.com/i.test(panel.textContent),
+         "the panel does not say analytics are off on this host");
+});
+
+test("the privacy wording no longer claims nothing leaves the device", async () => {
+  for (const file of ["../index.html", "../user-guide.html"]) {
+    const response = await fetch(new URL(file, import.meta.url));
+    const text = (await response.text()).toLowerCase();
+    for (const claim of ["nothing leaves your device",
+                         "nothing ever leaves your device",
+                         "nothing is sent anywhere ever"]) {
+      assert(!text.includes(claim),
+             `${file} still claims "${claim}" while analytics may be enabled`);
+    }
+  }
 });
 
 run();
