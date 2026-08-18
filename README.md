@@ -349,12 +349,21 @@ else. Every entry point re-reads the gate, so a local copy, a preview build, a
 LAN address or a test runner sends nothing whatever the stored consent says. Add
 a second production hostname to that set if one ever exists.
 
-**2. Consent.** `gtag.js` is not requested until somebody has allowed it. There
-is no consent-denied event, no consent-mode ping and no tag on the page before
-the answer. The decision lives in its own `localStorage` key,
-`helix_analytics_consent`, holding `granted` or `denied`; anything else reads as
-unset and falls back to asking. It is deliberately outside `careerpath.v1`, so an
-export never carries it and "Reset Helix" never silently re-consents anybody.
+**2. Opt-out.** Analytics run **by default** for every visitor on the production
+host. There is no consent banner; the footer of every page states what is
+collected and that it is on. This is the site owner's decision, taken knowingly:
+GA4's cookies are not "strictly necessary", so UK PECR requires consent before
+they are set, and the footer notice informs rather than obtains it. The decision
+is recorded in `analyticsEnabled()` and in this paragraph so that it reads as a
+choice rather than an oversight.
+
+The off switch lives on **My data → Privacy and analytics**. The state is stored
+in its own `localStorage` key, `helix_analytics_consent`, holding `granted` or
+`denied`; anything else reads as unset, and **unset means on**. That is the one
+default in this module that leans towards collecting, and a test asserts it so
+that flipping back to opt-in is a deliberate change. The key sits outside
+`careerpath.v1` on purpose, so an export never carries it and "Reset Helix" never
+silently re-enables analytics for somebody who turned them off.
 
 **3. Shape.** `trackHelixEvent(name)` takes one argument. There is no parameter
 object, so no call site can attach a career, a profile, a gap, a salary or an
@@ -410,8 +419,8 @@ visit and does report again. Page views are separately deduplicated on
 
 The suite runs on `localhost`, which is the point: the host gate is permanently
 shut there, so every "nothing is sent" assertion is made in live conditions. The
-gates, the sanitiser, the payload builder, consent round-tripping, the banner's
-accessibility and the source-level guarantees are all covered. To prove the tests
+gates, the sanitiser, the payload builder, the opt-out round trip, the footer
+notice's required wording and the source-level guarantees are all covered. To prove the tests
 bite rather than pass vacuously, temporarily add `"localhost"` to
 `ANALYTICS_ALLOWED_HOSTS` and re-run — six tests should go red, including "no
 Google tag is ever added to this page". Remove it again.
@@ -420,8 +429,9 @@ The far side of the gate cannot be tested anywhere but production. To check it
 live:
 
 1. Open <https://tools.optymumss.com/helix-career-pathway-planner/> in a private
-   window and allow analytics.
-2. Open **GA4 → Reports → Realtime**, or **Admin → DebugView**.
+   window. Analytics start on their own; there is nothing to click.
+2. Open **GA4 → Reports → Realtime**. Standard reports and the Admin events list
+   lag 24–48 hours, so Realtime is the only place new events show up today.
 3. Walk the funnel and watch the event names appear.
 4. In the browser's Network panel, filter for `google-analytics.com/g/collect`
    and read the payloads: `en=` carries the event name, `dp`/`dl` the sanitised

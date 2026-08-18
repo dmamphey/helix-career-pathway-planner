@@ -168,12 +168,13 @@
    page views and why nothing anywhere learns which careers you looked at.</p>
 
 <h3>Usage analytics</h3>
-<p>Helix can send limited, anonymous information about how the tool is used to
-   Google Analytics, so we can see which parts help and which are ignored. It is
-   optional. Nothing is sent unless you allow it, and the first time you visit
-   you are asked once, at the bottom of the screen, with an equal choice either
-   way. Ignoring the question is the same as declining.</p>
-<p>If you allow it, what is sent is:</p>
+<p>Helix sends limited, anonymous information about how the tool is used to
+   Google Analytics, so we can see which parts help and which are ignored. This
+   is <strong>on by default</strong>, and Google Analytics cookies are set on
+   your device to do it. There is no banner asking first; the footer of every
+   page says what is happening, and you can switch it off whenever you like.</p>
+<p><strong>If you do not agree to this, please do not use Helix.</strong></p>
+<p>What is sent is:</p>
 <ul>
   <li><strong>Which screens you opened</strong>, as fixed names — “start”,
       “recommendations”, “compare”, “pathway”. A career page always reports as
@@ -191,13 +192,16 @@
    Helix has no field for your name, email address, telephone number or postal
    address, so those cannot be sent even by mistake. <strong>Your CV is still
    read entirely inside your browser whatever you choose here.</strong></p>
-<p>Analytics also run only on the live site at tools.optymumss.com. A local copy
-   or a preview build sends nothing at all, whatever the setting says.</p>
-<p><strong>Changing your mind.</strong> Go to
+<p>Analytics run only on the live site at tools.optymumss.com. A local copy or a
+   preview build sends nothing at all, whatever the setting says.</p>
+<p><strong>Switching it off.</strong> Go to
    <a href="index.html#/data">My data</a> and use <em>Privacy and analytics</em>.
-   The panel says which state you are in and lets you switch either way at any
-   time. Declining stops Helix sending anything further; reloading the page after
-   that leaves Google Analytics out of it altogether.</p>
+   The panel says which state you are in and has a single button to turn
+   analytics off — or back on again later. Turning them off stops Helix sending
+   anything further; reloading the page after that leaves Google Analytics out
+   of it altogether.</p>
+<p>That choice is remembered in this browser only, in the same way as your saved
+   profile. Another browser or another device starts from the default again.</p>
 
 <p>You can export or import everything from
    <a href="index.html#/data">My data</a>. <strong>Reset Helix</strong>, which
@@ -995,6 +999,28 @@
     <a href="index.html">Open Helix</a>
     <a href="https://www.optymumss.com/compliments-complaints/"
        target="_blank" rel="noopener">Feedback</a>
+  </p>
+  <!--
+    The analytics notice.
+
+    Visible in the footer of every page rather than behind a banner or inside
+    the disclosure below, because it is the one thing on this site that leaves
+    the device and somebody should not have to open anything to find out about
+    it. It states what is collected, what is not, that it is on by default, and
+    where to switch it off.
+  -->
+  <p class="analytics-notice">
+    <strong>Usage analytics.</strong> Helix sends limited, anonymous
+    information about how the tool is used to Google Analytics, and sets
+    Google Analytics cookies on this device to do it. This is on by default.
+    What is sent is which screens you open — as fixed names such as
+    &ldquo;recommendations&rdquo; or &ldquo;compare&rdquo;, with career
+    identifiers removed — and whether a step succeeded.
+    <strong>Your CV, career profile and career plan are not sent</strong>, nor
+    are the careers you look at, save, compare or plan against. Your CV is
+    still read entirely inside your browser.
+    You can switch analytics off at any time from <a href="index.html#/data">My data</a>.
+    If you do not agree to this, please do not use Helix.
   </p>
 </footer>
 

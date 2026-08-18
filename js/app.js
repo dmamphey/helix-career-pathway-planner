@@ -26,7 +26,6 @@ import { buildTimeline } from "./timeline-engine.js";
 import { loadRulePack } from "./rules.js";
 import * as analytics from "./analytics.js";
 import { EVENTS } from "./analytics.js";
-import { mountConsentBanner } from "./consent-ui.js";
 import {
   clear, errorPanel, clearNotice, notice, button, h, link, datasetLabel,
 } from "./ui.js";
@@ -641,9 +640,10 @@ async function boot() {
     {}));
 
   /*
-   * Analytics start before the router so a returning visitor who has already
-   * agreed gets the page view for the screen they arrived on. Both calls are
-   * no-ops off the production host and no-ops without consent, so this line
+   * Analytics start before the router so the screen somebody arrived on gets
+   * its page view. No banner: measurement is on by default and the footer says
+   * so, which is the site owner's decision. It is still a no-op off the
+   * production host and a no-op for anybody who has opted out, so this line
    * does nothing at all in development.
    */
   analytics.initAnalytics();
@@ -651,12 +651,6 @@ async function boot() {
   router.start();
   renderTray(app);
   wireMenu();
-
-  /*
-   * Asked last, and never before the app is usable. Somebody who lands on Helix
-   * should see Helix, not a question about measurement over an empty page.
-   */
-  mountConsentBanner(() => analytics.beginView());
 }
 
 document.addEventListener("DOMContentLoaded", boot);

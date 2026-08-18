@@ -49,7 +49,6 @@ import * as labour from "../js/labour-market.js";
 import { REGIONS, normaliseRegion, isUk } from "../js/regions.js";
 import { looksScanned, textQuality } from "../js/ocr.js";
 import * as analytics from "../js/analytics.js";
-import * as consentUi from "../js/consent-ui.js";
 import {
   PREFERENCE_FIELDS, PREFERENCE_GROUPS, hasPreferences,
 } from "../js/profile.js";
@@ -2874,26 +2873,30 @@ test("every event call site passes one EVENTS constant and no payload", async ()
   assert(found >= 13, `expected at least 13 call sites, found ${found}`);
 });
 
-test("consent is unset until a choice is made, and round-trips", () => {
+test("analytics are on by default and opting out is remembered", () => {
   const original = window.localStorage.getItem("helix_analytics_consent");
   try {
     window.localStorage.removeItem("helix_analytics_consent");
     equal(analytics.consentState(), "unset", "a fresh browser is not unset");
-    assert(!analytics.consentDecided(), "an unanswered choice reads as decided");
-    assert(!analytics.userHasGrantedAnalyticsConsent(), "unset granted consent");
+    assert(!analytics.consentDecided(), "the default counted as a decision");
+    // The one place the default leans towards collecting. Asserted, so that
+    // flipping it back to opt-in is a deliberate change rather than a drift.
+    assert(analytics.analyticsEnabled(),
+           "analytics are not on by default, which is the configured behaviour");
 
     analytics.setAnalyticsConsent(analytics.DENIED);
-    equal(analytics.consentState(), "denied", "declining did not persist");
-    assert(analytics.consentDecided(), "declining did not count as a decision");
-    assert(!analytics.userHasGrantedAnalyticsConsent(), "declining granted consent");
+    equal(analytics.consentState(), "denied", "opting out did not persist");
+    assert(analytics.consentDecided(), "opting out did not count as a decision");
+    assert(!analytics.analyticsEnabled(), "opting out did not switch them off");
 
     analytics.setAnalyticsConsent(analytics.GRANTED);
-    equal(analytics.consentState(), "granted", "allowing did not persist");
-    assert(analytics.userHasGrantedAnalyticsConsent(), "allowing did not grant");
+    equal(analytics.consentState(), "granted", "opting back in did not persist");
+    assert(analytics.analyticsEnabled(), "opting back in did not switch them on");
 
-    // Anything else is not a decision, so it fails towards asking again.
-    window.localStorage.setItem("helix_analytics_consent", "yes please");
+    // A junk value is not an opt-out, so it falls back to the default.
+    window.localStorage.setItem("helix_analytics_consent", "maybe");
     equal(analytics.consentState(), "unset", "a junk value was trusted");
+    assert(analytics.analyticsEnabled(), "a junk value switched analytics off");
   } finally {
     if (original === null) {
       window.localStorage.removeItem("helix_analytics_consent");
@@ -2910,7 +2913,7 @@ test("consent is unset until a choice is made, and round-trips", () => {
  * gtag — every gate open except the host. Nothing may be sent, and the spy must
  * never be touched.
  */
-test("consent alone cannot send anything from a non-production host", () => {
+test("the default cannot send anything from a non-production host", () => {
   const original = window.localStorage.getItem("helix_analytics_consent");
   const hadFlag = window.__helixGaLoaded;
   const hadGtag = window.gtag;
@@ -2971,68 +2974,8 @@ test("a repeated screen is not reported twice", () => {
 
 /* ------------------------------------------------------- the consent banner */
 
-test("the consent banner is not offered on a non-production host", () => {
-  const original = window.localStorage.getItem("helix_analytics_consent");
-  try {
-    window.localStorage.removeItem("helix_analytics_consent");
-    equal(consentUi.mountConsentBanner(), false,
-          "the banner was mounted off production");
-    assert(!document.getElementById("analytics-consent"),
-           "the banner reached the page");
-  } finally {
-    if (original !== null) {
-      window.localStorage.setItem("helix_analytics_consent", original);
-    }
-  }
-});
 
-test("the consent banner is keyboard-operable and names itself", () => {
-  const banner = consentUi.consentBannerNode();
-  equal(banner.getAttribute("role"), "region", "the banner is not a region");
-  const labelledBy = banner.getAttribute("aria-labelledby");
-  assert(labelledBy, "the banner has no accessible name");
-  assert(banner.querySelector(`#${labelledBy}`),
-         "the banner's accessible name points at nothing");
 
-  const buttons = [...banner.querySelectorAll("button")];
-  equal(buttons.length, 2, "the banner does not offer exactly two answers");
-  const labels = buttons.map((b) => b.textContent);
-  assert(labels.some((l) => /allow/i.test(l)), "no way to allow analytics");
-  assert(labels.some((l) => /decline/i.test(l)), "no way to decline");
-  for (const control of buttons) {
-    equal(control.tagName, "BUTTON", "an answer is not a real button");
-    equal(control.getAttribute("type"), "button", "a button could submit a form");
-    assert(control.className.includes("btn-tap"),
-           "an answer does not carry the enlarged tap target");
-  }
-  // Nothing may be disabled, hidden from assistive technology, or a link.
-  assert(!banner.querySelector("[aria-hidden='true'] button"),
-         "an answer is hidden from assistive technology");
-});
-
-test("declining from the banner stores the choice and removes the banner", () => {
-  const original = window.localStorage.getItem("helix_analytics_consent");
-  try {
-    window.localStorage.removeItem("helix_analytics_consent");
-    const banner = consentUi.forceShowConsentBanner();
-    assert(document.getElementById("analytics-consent"), "the banner did not mount");
-    const decline = [...banner.querySelectorAll("button")]
-      .find((b) => /decline/i.test(b.textContent));
-    decline.click();
-    equal(analytics.consentState(), "denied", "the choice was not stored");
-    assert(!document.getElementById("analytics-consent"),
-           "the banner stayed after answering");
-    assert(!document.body.classList.contains("has-consent"),
-           "the page kept reserving space for a banner that has gone");
-  } finally {
-    if (original === null) {
-      window.localStorage.removeItem("helix_analytics_consent");
-    } else {
-      window.localStorage.setItem("helix_analytics_consent", original);
-    }
-    consentUi.dismissConsentBanner();
-  }
-});
 
 test("the analytics settings panel is on My data, on every host", async () => {
   const app = await appForViews({ profile: DEMO_PROFILES[0].build() });
@@ -3042,12 +2985,41 @@ test("the analytics settings panel is on My data, on every host", async () => {
   assert(heading, "My data has no analytics settings panel");
 
   const panel = heading.closest("section");
-  const buttons = [...panel.querySelectorAll("button")].map((b) => b.textContent);
-  assert(buttons.some((l) => /allow analytics/i.test(l)), "no way to allow");
-  assert(buttons.some((l) => /decline analytics/i.test(l)), "no way to decline");
+  const buttons = [...panel.querySelectorAll("button")];
+  assert(buttons.some((b) => /turn analytics (off|back on)/i.test(b.textContent)),
+         "the panel has no control to switch analytics off");
+  for (const control of buttons) {
+    assert(control.className.includes("btn-tap"),
+           "the analytics control is under the enlarged tap target");
+  }
   // Off production it must say so rather than implying analytics are running.
   assert(/only on tools\.optymumss\.com/i.test(panel.textContent),
          "the panel does not say analytics are off on this host");
+});
+
+/**
+ * The notice is the only place a visitor is told, so its absence is a bug of a
+ * different order from a missing paragraph. Checked in the shipped HTML of both
+ * pages rather than in a template, because the footer is hand-written markup.
+ */
+test("every page footer carries the analytics notice", async () => {
+  for (const file of ["../index.html", "../user-guide.html"]) {
+    const response = await fetch(new URL(file, import.meta.url));
+    const html = await response.text();
+    const at = html.indexOf("analytics-notice");
+    assert(at > 0, `${file} has no analytics notice in its footer`);
+    const notice = html.slice(at, at + 1200);
+    for (const [label, pattern] of [
+      ["names Google Analytics", /Google Analytics/],
+      ["says it is on by default", /on by default/i],
+      ["says cookies are set", /cookie/i],
+      ["says the CV is not sent", /career plan are not sent/i],
+      ["asks non-consenting users not to use the site", /please do not use Helix/i],
+      ["points at the off switch", /My data/],
+    ]) {
+      assert(pattern.test(notice), `${file} notice does not ${label}`);
+    }
+  }
 });
 
 test("the privacy wording no longer claims nothing leaves the device", async () => {

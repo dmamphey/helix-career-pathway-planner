@@ -1111,69 +1111,33 @@ ul.plain, ol.plain { list-style: none; padding: 0; margin: 0; }
 .page-controls { align-items: center; gap: .6rem 1rem; }
 .page-position { font-variant-numeric: tabular-nums; }
 
-/* ------------------------------------------------- the analytics consent bar
+/* ------------------------------------------------ the analytics footer notice
 
-   Fixed to the bottom rather than laid over the page. Helix works whether or
-   not somebody answers, so the choice sits in the corner of the room instead of
-   standing in the doorway: no overlay, no focus trap, nothing disabled behind
-   it. It is early in the DOM so a keyboard user meets it before the navigation,
-   and painted last so it does not push the layout around when it appears.
+   Analytics are on by default and there is no banner, so this paragraph is the
+   only place a visitor is told. That makes it the wrong thing to set in small
+   grey type at the bottom of a stack of legal text: it gets the panel
+   treatment, a left rule and the body colour, so it reads as a statement rather
+   than as boilerplate somebody hoped you would scroll past.
 
-   The two answers are the same size, the same weight and the same colour.
-   Making "Allow" the primary button and "Decline" a quiet one would be a thumb
-   on the scale, and the whole point of asking is that either answer is fine. */
-.consent {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
-  background: var(--panel);
-  border-top: 3px solid var(--brand-blue);
-  box-shadow: 0 -4px 20px rgba(16, 39, 66, .18);
+   It sits above the disclaimer because it is about the reader, and the
+   disclaimer is about the product. */
+.analytics-notice {
+  max-width: var(--max);
+  margin: 0 auto 1rem;
+  padding: .8rem 1rem;
+  border-left: 4px solid var(--brand-blue);
+  background: var(--info-bg);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  color: var(--ink);
+  font-size: .9rem;
+  line-height: 1.5;
 }
-.consent-inner {
-  max-width: var(--max); margin: 0 auto; padding: .85rem 1rem;
-  display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1.5rem;
-}
-.consent-text { flex: 1 1 22rem; }
-.consent-title { font-size: 1.02rem; margin: 0 0 .15rem; color: var(--brand-navy); }
-.consent-text p { margin: 0; font-size: .92rem; color: var(--muted); }
-.consent-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-left: auto; }
+.analytics-notice strong { color: var(--brand-navy); }
 
-/* 44px, which is the smallest target most accessibility guidance will accept,
-   applied to the consent controls specifically rather than to every button in
-   Helix — these are the ones people tap once, in a hurry, on a phone. */
+/* 44px, the smallest target most accessibility guidance accepts, on the
+   analytics control specifically rather than on every button in Helix. */
 .btn-tap { min-height: 44px; min-width: 44px; }
 
-/* Below the tray breakpoint the actions take their own full-width row, but the
-   two answers share it rather than stacking. At 320px they come out at about
-   145px each, which holds "Allow analytics" on one line and is well over the
-   44px minimum in both directions — and it saves a whole row of height on the
-   screen where the bar costs the most. */
 @media (max-width: 34rem) {
-  /* The bar is two to three times taller here, so the floor rises with it. */
-  body.has-consent { padding-bottom: max(var(--consent-height, 13rem), 13rem); }
-  body.has-consent .tray { bottom: max(var(--consent-height, 13rem), 13rem); }
-  .consent-inner { padding: .75rem .8rem; gap: .55rem; }
-  .consent-actions { margin-left: 0; width: 100%; }
-  .consent-actions .btn { flex: 1 1 0; justify-content: center; text-align: center; }
-}
-
-/* The comparison tray sticks to the bottom too, and a fixed bar would sit on
-   top of it. While the consent bar is up, `has-consent` on the body reserves
-   the space: the page can still be scrolled to its end, and the tray rides
-   above the bar rather than under it. The class goes when the bar does, so
-   nothing is reserved for an element that is no longer there. */
-/* `max()` of the measured height and a per-breakpoint floor.
-   The measurement is the accurate number and usually wins on a wide screen. The
-   floor is what makes this safe when it is briefly stale — after a rotation,
-   before a webfont settles, or in a browser without ResizeObserver — because
-   the only failure that costs anything is reserving *less* than the bar's
-   height, which hides the end of the page behind it. Reserving a little too
-   much costs nothing. */
-body.has-consent {
-  padding-bottom: max(var(--consent-height, 7.5rem), 7.5rem);
-}
-body.has-consent .tray { bottom: max(var(--consent-height, 7.5rem), 7.5rem); }
-
-@media (prefers-reduced-motion: no-preference) {
-  .consent { animation: consent-rise .18s ease-out; }
-  @keyframes consent-rise { from { transform: translateY(100%); } }
+  .analytics-notice { padding: .7rem .8rem; font-size: .88rem; }
 }

@@ -10,8 +10,11 @@
  *
  *   1. Host.    Only the production hostname. Nothing is sent from localhost, a
  *               preview build, a test runner or a developer's machine.
- *   2. Consent. Nothing loads until somebody has said yes. Not the tag, not a
- *               page view, and not an event recording that they said no.
+ *   2. Opt-out.  Analytics run by default and stop for anybody who turns them
+ *               off. The footer states this rather than a banner asking first,
+ *               which is the site owner's decision; see `analyticsEnabled`.
+ *               Opting out is honoured on every call, and no event is ever
+ *               sent to record that somebody opted out.
  *   3. Shape.   `trackHelixEvent` takes an event name and nothing else. There is
  *               no parameter argument, so there is no way to pass a career, a
  *               profile or a document — a caller that wanted to leak something
@@ -121,11 +124,10 @@ export function isAnalyticsHost(hostname) {
 }
 
 /**
- * The stored consent decision.
+ * The stored decision.
  *
- * Any value that is not exactly "granted" or "denied" reads as unset, so a
- * corrupted or hand-edited key fails towards asking rather than towards
- * collecting.
+ * Only two values are recognised. Anything else — absent, corrupted, or edited
+ * by hand — reads as unset.
  */
 export function consentState() {
   try {
@@ -135,18 +137,34 @@ export function consentState() {
   return UNSET;
 }
 
-export function userHasGrantedAnalyticsConsent() {
-  return consentState() === GRANTED;
+/**
+ * Analytics are on unless somebody has turned them off.
+ *
+ * This is an opt-out, decided by the site owner: measurement runs for every
+ * visitor on the production host, and the footer states that plainly rather
+ * than a banner asking first.
+ *
+ * `UNSET` therefore means on. That is the one line in this file where the
+ * default leans towards collecting, so it is worth being explicit that it is a
+ * deliberate product decision and not an oversight — every other default here
+ * leans the other way. Only an explicit `denied` stops it.
+ */
+export function analyticsEnabled() {
+  return consentState() !== DENIED;
 }
 
-/** Whether a decision has been made, either way. Drives the banner. */
+/** Kept under its old name for call sites that ask the question directly. */
+export function userHasGrantedAnalyticsConsent() {
+  return analyticsEnabled();
+}
+
+/** Whether the user has actively chosen, as opposed to taking the default. */
 export function consentDecided() {
   return consentState() !== UNSET;
 }
 
 export function canUseAnalytics() {
-  return isAnalyticsHost(window.location.hostname)
-      && userHasGrantedAnalyticsConsent();
+  return isAnalyticsHost(window.location.hostname) && analyticsEnabled();
 }
 
 /* -------------------------------------------------------------- the loader */
@@ -332,6 +350,11 @@ export function setAnalyticsConsent(decision) {
     window.localStorage.setItem(CONSENT_KEY, value);
   } catch (ignored) { /* private mode: the choice holds for this session only */ }
 
+  /*
+   * Turning analytics back on mid-visit. The tag is normally already loaded by
+   * `initAnalytics`, in which case this reloads nothing and simply reports the
+   * screen the person is on so the session is not left without a page view.
+   */
   if (value === GRANTED && loadGoogleAnalytics()) {
     lastTrackedRoute = null;
     trackHelixPageView();
@@ -340,10 +363,10 @@ export function setAnalyticsConsent(decision) {
 }
 
 /**
- * Start analytics for a returning visitor who has already agreed.
+ * Start analytics, for everybody the gates allow.
  *
- * Safe to call unconditionally: on a non-production host, or without consent,
- * every branch below is a no-op.
+ * Safe to call unconditionally: off the production host, or for somebody who
+ * has opted out, every branch below is a no-op.
  */
 export function initAnalytics() {
   if (!canUseAnalytics()) return false;
