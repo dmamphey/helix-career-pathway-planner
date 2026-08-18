@@ -2956,6 +2956,14 @@ test("no Google tag is ever added to this page", () => {
   assert(!window.__helixGaLoaded, "the tag reported itself as loaded");
 });
 
+test("the debug flag is off unless the query string asks for it", () => {
+  // The suite runs without a query string, which is the ordinary visit.
+  equal(analytics.debugRequested(), false,
+        "debug mode was on for a visit that did not ask for it");
+  assert(!/[?&]gadebug=1/.test(window.location.search),
+         "this test page was itself loaded with the debug flag");
+});
+
 test("an unknown event name is refused", () => {
   for (const name of ["", null, undefined, "page_view", "purchase",
                       "career_saved ", "CAREER_SAVED", "custom_thing"]) {

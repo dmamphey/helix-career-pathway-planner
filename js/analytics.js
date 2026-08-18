@@ -167,6 +167,30 @@ export function canUseAnalytics() {
   return isAnalyticsHost(window.location.hostname) && analyticsEnabled();
 }
 
+/**
+ * Whether this visit should be tagged for GA4's DebugView.
+ *
+ * Added because "the tag is firing but nothing appears in the reports" is
+ * otherwise unfalsifiable from outside Google. Realtime can be ambiguous and
+ * the standard reports lag a day, so there was no way to tell a processing
+ * delay apart from a property that is quietly dropping the data. DebugView
+ * answers that in seconds.
+ *
+ * Driven by `?gadebug=1` in the query string rather than the hash, so it
+ * survives every route change in the application without being part of a
+ * shareable career link. It changes nothing about what is sent — same events,
+ * same sanitised routes, same absent payload — it only asks Google to show
+ * them live. Both other gates still apply, so this cannot switch analytics on
+ * for somebody who opted out, or off the production host.
+ */
+export function debugRequested() {
+  try {
+    return new URLSearchParams(window.location.search).get("gadebug") === "1";
+  } catch (ignored) {
+    return false;
+  }
+}
+
 /* -------------------------------------------------------------- the loader */
 
 /**
@@ -198,11 +222,14 @@ export function loadGoogleAnalytics() {
     document.head.appendChild(script);
 
     window.gtag("js", new Date());
-    window.gtag("config", MEASUREMENT_ID, {
+    const config = {
       send_page_view: false,
       allow_google_signals: false,
       allow_ad_personalization_signals: false,
-    });
+    };
+    // Only ever added on request, and never on an ordinary visit.
+    if (debugRequested()) config.debug_mode = true;
+    window.gtag("config", MEASUREMENT_ID, config);
 
     window.__helixGaLoaded = true;
     return true;
