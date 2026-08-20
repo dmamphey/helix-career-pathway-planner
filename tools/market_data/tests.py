@@ -563,6 +563,31 @@ class PublishedData(unittest.TestCase):
     def setUp(self):
         self.records = PUBLISHED["records"]
         self.careers = BASE["careers"]
+        # Records Helix claims evidence for. The completeness assertions below
+        # are about those; the roles marked `no_verified_source` are listed by
+        # name with nothing behind them on purpose, and their emptiness is
+        # asserted separately and just as strictly.
+        self.sourced = [r for r in self.records
+                        if r.get("evidence_basis") != "no_verified_source"]
+        self.unsourced = [r for r in self.records
+                          if r.get("evidence_basis") == "no_verified_source"]
+
+    def test_unsourced_roles_carry_nothing_that_was_not_published(self):
+        self.assertTrue(self.unsourced, "no unsourced roles in the file")
+        for record in self.unsourced:
+            with self.subTest(career=record["career_id"]):
+                salary = record["salary"]
+                self.assertIsNone(salary["typical_low"])
+                self.assertIsNone(salary["typical_high"])
+                self.assertEqual(salary["evidence_quality"], "PENDING")
+                self.assertFalse(salary.get("source_records"))
+                # The qualitative fields are inferred from the career's own
+                # tags, so publishing them here would read Helix's own guess
+                # back to the user as a finding.
+                self.assertEqual(record["work_life"]["qualitative_source"],
+                                 "not_sourced")
+                self.assertEqual(record["role"]["summary_kind"], "not_sourced")
+                self.assertFalse(record["role"].get("source_records"))
 
     def test_there_is_exactly_one_record_per_career(self):
         self.assertEqual(len(self.records), len(self.careers))
@@ -583,7 +608,7 @@ class PublishedData(unittest.TestCase):
         self.assertEqual({c["id"] for c in self.careers} - covered, set())
 
     def test_every_salary_is_publishable(self):
-        for record in self.records:
+        for record in self.sourced:
             with self.subTest(career=record["career_id"]):
                 salary = record["salary"]
                 self.assertIsInstance(salary["typical_low"], (int, float))
@@ -597,7 +622,7 @@ class PublishedData(unittest.TestCase):
                 self.assertTrue(salary["last_verified"])
 
     def test_no_salary_is_published_without_method_and_evidence(self):
-        for record in self.records:
+        for record in self.sourced:
             with self.subTest(career=record["career_id"]):
                 salary = record["salary"]
                 self.assertTrue(salary["estimate_method"])
@@ -607,7 +632,7 @@ class PublishedData(unittest.TestCase):
                 self.assertNotEqual(salary["evidence_quality"], "PENDING")
 
     def test_no_salary_is_published_without_provenance(self):
-        for record in self.records:
+        for record in self.sourced:
             with self.subTest(career=record["career_id"]):
                 salary = record["salary"]
                 self.assertTrue(
@@ -649,8 +674,14 @@ class PublishedData(unittest.TestCase):
             role = record["role"]
             kind = role.get("summary_kind")
             with self.subTest(career=record["career_id"]):
-                self.assertIn(kind, {"authoritative", "taxonomy_composed"})
-                if kind == "authoritative":
+                self.assertIn(kind, {"authoritative", "taxonomy_composed",
+                                     "not_sourced"})
+                if kind == "not_sourced":
+                    # A third kind: a statement that nothing was published,
+                    # which is neither somebody's words nor Helix's own
+                    # composition from its recorded attributes.
+                    self.assertFalse(role.get("source_records"))
+                elif kind == "authoritative":
                     self.assertTrue(role.get("source_records"),
                                     "an authoritative summary with no source")
                 else:
@@ -927,6 +958,10 @@ class Validation(unittest.TestCase):
     def test_a_large_change_against_the_previous_file_is_flagged(self):
         previous = json.loads(json.dumps(PUBLISHED))
         for record in previous["records"]:
+            # Roles with no salary have nothing to halve, and skipping
+            # them is the point of the exercise, not an exception to it.
+            if record["salary"]["typical_low"] is None:
+                continue
             record["salary"]["typical_low"] = \
                 round(record["salary"]["typical_low"] * 0.5)
             record["salary"]["typical_high"] = \
@@ -954,7 +989,11 @@ class CanonicalDataset(unittest.TestCase):
     deliberate act with a diff attached.
     """
 
-    CANONICAL_COUNT = 716
+    # The merged catalogue: the supplied 677 plus the post-launch
+    # additions. Moved from 716 to 734 when innovation, enterprise and
+    # academic teaching were filled out — two areas that had eight and
+    # five titles respectively out of 716.
+    CANONICAL_COUNT = 734
 
     def test_the_canonical_career_count_has_not_moved(self):
         self.assertEqual(

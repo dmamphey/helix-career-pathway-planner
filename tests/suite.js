@@ -48,6 +48,7 @@ import { whyNotRecommended, standing } from "../js/why-not.js";
 import * as labour from "../js/labour-market.js";
 import { REGIONS, normaliseRegion, isUk } from "../js/regions.js";
 import { looksScanned, textQuality } from "../js/ocr.js";
+import { careerCard } from "../js/ui.js";
 import * as analytics from "../js/analytics.js";
 import {
   PREFERENCE_FIELDS, PREFERENCE_GROUPS, hasPreferences,
@@ -90,11 +91,11 @@ test("the dataset loads", async () => {
  * The canonical count, as a regression test rather than a constant.
  *
  * Nothing in the application hard-codes how many careers there are — everything
- * counts what it loaded. But a silent drop from 716 to 700 would look like a
+ * counts what it loaded. But a silent drop from 734 to 700 would look like a
  * working application, so the expected figure is pinned here, in one place, where
  * changing it is a deliberate act with a diff attached.
  */
-const CANONICAL_CAREER_COUNT = 716;
+const CANONICAL_CAREER_COUNT = 734;
 
 test(`the canonical dataset loads all ${CANONICAL_CAREER_COUNT} careers`, () => {
   equal(catalogue.count, CANONICAL_CAREER_COUNT,
@@ -886,9 +887,26 @@ test("there is exactly one market record for every career", () => {
   }
 });
 
-test("every career has a usable published salary", () => {
+/**
+ * Careers Helix claims evidence for.
+ *
+ * The completeness assertions below used to run over the whole catalogue,
+ * because every career had a salary — if no source published one, a tier
+ * derived it. Roles marked `no_verified_source` deliberately break that: they
+ * are listed by name with nothing behind them, and the machinery that would
+ * have produced a number is switched off rather than allowed to succeed.
+ *
+ * So completeness is asserted over the sourced careers, and the emptiness of
+ * the rest is asserted separately and just as strictly, further down.
+ */
+function sourcedCareers() {
+  return catalogue.careers
+    .filter((career) => career.evidence_basis !== "no_verified_source");
+}
+
+test("every sourced career has a usable published salary", () => {
   // §58's completeness assertion, run in the browser against the served file.
-  for (const career of catalogue.careers) {
+  for (const career of sourcedCareers()) {
     const pay = market.salary(career.id);
     assert(pay, `${career.id} has no salary`);
     assert(Number.isFinite(pay.low) && Number.isFinite(pay.high),
@@ -905,7 +923,7 @@ test("every career has a usable published salary", () => {
 });
 
 test("every evidence class maps to a label the interface can show", () => {
-  for (const career of catalogue.careers) {
+  for (const career of sourcedCareers()) {
     const pay = market.salary(career.id);
     assert(market.EVIDENCE[pay.evidenceKey],
            `${career.id} has unknown evidence class ${pay.evidenceKey}`);
@@ -922,7 +940,7 @@ test("no salary label uses the word verified in a way that promises pay", () => 
 });
 
 test("a derived salary always says what it was derived from", () => {
-  for (const career of catalogue.careers) {
+  for (const career of sourcedCareers()) {
     const pay = market.salary(career.id);
     if (pay.method !== "related_career_derived") continue;
     assert(pay.derivedFrom.length > 0,
@@ -931,7 +949,7 @@ test("a derived salary always says what it was derived from", () => {
 });
 
 test("a career-specific guide always carries a source record", () => {
-  for (const career of catalogue.careers) {
+  for (const career of sourcedCareers()) {
     const pay = market.salary(career.id);
     if (pay.evidenceKey !== "VERIFIED_GUIDE") continue;
     assert(pay.sources.length > 0,
@@ -971,7 +989,13 @@ test("every career has a description of its own", () => {
     assert(role, `${career.id} has no role record`);
     const text = role.summary || role.composedSummary;
     assert(text, `${career.id} has no description`);
-    if (role.summary) {
+    if (role.summaryKind === "not_sourced") {
+      // A statement that there is nothing, which is a description of the
+      // evidence rather than of the job. It must not claim to be either of the
+      // other two kinds.
+      assert(/no official uk source/i.test(text),
+             `${career.id} is unsourced but its text does not say so`);
+    } else if (role.summary) {
       equal(role.summaryKind, "authoritative", `${career.id} kind mismatch`);
     } else {
       equal(role.summaryKind, "taxonomy_composed",
@@ -999,7 +1023,7 @@ test("a composed description is never exposed as a sourced one", () => {
             `${career.id} exposes composed text as a sourced summary`);
       equal(role.sources.length, 0,
             `${career.id} attributes a composed description to a source`);
-    } else {
+    } else if (role.summaryKind !== "not_sourced") {
       equal(role.composedSummary, null,
             `${career.id} carries both a sourced and a composed description`);
     }
@@ -2362,7 +2386,7 @@ test("a finished screen returns you where you belong", async () => {
   /*
    * Clearing a comparison sent everybody to the Career Explorer. For a visitor
    * with no profile that is right — it is the only list they have. For somebody
-   * who uploaded a CV it hands back a catalogue of 716 in place of the careers
+   * who uploaded a CV it hands back a catalogue of 734 in place of the careers
    * matched to them.
    */
   const { app } = await import("../js/app.js");
@@ -3041,6 +3065,103 @@ test("the privacy wording no longer claims nothing leaves the device", async () 
              `${file} still claims "${claim}" while analytics may be enabled`);
     }
   }
+});
+
+/* ------------------------------------------------- careers with no source */
+
+/**
+ * Some destinations are real and undocumented.
+ *
+ * Founding a company, or being its chief scientist, is somewhere life
+ * scientists actually go, and no UK government source publishes a pay range or
+ * an entry route for any of it. Helix lists them anyway and says it has
+ * nothing — which is only defensible while the saying-nothing is airtight, so
+ * these tests hold the line rather than the intention.
+ */
+test("careers with no verified source carry no salary and no inferred detail", () => {
+  const unsourced = catalogue.careers
+    .filter((career) => career.evidence_basis === "no_verified_source");
+  assert(unsourced.length >= 5,
+         `expected the unsourced roles to be present, found ${unsourced.length}`);
+
+  for (const career of unsourced) {
+    equal(market.salary(career.id), null,
+          `${career.title} has a salary despite having no source`);
+    equal(market.salaryForRegion(career.id, "london"), null,
+          `${career.title} has a regional salary despite having no source`);
+
+    const work = market.workLife(career.id);
+    assert(!work || !work.hours,
+           `${career.title} reports typical hours from nowhere`);
+
+    const role = market.role(career.id);
+    assert(!role || role.summaryKind !== "taxonomy_composed",
+           `${career.title} has a composed description built from inferred `
+           + "attributes that were supposed to be withheld");
+    assert(career.evidence_note, `${career.title} has no explanation`);
+  }
+});
+
+test("an unsourced career says so on its own page and in a list", async () => {
+  const app = await appForViews({ profile: DEMO_PROFILES[0].build() });
+  const career = catalogue.careers
+    .find((c) => c.evidence_basis === "no_verified_source");
+  assert(career, "no unsourced career in the catalogue");
+
+  const node = await renderView("career", app, { params: { id: career.id } });
+  const text = node.textContent;
+  assert(/no verified data for this role/i.test(text),
+         "the career page does not say it has no verified data");
+  assert(!/Not yet available/.test(text),
+         "the page says data is 'not yet available', which implies it is coming");
+  assert(/None published/.test(text), "the page does not say none is published");
+
+  // And the marker travels with the card, so it is visible before the click.
+  const card = careerCard(career, {});
+  assert(/No verified data/i.test(card.textContent),
+         "a card for an unsourced career carries no marker");
+});
+
+/**
+ * `replaceChildren` stringifies whatever is not a node, so a conditional card
+ * returning null printed the word "null" on 579 career pages. The helper that
+ * replaced it filters, and this is the regression test for the day somebody
+ * reaches for the native method again.
+ */
+test("no screen renders a stray null, including unregulated careers", async () => {
+  const app = await appForViews({ profile: DEMO_PROFILES[0].build() });
+  const unregulated = catalogue.careers
+    .find((c) => c.regulatory_status === "Generally unregulated");
+  const regulated = catalogue.careers
+    .find((c) => c.regulatory_status === "Statutory / regulated");
+  const unsourced = catalogue.careers
+    .find((c) => c.evidence_basis === "no_verified_source");
+
+  for (const career of [unregulated, regulated, unsourced]) {
+    const node = await renderView("career", app, { params: { id: career.id } });
+    const walker = node.ownerDocument.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) {
+      assert(walker.currentNode.nodeValue.trim() !== "null",
+             `${career.title} renders a stray "null"`);
+    }
+  }
+});
+
+test("the two thin areas of the catalogue have been filled out", () => {
+  const titles = catalogue.careers.map((c) => c.title);
+  for (const wanted of ["Patent Attorney", "Investment Analyst", "Bid Writer",
+                        "Higher Education Lecturer", "Further Education Lecturer",
+                        "Chief Scientific Officer",
+                        "Founder - Life Sciences Start-up"]) {
+    assert(titles.includes(wanted), `${wanted} is missing from the catalogue`);
+  }
+  // The NCS-backed ones must actually have arrived with a published range,
+  // otherwise adding them bought nothing over the unsourced list.
+  const patent = catalogue.careers.find((c) => c.title === "Patent Attorney");
+  const pay = market.salary(patent.id);
+  assert(pay, "Patent Attorney has no salary");
+  equal(pay.evidenceKey, "VERIFIED_GUIDE",
+        "Patent Attorney's salary is not a published career-specific range");
 });
 
 run();

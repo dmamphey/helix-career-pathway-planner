@@ -72,6 +72,24 @@ export function clear(node) {
   return node;
 }
 
+/**
+ * Replace a node's children, dropping the ones that are not there.
+ *
+ * `Node.replaceChildren()` is the obvious thing to reach for and it is a trap:
+ * it stringifies anything that is not a node, so a card that returns `null`
+ * because it has nothing to say is rendered as the literal text "null". Every
+ * redraw in Helix is a list of cards where several are conditional, so this hit
+ * every unregulated career — 579 of them — with a stray "null" under the
+ * heading, for as long as the career page has existed.
+ *
+ * `append` already skips null, undefined and false. This is that behaviour with
+ * the clear in front of it, which is what the call sites actually wanted.
+ */
+export function replaceKids(node, ...children) {
+  clear(node);
+  return append(node, children.flat());
+}
+
 /** A page section with a heading. */
 export function panel(title, children, options = {}) {
   return h("section", { class: `panel ${options.class || ""}`.trim(),
@@ -133,6 +151,25 @@ export function alignmentBadge(match) {
   ]);
 }
 
+/**
+ * The marker for a career Helix has no source for.
+ *
+ * Deliberately the same shape as the regulation badge and deliberately not a
+ * colour on its own: it carries the words "No verified data", so it survives
+ * greyscale, colour blindness and a screen reader.
+ */
+export function unverifiedBadge(career) {
+  if (!career || career.evidence_basis !== "no_verified_source") return null;
+  return h("span", {
+    class: "reg reg-unverified",
+    title: "No official UK source publishes pay or entry requirements for this "
+         + "role.",
+  }, [
+    h("span", { class: "pill-symbol", "aria-hidden": "true", text: "?" }),
+    h("span", { text: "No verified data" }),
+  ]);
+}
+
 /** Regulation indicator, shown wherever a career is named. */
 export function regulationBadge(career) {
   if (!career.derived.regulated) return null;
@@ -151,7 +188,7 @@ export function regulationBadge(career) {
  * Preference fit for a card, or null when there was nothing to compare.
  *
  * Shared by every list that draws career cards. A badge reading "Not enough
- * preference data" on all 716 cards would be noise rather than honesty — the
+ * preference data" on all 734 cards would be noise rather than honesty — the
  * priorities screen and the career page are where that gets explained properly.
  */
 export function scoredFit(app, career) {
@@ -188,13 +225,22 @@ export function careerCard(career, options = {}) {
           h("span", { class: "hint", text: ` a year · ${pay.geography}` }),
           evidenceBadge(pay),
         ])
-      : h("p", { class: "hint", text: "Salary data not available" }),
+      : h("p", { class: "hint", text: career.evidence_basis === "no_verified_source"
+          ? "No published salary for this role"
+          : "Salary data not available" }),
 
     work && work.hours
       ? h("p", { class: "hint", text: work.hours })
       : null,
 
     h("div", { class: "badges" }, [
+      /*
+       * Visible in the list, not only on the career page. Somebody scanning
+       * six cards should be able to see which one Helix cannot stand behind
+       * before they click it, otherwise the warning arrives after the interest
+       * has already formed.
+       */
+      unverifiedBadge(career),
       regulationBadge(career),
       options.effort ? effortBadge(options.effort) : null,
       options.fit ? fitBadge(options.fit) : null,

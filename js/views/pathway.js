@@ -7,8 +7,7 @@
 
 import {
   h, panel, button, link, statusPill, milestonePill, sourceList, empty,
-  progressBar, dialog, notice, verificationNote, confirmDialog
-} from "../ui.js";
+  progressBar, dialog, notice, verificationNote, confirmDialog, replaceKids } from "../ui.js";
 import { horizonForDate } from "../timeline-engine.js";
 import { MILESTONE_STATUS, evidenceFor } from "../pathway-engine.js";
 import { CATEGORIES, GAP_STATUS, AREAS } from "../gap-engine.js";
@@ -43,7 +42,7 @@ export async function render(app, context) {
   const draw = async () => {
     const analysis = await app.analysisFor(careerId);
     const { match, gaps, pathway, actions, pack, bridge, timeline } = analysis;
-    host.replaceChildren(
+    replaceKids(host,
       header(app, career, match, pathway),
       verificationNote(gaps),
       actionsPanel(actions, app),

@@ -1,7 +1,7 @@
 /**
  * The career graph: a neighbourhood, never the whole catalogue.
  *
- * 716 nodes and their edges would render as a hairball — technically a graph,
+ * 734 nodes and their edges would render as a hairball — technically a graph,
  * practically a decoration. What answers a question is the neighbourhood around
  * one or two careers: where you are, where you are going, what sits between, and
  * what else is within reach.

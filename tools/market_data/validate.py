@@ -87,6 +87,17 @@ def validate(published: dict, base: dict, previous: dict | None = None) -> tuple
         salary = record.get("salary") or {}
         low, high = salary.get("typical_low"), salary.get("typical_high")
 
+        # A career with no official source has no salary, and that is the
+        # correct state rather than a missing one. The check is inverted for
+        # these: carrying a range would be the error, because the only way one
+        # could appear is if some tier had estimated it after all.
+        if record.get("evidence_basis") == "no_verified_source":
+            if low is not None or high is not None:
+                errors.append(
+                    f"{cid}: marked no_verified_source but carries a salary "
+                    f"range ({low}, {high}) — it must have none")
+            continue
+
         if not isinstance(low, (int, float)) or not isinstance(high, (int, float)):
             errors.append(f"{cid}: salary range is not numeric ({low}, {high})")
             continue

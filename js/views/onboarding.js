@@ -7,8 +7,7 @@
  */
 
 import {
-  h, panel, button, link, notice, confirmDialog, empty, progressBar,
-} from "../ui.js";
+  h, panel, button, link, notice, confirmDialog, empty, progressBar, replaceKids } from "../ui.js";
 import { profileForm, profileSummary, signalChips } from "./profile-form.js";
 import { preferenceForm } from "./preferences.js";
 import {
@@ -153,7 +152,7 @@ async function handleFile(app, file, status, problem) {
 function offerOcr(app, file, error, status, problem) {
   const host = h("div", { class: "callout callout-info" });
 
-  const draw = (children) => host.replaceChildren(...children);
+  const draw = (children) => replaceKids(host, children);
 
   const idle = () => draw([
     h("h3", { class: "callout-title", text: "This CV appears to be scanned" }),
@@ -274,7 +273,7 @@ export async function renderReview(app) {
   const host = h("div", { class: "stack" });
 
   const redraw = () => {
-    host.replaceChildren(
+    replaceKids(host,
       panel("Your starting profile", [
         h("p", { class: "hint", text:
           `Read from your ${pending.format} by rule-based extraction — not by an `
@@ -471,7 +470,7 @@ export async function renderQuestions(app) {
          *
          * This used to branch: somebody who said they had a target career in
          * mind was sent to the Career Explorer instead, on the theory that
-         * searching all 716 is more useful than grouped matches when you
+         * searching all 734 is more useful than grouped matches when you
          * already know where you are going.
          *
          * It was wrong twice over. The button says "Show my career options",

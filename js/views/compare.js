@@ -14,8 +14,7 @@
 
 import {
   h, panel, button, link, empty, alignmentBadge, regulationBadge, evidenceBadge,
-  notice,
-} from "../ui.js";
+  notice, replaceKids } from "../ui.js";
 import * as market from "../market-data.js";
 import {
   MAX_COMPARE, MIN_COMPARE, idsFromRoute, standoutSummary,
@@ -74,7 +73,7 @@ export async function render(app, context) {
   }
 
   const host = h("div", { class: "stack" });
-  const redraw = () => host.replaceChildren(
+  const redraw = () => replaceKids(host,
     header(app, entries, ids, redraw),
     baselinePicker(app, entries, redraw),
     baselinePanel(app, entries),
@@ -277,7 +276,7 @@ function header(app, entries, ids, redraw) {
       button("Clear comparison", () => {
         app.clearCompare();
         // Not the Explorer by default: somebody with a profile came from their
-        // options and should land back there, not in a catalogue of 716.
+        // options and should land back there, not in a catalogue of 734.
         app.navigate(app.homeRoute());
       }, { variant: "quiet" }),
       link("Add another career", "#/explore", { class: "btn" }),

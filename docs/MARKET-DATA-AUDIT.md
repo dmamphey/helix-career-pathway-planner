@@ -1,6 +1,6 @@
 # Helix market-data audit
 
-Generated 2026-08-14 · dataset version 1.0 · jurisdiction United Kingdom
+Generated 2026-08-20 · dataset version 1.0 · jurisdiction United Kingdom
 
 This report is produced by `tools/market_data/report.py` as part of every enrichment run. It exists to make data quality visible: which salaries come from a career-specific official source, which are derived, and what a person should look at next.
 
@@ -8,11 +8,11 @@ This report is produced by `tools/market_data/report.py` as part of every enrich
 
 | | |
 |---|---|
-| Careers in the base taxonomy | 716 |
-| Market-data records | 716 |
-| Careers with a published salary range | **716** |
-| Careers with typical weekly hours | 148 |
-| Careers with an authoritative role description | 143 |
+| Careers in the base taxonomy | 734 |
+| Market-data records | 734 |
+| Careers with a published salary range | **727** |
+| Careers with typical weekly hours | 156 |
+| Careers with an authoritative role description | 150 |
 | Records past their review date | 0 |
 | Records flagged for manual review | 0 |
 
@@ -20,25 +20,26 @@ This report is produced by `tools/market_data/report.py` as part of every enrich
 
 | Evidence class | Careers | What it means |
 |---|---|---|
-| Career-specific guide (`VERIFIED_GUIDE`) | 148 | A career-specific salary range published by an official careers source for this job. |
+| Career-specific guide (`VERIFIED_GUIDE`) | 156 | A career-specific salary range published by an official careers source for this job. |
 | Strong estimate (`STRONG_ESTIMATE`) | 0 | A high-quality occupation or pay-framework mapping, but not a range published for this exact job title. |
-| Indicative estimate (`INDICATIVE`) | 378 | Derived from closely related careers that do have stronger evidence, with any seniority difference priced in. |
-| Limited-data estimate (`LIMITED_DATA`) | 190 | A median across the career's family and seniority level. A broad indication only. |
+| Indicative estimate (`INDICATIVE`) | 413 | Derived from closely related careers that do have stronger evidence, with any seniority difference priced in. |
+| Limited-data estimate (`LIMITED_DATA`) | 158 | A median across the career's family and seniority level. A broad indication only. |
 
 ## Salary method
 
 | Method | Careers |
 |---|---|
-| Derived from related careers | 378 |
-| Family and seniority median | 190 |
-| National Careers Service career profile | 148 |
+| Derived from related careers | 413 |
+| Family and seniority median | 158 |
+| National Careers Service career profile | 156 |
+| none | 7 |
 
 ## Title matching against external profiles
 
 | Outcome | Careers |
 |---|---|
-| `no_match` | 553 |
-| `exact_title` | 92 |
+| `no_match` | 562 |
+| `exact_title` | 101 |
 | `curated_alias` | 57 |
 | `review_candidate` | 9 |
 | `seniority_variant_rejected` | 5 |
@@ -54,7 +55,7 @@ This report is produced by `tools/market_data/report.py` as part of every enrich
 
 | Provider | Salary records |
 |---|---|
-| National Careers Service (public job profile) | 148 |
+| National Careers Service (public job profile) | 156 |
 
 ## Attribution
 

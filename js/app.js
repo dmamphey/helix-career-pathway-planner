@@ -72,7 +72,7 @@ export const app = {
    * Several screens sent people to the Career Explorer when they were done —
    * clearing a comparison, backing out of a career page. For a visitor with no
    * profile that is right: the Explorer is the only list they have. For somebody
-   * who has uploaded a CV it is a demotion, handing back a catalogue of 716
+   * who has uploaded a CV it is a demotion, handing back a catalogue of 734
    * careers in place of the ones matched to them.
    *
    * One helper rather than a conditional at each call site, so a new screen gets
@@ -106,7 +106,7 @@ export const app = {
    * Preference fit for a career.
    *
    * Cached per career because the explorer asks for it while filtering and
-   * sorting all 716. The cache is cleared whenever the profile changes, which is
+   * sorting all 734. The cache is cleared whenever the profile changes, which is
    * the only thing that can alter the answer — the career data is static.
    *
    * `effort` is optional and deliberately bypasses the cache: it comes from an
@@ -192,7 +192,7 @@ export const app = {
    * filter by.
    *
    * `analysisFor` builds a pathway and three actions as well, which the explorer
-   * never uses and cannot afford 716 times. This is the same effort object built
+   * never uses and cannot afford 734 times. This is the same effort object built
    * from the same match and gap analysis, so the value here and the badge on the
    * career page can never disagree.
    */

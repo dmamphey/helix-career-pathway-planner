@@ -14,7 +14,7 @@ sciences and healthcare:
 4. What should I do next?
 
 It turns a CV — or a manually built profile — into a structured career profile,
-compares that profile against 716 UK career destinations, and produces a pathway,
+compares that profile against 734 UK career destinations, and produces a pathway,
 a gap analysis and exactly three next actions.
 
 It is a static browser application. No backend, no accounts, no AI service.
@@ -56,7 +56,7 @@ Structured career profile         the only thing the engines see
         │
         ├──► Bridge engine              intermediate roles, and why each helps
         │
-        ├──► Career graph               a neighbourhood, never all 716
+        ├──► Career graph               a neighbourhood, never all 734
         │
         ├──► Timeline engine            90 days / 6 / 12 months / longer
         │
@@ -195,12 +195,12 @@ should not have to contact a third party in order to read a CV.
 ```text
 Helix UK Life Sciences & Healthcare Career Dataset
 Version 1.0 Beta, United Kingdom
-716 careers — 677 supplied at launch (2026-08-12) plus 39 added since
+734 careers — 677 supplied at launch (2026-08-12) plus 57 added since
 ```
 
 The canonical count is whatever the catalogue loads. Nothing in the application
 hard-codes it; `tests/suite.js` carries a regression test that currently expects
-716 so that accidental data loss is caught rather than absorbed.
+734 so that accidental data loss is caught rather than absorbed.
 
 `data/careerpath_uk_careers_v1.json` is the supplied file, byte for byte. Nothing
 in the codebase edits, reorders or filters out a supplied record.
@@ -219,7 +219,7 @@ load time from fields the dataset already contains, under a `derived` key so it 
 always clear which is which.
 
 `pathway_depth` (Deep 66, Standard 438, Explorer 173) controls how much structure
-is built, never how trustworthy the content is. All 716 careers are searchable,
+is built, never how trustworthy the content is. All 734 careers are searchable,
 matchable, selectable as a target, and able to produce a pathway.
 
 ## How matching works
@@ -578,10 +578,16 @@ records stay in the launch taxonomy and are documented for a human decision.
 
 ## Limitations
 
-- Only 143 of 716 descriptions are an official job profile's own wording. The
+- Only 150 of 734 descriptions are an official job profile's own wording. The
   rest are composed from recorded attributes and say so; they state what the
   dataset holds and do not describe duties, employers or prospects.
-- Requirements are unverified for all 716 careers. Two structural rule
+- Seven careers have no official source at all — founder, scientific
+  co-founder, chief scientific officer, spin-out scientist, entrepreneur in
+  residence, commercialisation manager, incubator programme manager. They
+  are listed by name and carry `evidence_basis: no_verified_source`, which
+  suppresses their salary, working hours and description rather than
+  deriving them. Real destinations, no data, and the page says so.
+- Requirements are unverified for all 734 careers. Two structural rule
   packs exist (CP-003, CP-272), neither carrying verified requirements.
 - The parser is rule-based and conservative. It will miss things, which is why
   review is mandatory and every field is editable.

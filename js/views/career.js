@@ -1,7 +1,7 @@
 /**
  * The career detail screen: a decision dossier for one career.
  *
- * Every one of the 716 careers reaches this screen, and what it shows depends
+ * Every one of the 734 careers reaches this screen, and what it shows depends
  * entirely on how much is actually known. The decision header carries the facts
  * somebody weighs a career on — pay, hours, working pattern, regulation, and the
  * three personal measures when a profile exists — and everything below it exists
@@ -22,8 +22,7 @@ import {
   h, panel, button, link, careerCard, alignmentBadge, regulationBadge,
   evidenceBadge, effortBadge, fitBadge, compareToggle, baselineToggle,
   sourceList, statusPill,
-  dialog, empty, scoredFit,
-} from "../ui.js";
+  dialog, empty, scoredFit, replaceKids } from "../ui.js";
 import * as market from "../market-data.js";
 import { money } from "../market-data.js";
 import { adjacentCareers } from "../adjacency.js";
@@ -54,7 +53,7 @@ export async function render(app, context) {
   const role = market.role(career.id);
 
   const host = h("div", { class: "stack" });
-  const redraw = () => host.replaceChildren(
+  const redraw = () => replaceKids(host,
     header(app, career, { match, analysis, pay, work, redraw }),
     regulationCard(career, app),
     aboutCard(career, role),
@@ -69,6 +68,35 @@ export async function render(app, context) {
   );
   redraw();
   return host;
+}
+
+/**
+ * The statement for a career with no source behind it.
+ *
+ * Directly under the title, before any of the numbers, because it changes how
+ * every one of them should be read. It is a warning callout rather than an
+ * information one: the risk here is somebody treating a listed destination as a
+ * researched one, and the interface should be the thing that stops them.
+ *
+ * It says what Helix *does* know — that the role exists and roughly where it
+ * sits — so the entry still earns its place, and is explicit that everything
+ * else is missing rather than pending.
+ */
+function unsourcedNotice(career) {
+  return h("div", { class: "callout callout-warn" }, [
+    h("h2", { class: "callout-title",
+              text: "Helix has no verified data for this role" }),
+    h("p", { text: career.evidence_note
+      || "No official UK source publishes a pay range, entry route or "
+       + "requirement set for this role." }),
+    // The note above already says what is missing. This adds the one thing it
+    // cannot: that the alignment score further down is still shown, and what
+    // little it is based on. A score beside a "no data" banner invites the
+    // reading that the score is the exception.
+    h("p", { class: "hint", text: "The alignment score below is still shown, "
+      + "but it compares your profile against this job title and its recorded "
+      + "subject areas only — there is nothing else to compare it against." }),
+  ]);
 }
 
 /* ------------------------------------------------------------------- header */
@@ -91,9 +119,18 @@ function header(app, career, { match, analysis, pay, work, redraw }) {
 
   const fit = analysis && analysis.fit && analysis.fit.scored ? analysis.fit : null;
 
+  /*
+   * "Not yet available" is the right words for a career whose figures have not
+   * been resolved yet, and the wrong ones for a career nobody publishes figures
+   * for. The first says wait; the second has to say do not wait.
+   */
+  const unsourced = career.evidence_basis === "no_verified_source";
+  const blank = unsourced ? "None published" : "Not yet available";
+
   return h("section", { class: "panel career-header" }, [
     h("p", { class: "eyebrow", text: career.family }),
     h("h1", { text: career.title }),
+    unsourced ? unsourcedNotice(career) : null,
 
     h("dl", { class: "decision-facts" }, [
       h("div", { class: "decision-fact" }, [
@@ -102,23 +139,23 @@ function header(app, career, { match, analysis, pay, work, redraw }) {
           ? [h("strong", { text: pay.range }),
              h("span", { class: "hint", text: ` a year · ${pay.geography}` }),
              h("br"), evidenceBadge(pay)]
-          : [h("span", { class: "hint", text: "Not yet available" })]),
+          : [h("span", { class: "hint", text: blank })]),
       ]),
       h("div", { class: "decision-fact" }, [
         h("dt", { text: "Typical hours" }),
-        h("dd", { text: work && work.hours ? work.hours : "Not yet available" }),
+        h("dd", { text: work && work.hours ? work.hours : blank }),
       ]),
       h("div", { class: "decision-fact" }, [
         h("dt", { text: "Working pattern" }),
         h("dd", { text: work && work.patterns.length
           ? sentenceCase(work.patterns.join(", "))
-          : "Not yet available" }),
+          : blank }),
       ]),
       h("div", { class: "decision-fact" }, [
         h("dt", { text: "Main settings" }),
         h("dd", { text: work && work.settings.length
           ? work.settings.join(", ")
-          : "Not yet available" }),
+          : blank }),
       ]),
     ]),
 
@@ -642,8 +679,11 @@ function sectorBlock(career, pay) {
  * reach, and this is the part of the screen most worth checking.
  */
 function economicsCard(career, pay, work, app, redraw) {
+  // Same distinction as the header: pending is not the same as never published.
+  const unsourced = career.evidence_basis === "no_verified_source";
+  const blank = unsourced ? "None published" : "Not yet available";
   const level = (value) => value && value !== "unknown"
-    ? sentenceCase(value) : "Not yet available";
+    ? sentenceCase(value) : blank;
 
   return panel("Salary and working life", [
     pay
@@ -694,7 +734,10 @@ function economicsCard(career, pay, work, app, redraw) {
             : null,
           h("p", { class: "hint", text: pay.disclaimer }),
         ])
-      : empty("No salary record exists for this career."),
+      : empty(unsourced
+          ? "No official source publishes a salary for this role, so Helix "
+            + "shows none. It does not estimate one."
+          : "No salary record exists for this career."),
 
     regionalBlock(app, career, pay, redraw),
     sectorBlock(career, pay),
@@ -702,13 +745,13 @@ function economicsCard(career, pay, work, app, redraw) {
     h("h3", { text: "Working life" }),
     h("dl", { class: "summary" }, [
       h("dt", { text: "Typical weekly hours" }),
-      h("dd", { text: work && work.hours ? work.hours : "Not yet available" }),
+      h("dd", { text: work && work.hours ? work.hours : blank }),
       h("dt", { text: "Work patterns" }),
       h("dd", { text: work && work.patterns.length
-        ? sentenceCase(work.patterns.join(", ")) : "Not yet available" }),
+        ? sentenceCase(work.patterns.join(", ")) : blank }),
       h("dt", { text: "Work settings" }),
       h("dd", { text: work && work.settings.length
-        ? work.settings.join(", ") : "Not yet available" }),
+        ? work.settings.join(", ") : blank }),
       h("dt", { text: "Patient contact" }),
       h("dd", { text: level(work && work.patientContact) }),
       h("dt", { text: "Laboratory intensity" }),

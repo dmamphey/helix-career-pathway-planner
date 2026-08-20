@@ -21,7 +21,7 @@
  * focus ring — none of which comes free when you draw your own controls.
  */
 
-import { h, panel, button, link, empty, regulationBadge } from "../ui.js";
+import { h, panel, button, link, empty, regulationBadge, replaceKids } from "../ui.js";
 import * as market from "../market-data.js";
 import {
   buildGraph, layout, asList, NODE_KINDS, EXPANSION_STEP,
@@ -56,7 +56,7 @@ export async function render(app, context) {
     const graph = buildGraph({
       target, current, bridges, careers: app.catalogue.careers, expanded,
     });
-    host.replaceChildren(
+    replaceKids(host,
       header(app, target, current, graph),
       figure(app, graph, { zoom, setZoom: (value) => { zoom = value; draw(); },
                            expand: (id) => { expanded.add(id); draw(); },

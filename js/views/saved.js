@@ -12,8 +12,7 @@
  */
 
 import {
-  h, panel, link, button, careerCard, empty, notice, scoredFit,
-} from "../ui.js";
+  h, panel, link, button, careerCard, empty, notice, scoredFit, replaceKids } from "../ui.js";
 import { MAX_COMPARE, canCompare, routeFor } from "../comparison.js";
 
 export async function render(app) {
@@ -47,7 +46,7 @@ export async function render(app) {
     const addable = careers.filter((career) => !app.isComparing(career.id));
     const room = MAX_COMPARE - selected.length;
 
-    host.replaceChildren(
+    replaceKids(host,
       panel("Saved careers", [
         h("p", { class: "hint", text: `${careers.length} saved. Use Compare on any `
           + `card to add it to the comparison — up to ${MAX_COMPARE} at a time.` }),

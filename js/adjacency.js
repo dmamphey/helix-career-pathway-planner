@@ -1,7 +1,7 @@
 /**
  * The career graph.
  *
- * Adjacency is computed, not curated: 716 careers would need hundreds of
+ * Adjacency is computed, not curated: 734 careers would need hundreds of
  * thousands of hand-made connections, and they would rot. Instead a similarity
  * score is derived from what the dataset already knows — shared tags, family
  * proximity, title wording and seniority — and a rule pack can override or add to

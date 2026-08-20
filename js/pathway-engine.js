@@ -3,7 +3,7 @@
  *
  * A pathway is a sequence of milestones from where the user is to the career they
  * chose. Where a rule pack exists, its researched milestones are used. Where one
- * does not — which is the case for most of 716 careers — the pathway is generated
+ * does not — which is the case for most of 734 careers — the pathway is generated
  * from the gap analysis, so it is still specific to this person and this career
  * rather than a generic ladder of invented job titles.
  *

@@ -368,7 +368,22 @@ class Resolver:
         }
 
     def _record(self, career: dict, part: dict | None) -> dict:
-        """Assemble the published record, deriving qualitative work-life fields."""
+        """Assemble the published record, deriving qualitative work-life fields.
+
+        A career marked `no_verified_source` is listed by name only. Every tier
+        below this line exists to produce a number when no source published one
+        — a related-career estimate, a family median — and for these roles that
+        machinery has to be switched off rather than allowed to succeed. A
+        family median for "Founder" would be arithmetic on the wrong population
+        presented as a salary; founders commonly pay themselves nothing for
+        years, which no median over employed staff can express.
+
+        So the resolution is discarded and the record carries an explicit
+        refusal. The application shows the refusal instead of a range.
+        """
+        if career.get("evidence_basis") == "no_verified_source":
+            part = None
+
         salary = (part or {}).get("salary") or {
             "typical_low": None, "typical_high": None,
             "estimate_method": None, "evidence_quality": "PENDING",
@@ -400,13 +415,25 @@ class Resolver:
             salary["derived_from_career_ids"] = (
                 (part or {}).get("salary", {}).get("derived_from_career_ids", []))
 
+        unsourced = career.get("evidence_basis") == "no_verified_source"
+
         work_life = dict((part or {}).get("work_life") or {})
         work_life.setdefault("hours_min", None)
         work_life.setdefault("hours_max", None)
         work_life.setdefault("work_patterns", [])
         work_life.setdefault("work_settings", [])
         work_life.setdefault("source_records", [])
-        work_life.update(qualitative_work_life(career, work_life))
+        if not unsourced:
+            work_life.update(qualitative_work_life(career, work_life))
+        else:
+            # The qualitative fields are inferred from the career's own tags,
+            # and for these roles the tags are the only thing anybody wrote
+            # down. Inferring from them and presenting the result as a finding
+            # would be reading Helix's own guess back to the user as evidence.
+            work_life["qualitative_source"] = "not_sourced"
+            work_life["qualitative_note"] = (
+                "No source describes the working life of this role, and Helix "
+                "does not infer it.")
 
         role = dict((part or {}).get("role") or {})
         role.setdefault("summary", None)
@@ -424,7 +451,15 @@ class Resolver:
         # a description is composed from its own recorded attributes and labelled
         # as composed — never as though somebody had written it. §21 allows a
         # taxonomy fallback on exactly those terms. See describe.py.
-        if role.get("summary_kind") != "authoritative" or not role.get("summary"):
+        if unsourced:
+            # Not composed either. `describe.compose` reads the same inferred
+            # attributes that have just been withheld, so composing here would
+            # put them back into a sentence and call it a description.
+            role["summary"] = career.get("evidence_note") or (
+                "No official UK source publishes a description, pay range or "
+                "entry route for this role.")
+            role["summary_kind"] = "not_sourced"
+        elif role.get("summary_kind") != "authoritative" or not role.get("summary"):
             role["summary"] = describe.compose(
                 career, work_life, derive.seniority_class(career["title"]))
             role["summary_kind"] = "taxonomy_composed"
@@ -459,8 +494,11 @@ class Resolver:
             "work_life": work_life,
             "role": role,
             "mapping": mapping,
+            "evidence_basis": career.get("evidence_basis", "ncs_profile"),
             "enrichment": {
-                "status": ("resolved" if salary["evidence_quality"] != "PENDING"
+                "status": ("not_sourced"
+                           if career.get("evidence_basis") == "no_verified_source"
+                           else "resolved" if salary["evidence_quality"] != "PENDING"
                            else "unresolved"),
                 "resolved_at": _today(),
                 "manual_review_required": mapping.get("review_status") in

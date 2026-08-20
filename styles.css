@@ -1141,3 +1141,10 @@ ul.plain, ol.plain { list-style: none; padding: 0; margin: 0; }
 @media (max-width: 34rem) {
   .analytics-notice { padding: .7rem .8rem; font-size: .88rem; }
 }
+
+/* The "no verified data" marker. Same footprint as the regulation badge so a
+   row of cards keeps its rhythm, and amber rather than red because this is an
+   absence of evidence, not a warning about the career itself. */
+.reg-unverified {
+  background: var(--warn-bg); color: var(--warn); border-color: var(--warn-line);
+}
